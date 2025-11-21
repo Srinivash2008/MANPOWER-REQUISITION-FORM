@@ -19,10 +19,8 @@ import Dashboard from "./components/Dashboard";
 import Header from "./components/layout/Header";
 import BreadcrumbBar from "./components/layout/BreadcrumbBar";
 import Footer from "./components/layout/Footer";
-
-import socket from "./socket";
-// import { logout } from "./redux/auth/authSlice"; // <-- Corrected: Removed setUserFromToken
 import "./assets/css/Style.css";
+import Add_Form from "./components/Add_Form";
 
 
 
@@ -36,56 +34,32 @@ function App() {
 
   // This useEffect is now redundant and should be removed entirely
   // The logic is handled by the initial state of the authSlice.
-  // useEffect(() => {
-  //   if (token && !user) {
-  //     try {
-  //       const decodedToken = jwtDecode(token);
-  //       dispatch(
-  //         setUserFromToken({
-  //           emp_id: decodedToken.emp_id,
-  //           emp_pos: decodedToken.emp_pos,
-  //           emp_name: decodedToken.emp_name,
-  //           emp_dept: decodedToken.emp_dept,
-  //         })
-  //       );
-  //     } catch (error) {
-  //       dispatch(logout());
-  //       navigate("/login");
-  //     }
-  //   }
-  // }, [token, user, dispatch, navigate]);
-
   useEffect(() => {
-    if (user) {
-      // dispatch(fetchDashboardSummary({ emp_id: user.emp_id, role: user.emp_pos }));
-      // dispatch(fetchPendingCases(user.emp_id));
-      // dispatch(fetchEscalatedCases(user.emp_id));
-      // dispatch(fetchTodayCases(user.emp_id));
-      // dispatch(fetchMonthlyResolvedCases(user.emp_id));
-      // dispatch(fetchEmailTemplate(user.emp_id));
-
-      socket.connect();
-      socket.emit("authenticate", token);
-    } else {
-      socket.disconnect();
+    if (token && !user) {
+      try {
+        const decodedToken = jwtDecode(token);
+        dispatch(
+          setUserFromToken({
+            emp_id: decodedToken.emp_id,
+            emp_pos: decodedToken.emp_pos,
+            emp_name: decodedToken.emp_name,
+            emp_dept: decodedToken.emp_dept,
+          })
+        );
+      } catch (error) {
+        dispatch(logout());
+        navigate("/login");
+      }
     }
+  }, [token, user, dispatch, navigate]);
 
-    socket.on("receive-notification", (data) => {
-      // Notification logic here
-    });
-
-    return () => {
-      socket.off("receive-notification");
-      socket.disconnect();
-    };
-  }, [user, token, dispatch]);
 
   return (
     <ThemeProvider theme={themeBlue}>
       <div className="min-h-screen flex flex-col bg-gray-100 text-gray-900">
         {!isLoginPage && <>
     <Header />
-    <BreadcrumbBar />
+    {/* <BreadcrumbBar /> */}
   </>}
 
         <main className="container mx-auto mt-8 p-4 flex-grow">
@@ -94,6 +68,7 @@ function App() {
             <Route path="/login" element={<Login />} />
 
            <Route path="/dashboard" element={<Dashboard />} />
+           <Route path="/add-mrf" element={<Add_Form />} />
 
            
           </Routes>

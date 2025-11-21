@@ -5,37 +5,49 @@ import {
   Toolbar,
   Box,
   Typography,
-  Menu,
-  MenuItem,
-  Divider,
   Avatar,
   IconButton,
   useMediaQuery, // 👈 New hook for responsive behavior
   Drawer, // 👈 New component for mobile navigation
   List,
+  Menu,
   ListItem,
+  MenuItem,
   ListItemText,
+  Divider,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu"; // 👈 New icon for mobile menu
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import LogoutIcon from '@mui/icons-material/Logout';
+
+import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, logoutUser } from "../../redux/auth/authSlice";
-import Logo from "../../assets/images/acs_hd_logo.jpg";
+import Logo from "../../assets/images/logo_MRF.png";
 import Swal from "sweetalert2";
 //import { fetchTodayLogin, shiftUpdateUser } from "../../redux/cases/caseEntrySlice";
 
 const useHeaderStyles = () => {
   const theme = useTheme();
+  // Color palette inspired by Login.jsx for a cohesive look
+  const colors = {
+    lightGreenBg: '#F3FAF8',
+    darkAccent: '#2A7F66',
+    lightBorder: '#C0D1C8',
+    darkText: '#333333',
+    mediumText: '#666666',
+    white: '#FFFFFF',
+  };
+
   return {
     appBar: {
-      position: "fixed",
+      // position: "fixed",
       width: "100%",
-      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-      height: 60,
-      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+      background: colors.lightGreenBg, // Use light green background
+      height: 64, // Slightly taller for better spacing
+      boxShadow: 'none', // Remove shadow for a flatter, modern look
+      borderBottom: `1px solid ${colors.lightBorder}`, // Use a subtle border instead
       zIndex: theme.zIndex.drawer + 1,
-      color: theme.palette.primary.contrastText,
-      borderRadius: 1,
       padding: 0,
       margin: 0,
     },
@@ -43,7 +55,7 @@ const useHeaderStyles = () => {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      minHeight: 64,
+      minHeight: '64px !important', // Ensure toolbar height is consistent
       padding: theme.spacing(0, 3),
     },
     leftSection: {
@@ -52,7 +64,7 @@ const useHeaderStyles = () => {
       gap: theme.spacing(10),
     },
     logo: {
-      height: 50,
+      height: 145, // Corrected logo size for the navbar
       width: "auto",
       cursor: "pointer",
       userSelect: "none",
@@ -66,21 +78,26 @@ const useHeaderStyles = () => {
       width: "fit-content",
     },
     navItem: {
-      color: "#fff",
+      color: colors.mediumText, // Use medium text for inactive items
       cursor: "pointer",
       fontWeight: 500,
       fontSize: "0.9rem",
-      textAlign: "center",
-      padding: theme.spacing(1, 1.5),
-      borderRadius: 6,
-      transition: "background-color 0.3s ease, color 0.3s ease",
+      padding: theme.spacing(0.5, 0), // Adjust padding for underline effect
+      margin: theme.spacing(0, 1.5),
+      borderBottom: '3px solid transparent', // Placeholder for hover/active underline
+      transition: "all 0.3s ease",
       "&:hover": {
-        backgroundColor: "rgba(255,255,255,0.15)",
+        color: colors.darkAccent, // Accent color on hover
+        borderBottomColor: colors.darkAccent, // Show underline on hover
       },
     },
     activeNavItem: {
-      backgroundColor: "rgba(255,255,255,0.25)",
+      color: colors.darkAccent, // Use accent color for active text
       fontWeight: 600,
+      borderBottomColor: colors.darkAccent, // Persistent underline for active item
+      '&:hover': {
+        borderBottomColor: colors.darkAccent,
+      }
     },
     rightSection: {
       marginLeft: "auto",
@@ -88,15 +105,16 @@ const useHeaderStyles = () => {
       alignItems: "center",
       gap: theme.spacing(1),
       cursor: "pointer",
-      padding: theme.spacing(0.5, 1.5),
+      padding: theme.spacing(0.75, 1.5),
       width: "fit-content",
-      borderRadius: 6,
+      borderRadius: 2, // Pill shape
+      transition: 'background-color 0.3s ease',
       "&:hover": {
-        backgroundColor: "rgba(255,255,255,0.15)",
+        backgroundColor: "rgba(42, 127, 102, 0.08)", // Subtle hover effect
       },
     },
     userName: {
-      color: "#fff",
+      color: colors.darkText,
       fontWeight: 500,
       textAlign: "right",
       whiteSpace: "nowrap",
@@ -106,41 +124,56 @@ const useHeaderStyles = () => {
       width: 36,
       height: 36,
       fontSize: "1rem",
-      bgcolor: theme.palette.secondary.main,
+      bgcolor: colors.darkAccent, // Use accent for avatar
     },
     menuPaper: {
       mt: theme.spacing(1.5),
       width: 200,
-      borderRadius: 8,
+      
       boxShadow: theme.shadows[4],
-      backgroundColor: "#fff",
+      backgroundColor: colors.white,
     },
     menuItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing(1.5),
       fontSize: "0.95rem",
       padding: theme.spacing(1, 2),
-      color: theme.palette.text.primary,
+      color: colors.darkText,
       "&:hover": {
-        backgroundColor: theme.palette.primary.main,
-        color: "#fff",
+        backgroundColor: "rgba(42, 127, 102, 0.08)",
       },
     },
     logoutItem: {
       color: theme.palette.error.main,
       fontWeight: 600,
+      '&:hover': {
+        color: theme.palette.error.main,
+        backgroundColor: theme.palette.error.main,
+        color: theme.palette.error.contrastText,
+      }
     },
     drawerPaper: {
       width: 240,
-      background: `linear-gradient(180deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-      color: "#fff",
+      background: colors.white,
+      color: colors.darkText,
     },
     drawerItem: {
-      color: "#fff",
+      color: colors.mediumText,
       "&:hover": {
-        backgroundColor: "rgba(255,255,255,0.15)",
+        backgroundColor: "rgba(42, 127, 102, 0.08)",
       },
     },
     activeDrawerItem: {
-      backgroundColor: "rgba(255,255,255,0.25)",
+      backgroundColor: colors.darkAccent,
+      color: colors.white,
+      '&:hover': {
+        backgroundColor: colors.darkAccent,
+      }
+    },
+    logoutDropdownItem: {
+      color: theme.palette.error.main,
+      fontWeight: 600,
     }
   };
 };
@@ -213,160 +246,10 @@ const Header = () => {
   };
 
 
-  // const handleLogout = () => {
-  //   const shiftcount = userLoginStatus[0].shift_count;
-  //   const login_id = userLoginStatus[0].login_id;
-  //   console.log(login_id,"login_id");
-  //   console.log(shiftcount,"shiftcount");
-    
-  //   if (user?.emp_id) {
-  //     if(shiftcount === 1 )
-  //     {
-  //       Swal.fire({
-  //         title: 'Select a Shift',
-  //         input: 'select',
-  //         inputOptions: {
-  //           'SHIFT_I': 'SHIFT I - 3.30 AM to 12.30 PM',
-  //           'SHIFT_II': 'SHIFT II - 12.30 PM to 7.30 PM',
-  //           'SHIFT_III': 'SHIFT III - 7.30 PM to 3.30 AM',
-  //         },
-  //         inputPlaceholder: 'Choose Shift',
-  //         showCancelButton: true,
-  //         confirmButtonText: 'Submit',
-  //         cancelButtonText: 'Cancel',
-  //         confirmButtonColor: theme.palette.error.main,
-  //         didOpen: () => {
-  //           const select = Swal.getPopup().querySelector('select');
-  //           if (select) {
-  //             select.style.width = '440px';  // Change only select width
-  //             select.style.maxWidth = '100%';
-  //             select.style.padding = '8px';
-  //             select.style.fontSize = '15px';
-  //           }
-  //         },
-  //         preConfirm: (value) => {
-  //           if (!value) {
-  //             Swal.showValidationMessage('Please select a shift before submitting.');
-  //             return false;
-  //           }
-  //           return value;
-  //         }
-  //       }).then((selection) => {
-  //         if (selection.isConfirmed) {
-  //           const caseData = {
-  //             shift: selection.value,
-  //             login_id: login_id,  // Fix: obtain selected value here
-  //           };
-
-  //           dispatch(shiftUpdateUser({
-  //             login_id: login_id,
-  //             caseData: caseData
-  //           })).unwrap();
-  //           Swal.fire({
-  //             title: 'Logout',
-  //             text: 'User Last Logout is Confirmed',
-  //             icon: '',
-  //             iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px;">`,
-  //             showCancelButton: true,
-  //             confirmButtonText: 'Yes',
-  //             cancelButtonText: 'No',
-  //             confirmButtonColor: theme.palette.error.main,
-  //           }).then((result) => {
-  //             const status = result.isConfirmed ? "last_logout" : "normal";
-
-  //             // ✅ Wait for the actual logout to complete
-  //             dispatch(logoutUser({ emp_id: user.emp_id, status }))
-  //               .unwrap()
-  //               .then(() => {
-  //                 // Logout successful — now redirect
-  //                 dispatch(logout());
-  //                 handleUserMenuClose();
-  //                 setDrawerOpen(false);
-  //                 navigate("/login");
-  //               })
-  //               .catch((error) => {
-  //                 console.error("Logout failed:", error);
-  //                 Swal.fire({
-  //                   title: 'Logout Failed',
-  //                   text: error || 'Something went wrong.',
-  //                   icon: 'error',
-  //                 });
-  //               });
-  //           });
-  //         }
-  //       });
-
-  //     } else {
-  //       Swal.fire({
-  //         title: 'Logout',
-  //         text: 'User Last Logout is Confirmed',
-  //         icon: '',
-  //         iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px;">`,
-  //         showCancelButton: true,
-  //         confirmButtonText: 'Yes',
-  //         cancelButtonText: 'No',
-  //         confirmButtonColor: theme.palette.error.main,
-  //       }).then((result) => {
-  //         const status = result.isConfirmed ? "last_logout" : "normal";
-
-  //         // ✅ Wait for the actual logout to complete
-  //         dispatch(logoutUser({ emp_id: user.emp_id, status }))
-  //           .unwrap()
-  //           .then(() => {
-  //             // Logout successful — now redirect
-  //             dispatch(logout());
-  //             handleUserMenuClose();
-  //             setDrawerOpen(false);
-  //             navigate("/login");
-  //           })
-  //           .catch((error) => {
-  //             console.error("Logout failed:", error);
-  //             Swal.fire({
-  //               title: 'Logout Failed',
-  //               text: error || 'Something went wrong.',
-  //               icon: 'error',
-  //             });
-  //           });
-  //       });
-  //     }
-      
-  //   }
-  // };
-
-
   
   const menuItems = [
-    { label: "Dashboard", link: "/dashboard" },
-    { label: "Entry", link: "/case-entry" },
-    // ✅ Conditional Quality Menu
-  isAdmin
-  ? {
-      label: "Quality",
-      submenu: [
-        { label: "Internal Quality List", link: "/quality" },
-        { label: "Internal Quality Completed", link: "/quality-approved" },
-        { label: "External Quality List", link: "/external-quality-cases" },
-      ],
-    }
-  : {
-      label: "Quality",
-      submenu: [
-        { label: "Internal Quality", link: "/quality-approved" },
-        { label: "External Quality", link: "/external-quality-cases" },
-      ],
-    },
-    {
-      label: "Updates",
-      submenu: [
-        ...(isAdmin ? [{ label: "Assessment/Feedback", link: "/assessment" }] : [{ label: "Assessment", link: "/assessment-view" }]),
-        { label: "Latest Updates", link: "/system-updates" },
-        { label: "Email Templates", link: "/email-template" },
-        ...(isAdmin ? [{ label: "User Registration", link: "/user-registration" }] : []),
-      ],
-    },
-    { label: "Report", link: "/report" },
-    
-    
+    { label: "Dashboard", link: "/dashboard", icon: "dashboard" },
+    { label: "ADD MRF", link: "/add-mrf", icon: "add" },
   ];
 
   const renderMobileMenu = (
@@ -385,6 +268,8 @@ const Header = () => {
             sx={styles.logo}
           />
       </Box>
+
+
       <List>
         {menuItems.map((item, index) => (
           <React.Fragment key={index}>
@@ -424,7 +309,7 @@ const Header = () => {
                 ))}
               </List>
             )}
-            <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+            {index < menuItems.length - 1 && <Divider sx={{ bgcolor: 'rgba(0,0,0,0.08)' }} />}
           </React.Fragment>
         ))}
       </List>
@@ -452,7 +337,7 @@ const Header = () => {
             src={Logo}
             alt="Logo"
             sx={styles.logo}
-            onClick={() => handleNavigation("/")}
+            onClick={() => handleNavigation("/dashboard")}
           />
           {!isMobile && ( // 👈 Hide nav menu on mobile
             <Box sx={styles.navMenu}>
@@ -532,7 +417,7 @@ const Header = () => {
           )}
         </Box>
         {/* Right Section: User Info */}
-        {token && user && (
+        {/* {token && user && ( */}
           <Box sx={styles.rightSection} onClick={handleUserMenuClick}>
             <Typography sx={styles.userName}>
               {user.emp_name || "User"}
@@ -541,28 +426,38 @@ const Header = () => {
               {user.emp_name?.charAt(0).toUpperCase() || "U"}
             </Avatar>
           </Box>
-        )}
-        {/* User Dropdown */}
+        {/* )} */}
+
+        {/* User Dropdown Menu */}
         <Menu
           anchorEl={userMenuAnchorEl}
           open={Boolean(userMenuAnchorEl)}
           onClose={handleUserMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
           PaperProps={{ sx: styles.menuPaper }}
         >
           <MenuItem
             sx={styles.menuItem}
-            onClick={() => {
-              handleNavigation("/profile");
-              handleUserMenuClose();
-            }}
+            onClick={() => handleNavigation("/profile")}
           >
+            <PersonOutlineIcon fontSize="small" />
             Profile
           </MenuItem>
           <Divider />
           <MenuItem
             sx={{ ...styles.menuItem, ...styles.logoutItem }}
-            onClick={handleLogout}
+            onClick={() => {
+              handleLogout();
+            }}
           >
+            <LogoutIcon fontSize="small" />
             Logout
           </MenuItem>
         </Menu>
