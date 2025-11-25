@@ -64,8 +64,8 @@ const useHeaderStyles = () => {
       gap: theme.spacing(10),
     },
     logo: {
-      height: 100,
-      width: 150,
+      height: 145, // Corrected logo size for the navbar
+      width: "auto",
       cursor: "pointer",
       userSelect: "none",
       margin: 0,
@@ -129,7 +129,7 @@ const useHeaderStyles = () => {
     menuPaper: {
       mt: theme.spacing(1.5),
       width: 200,
-
+      
       boxShadow: theme.shadows[4],
       backgroundColor: colors.white,
     },
@@ -148,7 +148,6 @@ const useHeaderStyles = () => {
       color: theme.palette.error.main,
       fontWeight: 600,
       '&:hover': {
-        // color: theme.palette.error.main,
         backgroundColor: theme.palette.error.main,
         color: theme.palette.error.contrastText,
       }
@@ -188,7 +187,7 @@ const Header = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md")); // 👈 Check if screen is 'md' or smaller
 
   const isAdmin = user?.emp_pos === 'Senior Manager' || user?.emp_pos === 'Senior Client Support Executive';
-
+  
   const [anchorEl, setAnchorEl] = useState(null);
   const [hoveredMenu, setHoveredMenu] = useState(null);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
@@ -196,14 +195,14 @@ const Header = () => {
 
   //const { userLoginStatus } = useSelector((state) => state.caseEntry);
 
-  // console.log(userLoginStatus,"userLoginStatus");
-  /* 
-    useEffect(() => {
-        if (user) {
-         dispatch(fetchTodayLogin());
-        }
-    }, [user]); */
-
+ // console.log(userLoginStatus,"userLoginStatus");
+/* 
+  useEffect(() => {
+      if (user) {
+       dispatch(fetchTodayLogin());
+      }
+  }, [user]); */
+  
   // Menu handling
   const handleMenuEnter = (event, label) => {
     if (!isMobile) {
@@ -233,7 +232,7 @@ const Header = () => {
     setDrawerOpen(false); // Close drawer on navigation
   };
 
-
+  
 
   const handleLogout = () => {
     if (user?.emp_id) {
@@ -246,10 +245,11 @@ const Header = () => {
   };
 
 
-
+  
   const menuItems = [
     { label: "Dashboard", link: "/dashboard", icon: "dashboard" },
     { label: "ADD MRF", link: "/add-mrf", icon: "add" },
+     { label: "View MRF", link: "/mrf-list" },
   ];
 
   const renderMobileMenu = (
@@ -261,12 +261,12 @@ const Header = () => {
     >
       <Toolbar />
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-        <Box
-          component="img"
-          src={Logo}
-          alt="Logo"
-          sx={styles.logo}
-        />
+          <Box
+            component="img"
+            src={Logo}
+            alt="Logo"
+            sx={styles.logo}
+          />
       </Box>
 
 
@@ -418,14 +418,14 @@ const Header = () => {
         </Box>
         {/* Right Section: User Info */}
         {/* {token && user && ( */}
-        <Box sx={styles.rightSection} onClick={handleUserMenuClick}>
-          <Typography sx={styles.userName}>
-            {user.emp_name || "User"}
-          </Typography>
-          <Avatar sx={styles.avatar}>
-            {user.emp_name?.charAt(0).toUpperCase() || "U"}
-          </Avatar>
-        </Box>
+          <Box sx={styles.rightSection} onClick={handleUserMenuClick}>
+            <Typography sx={styles.userName}>
+              {user.emp_name || "User"}
+            </Typography>
+            <Avatar sx={styles.avatar}>
+              {user.emp_name?.charAt(0).toUpperCase() || "U"}
+            </Avatar>
+          </Box>
         {/* )} */}
 
         {/* User Dropdown Menu */}
