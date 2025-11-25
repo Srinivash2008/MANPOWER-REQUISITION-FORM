@@ -158,9 +158,16 @@ const emitQualityApproveDiscussionMessage = () => {
   }
 };
 
+const emitManpowerRequisitionRefresh = () => {
+  if(io) {
+    //console.log('[Socket] Emitting emailtemplate-refresh event.');
+    io.emit('manpowerrequisition-refresh');
+  }
+};
+
 // Export the functions that need to be used in other files
 module.exports = {
     initializeSocketIO,
     getSocketIo, emitDashboardRefresh, emitToDepartment, emitEmailTemplateRefresh, emitSystemUpdate, emitAssessmentDataRefresh, emitAssessmentQuestionDataRefresh, emitAssessmentSubmitDataRefresh,
-    emitAssessmentCorrectionSubmitDataRefresh,emitAssessmentDataShowRefresh,emitCaseEntryCreated, emitCaseEntryUpdated, emitCaseEntryDeleted, emitCaseEntryBatchCreated, emitDiscussionRead,emitDashboardRefreshCaseEntry, emitQualityDiscussionMessage,emitQualityView,emitQualityApproved,emitQualityApproveDiscussionMessage
+    emitAssessmentCorrectionSubmitDataRefresh,emitAssessmentDataShowRefresh,emitCaseEntryCreated, emitCaseEntryUpdated, emitCaseEntryDeleted, emitCaseEntryBatchCreated, emitDiscussionRead,emitDashboardRefreshCaseEntry, emitQualityDiscussionMessage,emitQualityView,emitQualityApproved,emitQualityApproveDiscussionMessage, emitManpowerRequisitionRefresh
 };

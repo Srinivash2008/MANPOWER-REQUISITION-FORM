@@ -29,6 +29,144 @@ export const fetchManpowerRequisition = createAsyncThunk(
   }
 );
 
+
+export const fetchManpowerRequisitionById = createAsyncThunk(
+  'manpowerRequisition/fetchManpowerRequisitionById',
+  async (id, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+      const response = await axios.get(
+        `${API_URL}/api/cases/getmanpowerrequisitionbyid/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to fetch manpower requisition by ID.';
+
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const addQueryForm = createAsyncThunk(
+  'manpowerRequisition/addQueryForm',
+
+  async (queryAddData, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+      // Send JSON directly when no files
+      const response = await axios.post(
+        `${API_URL}/api/cases/add-query-form`,
+        queryAddData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json', // JSON format for text-only
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to submit Query entries.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+
+);
+
+export const updateManpowerStatus = createAsyncThunk(
+  'manpowerRequisition/updateManpowerStatus',
+  async ({ manpowerId, newStatus }, { rejectWithValue, getState }) => {
+    console.log('updateManpowerStatus called with:', { manpowerId });
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const updateBody = {
+        status: newStatus
+      };
+
+      const response = await axios.put(
+        `${API_URL}/api/cases/update-status/${manpowerId}`,
+        updateBody,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return { manpowerId, newStatus, message: response.data.message };
+
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to update manpower status.';
+      return rejectWithValue({ manpowerId, error: errorMessage });
+    }
+  }
+);
+
+
+export const deleteManpowerRequisition = createAsyncThunk(
+  'manpowerRequisition/deleteManpowerRequisition',
+  async ({ id }, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const deleteBody = {
+        is_delete: 'Inactive'
+      };
+
+      const response = await axios.put(
+        `${API_URL}/api/cases/delete-manpower/${id}`,
+        deleteBody,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return { manpowerId: id, message: response.data.message };
+
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to delete manpower status.';
+      return rejectWithValue({ manpowerId: id, error: errorMessage });
+    }
+  }
+);
+
+
 // Async thunk to fetch departments for the logged-in manager
 export const fetchDepartmentsManagerId = createAsyncThunk(
   'manpowerRequisition/fetchDepartments',
@@ -93,54 +231,124 @@ const manpowerrequisitionSlice = createSlice({
     status: 'idle',
     error: null,
   },
-  reducers: { },
+  reducers: {
+    optimisticUpdateManpowerStatus: (state, action) => {
+      const { manpowerId, newStatus } = action.payload;
+      state.data = state.data.map(manpowerItem =>
+        manpowerItem.id === manpowerId ? { ...manpowerItem, status: newStatus } : manpowerItem
+      );
+    },
+    revertManpowerStatus: (state, action) => {
+      const { manpowerId, originalManpower } = action.payload;
+      state.data = state.data.map(manpowerItem =>
+        manpowerItem.id === manpowerId ? originalManpower : manpowerItem
+      );
+    },
+  },
   extraReducers: (builder) => {
     builder
 
-    .addCase(fetchManpowerRequisition.pending, (state) => {
-      state.status = 'loading';
-      state.error = null;
-    })
-    .addCase(fetchManpowerRequisition.fulfilled, (state, action) => {
-      state.status = 'succeeded';
-      state.data = action.payload;
-    })
-    .addCase(fetchManpowerRequisition.rejected, (state, action) => {
-      state.status = 'failed';
-      state.error = action.payload;
-      state.data = [];
-    })
+      .addCase(fetchManpowerRequisition.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchManpowerRequisition.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = action.payload;
+      })
+      .addCase(fetchManpowerRequisition.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.data = [];
+      })
+      .addCase(fetchManpowerRequisitionById.pending, (state) => {
+        state.statusById = 'loading';
+        state.errorById = null;
+      })
+      .addCase(fetchManpowerRequisitionById.fulfilled, (state, action) => {
+        state.statusById = 'succeeded';
+        state.selectedRequisition = action.payload;
+      })
+      .addCase(fetchManpowerRequisitionById.rejected, (state, action) => {
+        state.statusById = 'failed';
+        state.errorById = action.payload;
+        state.selectedRequisition = null;
+      })
 
-    // Handle fetchDepartments
-    .addCase(fetchDepartmentsManagerId.pending, (state) => {
-      state.status = 'loading';
-    })
-    .addCase(fetchDepartmentsManagerId.fulfilled, (state, action) => {
-      state.status = 'succeeded';
-      state.departments = action.payload;
-    })
-    .addCase(fetchDepartmentsManagerId.rejected, (state, action) => {
-      state.status = 'failed';
-      state.error = action.payload;
-      state.departments = [];
-    })
+      // Handle fetchDepartments
+      .addCase(fetchDepartmentsManagerId.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchDepartmentsManagerId.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.departments = action.payload;
+      })
+      .addCase(fetchDepartmentsManagerId.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.departments = [];
+      })
 
-    // Handle addManpowerRequisition
-    .addCase(addManpowerRequisition.pending, (state) => {
-      state.status = 'loading';
-      state.error = null;
-    })
-    .addCase(addManpowerRequisition.fulfilled, (state, action) => {
-      state.status = 'succeeded';
-      // Add the new entry to the state so the UI can update if needed
-      state.data.push(action.payload.mrfData);
-    })
-    .addCase(addManpowerRequisition.rejected, (state, action) => {
-      state.status = 'failed';
-      state.error = action.payload;
-    })
+      // Handle addManpowerRequisition
+      .addCase(addManpowerRequisition.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(addManpowerRequisition.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        // Add the new entry to the state so the UI can update if needed
+        state.data.push(action.payload.mrfData);
+      })
+      .addCase(addManpowerRequisition.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+
+      .addCase(addQueryForm.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(addQueryForm.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        //state.data = action.payload?.caseData || state.data;
+        if (action.payload?.caseData) {
+          state.data.push(action.payload.caseData);  // ✅ Add new record into array
+        }
+      })
+      .addCase(addQueryForm.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.data = [];
+      })
+      .addCase(updateManpowerStatus.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateManpowerStatus.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = action.payload;
+      })
+      .addCase(updateManpowerStatus.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.data = [];
+      })
+      //delete email function
+      .addCase(deleteManpowerRequisition.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(deleteManpowerRequisition.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = action.payload;
+      })
+      .addCase(deleteManpowerRequisition.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.data = [];
+      });
   }
 });
 
-
+export const { optimisticUpdateManpowerStatus, revertManpowerStatus } = manpowerrequisitionSlice.actions;
 export default manpowerrequisitionSlice.reducer;

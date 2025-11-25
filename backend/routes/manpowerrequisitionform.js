@@ -4,6 +4,7 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const pool = require('../config/database');
 const mrfUpload = require('../middleware/mrfUpload');
+const { emitManpowerRequisitionRefresh } = require('../socketManager');
 require('dotenv').config();
 
 const COMPREHENSIVE_VIEW_ROLES = ['Senior Manager', 'Senior Client Support Executive'];
@@ -13,7 +14,7 @@ const ALL_DASHBOARD_ACCESS_ROLES = ['Senior Manager', 'Senior Client Support Exe
 router.get('/getmanpowerrequisition', authMiddleware , async (req, res) => {
     
     try {
-         const [rows] = await pool.execute('SELECT * FROM  manpower_requisition WHERE isdelete="Active" ORDER BY id DESC' );
+        const [rows] = await pool.execute('SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE mr.isdelete = "Active" ORDER BY mr.id DESC' );
 
         const fetchManpowerRequisition = rows.map((row, index) => ({
             id: row.id,
@@ -21,9 +22,20 @@ router.get('/getmanpowerrequisition', authMiddleware , async (req, res) => {
             department: row.department,
             employment_status: row.employment_status,
             designation: row.designation,
+            num_resources: row.num_resources,
             requirement_type: row.requirement_type,
+            replacement_detail: row.replacement_detail,
+            ramp_up_reason: row.ramp_up_reason,
+            job_description: row.job_description,
+            education: row.education,
+            experience: row.experience,
+            ctc_range: row.ctc_range,
+            specific_info: row.specific_info,
+            mrf_number: row.mrf_number,
             status:row.status,
+            created_by:row.created_by,
             isdelete: row.isdelete,
+            emp_name: row.emp_name,
         }));
         res.json(fetchManpowerRequisition);
 
@@ -32,12 +44,6 @@ router.get('/getmanpowerrequisition', authMiddleware , async (req, res) => {
     }
 
 });
-
-/**
- * @desc Add a new Manpower Requisition Form entry
- * @route POST /api/mrf/add-manpower-requisition
- * @access Private
- */
 router.post(
     '/add-manpower-requisition',
     authMiddleware,
@@ -126,6 +132,186 @@ router.get('/departments-by-manager/:managerId', authMiddleware, async (req, res
         res.json(departments);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching departments.' });
+    }
+});
+
+
+router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [rows] = await pool.execute(`SELECT * FROM manpower_requisition AS mr WHERE mr.id = ? AND mr.isdelete = "Active" LIMIT 1`, [id] );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Manpower requisition not found.' });
+        }
+
+        const row = rows[0];
+
+        const fetchManpowerRequisitionById = {
+            id: row.id,
+            department: row.department,
+            employment_status: row.employment_status,
+            designation: row.designation,
+            num_resources: row.num_resources,
+            requirement_type: row.requirement_type,
+            replacement_detail: row.replacement_detail,
+            ramp_up_reason: row.ramp_up_reason,
+            job_description: row.job_description,
+            education: row.education,
+            experience: row.experience,
+            ctc_range: row.ctc_range,
+            specific_info: row.specific_info,
+            hiring_tat_fastag: row.hiring_tat_fastag,
+            hiring_tat_normal_cat1: row.hiring_tat_normal_cat1,
+            hiring_tat_normal_cat2: row.hiring_tat_normal_cat2,
+            requestor_sign: row.requestor_sign,
+            director_sign: row.director_sign,
+            mrf_number: row.mrf_number,
+            status: row.status,
+            created_by: row.created_by,
+            isdelete: row.isdelete,
+            emp_name: row.emp_name,
+        };
+
+        res.json(fetchManpowerRequisitionById);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
+
+router.post('/add-query-form', authMiddleware, async (req, res) => {
+  const { query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete} = req.body;
+
+  if (!query_name) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+  try {
+
+    const insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
+
+    const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
+
+    const [result] = await pool.execute(insertQuery, insertParams);
+
+    emitManpowerRequisitionRefresh();
+
+    res.status(201).json({
+      message: 'New Query List created successfully.',
+      manpowerId: result.insertId,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+router.put('/update-status/:id', authMiddleware, async (req, res) => {
+    const manpowerId = req.params.id;
+    const { status } = req.body; 
+
+    if (!manpowerId || !status) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+    try {
+
+        const query = `UPDATE manpower_requisition SET status = ? WHERE id = ?`;
+
+        const params = [status, manpowerId ];
+
+        const [result] = await pool.execute(query, params);
+
+        emitManpowerRequisitionRefresh();
+        
+        res.status(200).json({
+        message: 'Manpower status updated successfully Updated.',
+        id: manpowerId
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error updating manpower.' });
+    }
+});
+
+router.put('/delete-manpower/:id', authMiddleware, async (req, res) => {
+    try {
+        const manpowerId = req.params.id;
+        const deletestatus = "Inactive"; // Correct assignment
+
+        if (!manpowerId) {
+            return res.status(400).json({ message: 'Missing manpower ID' });
+        }
+
+        // SQL query to mark as deleted
+        const query = `UPDATE manpower_requisition SET isdelete = ? WHERE id = ?`;
+        const params = [deletestatus, manpowerId];
+
+        const [result] = await pool.execute(query, params);
+
+        emitManpowerRequisitionRefresh();
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Manpower not found' });
+        }
+
+        res.status(200).json({
+            message: 'Manpower Requisition successfully deleted.',
+            id: manpowerId
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error deleting manpower.' });
+    }
+});
+
+
+
+router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [rows] = await pool.execute(`SELECT * FROM manpower_requisition AS mr WHERE mr.id = ? AND mr.isdelete = "Active" LIMIT 1`, [id] );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Manpower requisition not found.' });
+        }
+
+        const row = rows[0];
+
+        const fetchManpowerRequisitionById = {
+            id: row.id,
+            department: row.department,
+            employment_status: row.employment_status,
+            designation: row.designation,
+            num_resources: row.num_resources,
+            requirement_type: row.requirement_type,
+            replacement_detail: row.replacement_detail,
+            ramp_up_reason: row.ramp_up_reason,
+            job_description: row.job_description,
+            education: row.education,
+            experience: row.experience,
+            ctc_range: row.ctc_range,
+            specific_info: row.specific_info,
+            hiring_tat_fastag: row.hiring_tat_fastag,
+            hiring_tat_normal_cat1: row.hiring_tat_normal_cat1,
+            hiring_tat_normal_cat2: row.hiring_tat_normal_cat2,
+            requestor_sign: row.requestor_sign,
+            director_sign: row.director_sign,
+            mrf_number: row.mrf_number,
+            status: row.status,
+            created_by: row.created_by,
+            isdelete: row.isdelete,
+            emp_name: row.emp_name,
+        };
+
+        res.json(fetchManpowerRequisitionById);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error.' });
     }
 });
 

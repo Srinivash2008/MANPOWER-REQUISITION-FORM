@@ -19,7 +19,7 @@ const authRoutes = require('./routes/auth'); // For authentication (login)
 
 const dashboardRoutes = require('./routes/dashboard'); // For dashboard summary data
 const mrfRoutes = require('./routes/manpowerrequisitionform'); // For MRF form data
-
+const manpowerrequisitionRoutes = require('./routes/manpowerrequisitionform');
 
 const authMiddleware = require('./middleware/auth'); // Middleware to verify JWT tokens
 
@@ -88,6 +88,7 @@ app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 
 // Protected MRF routes
 app.use('/api/mrf', authMiddleware, mrfRoutes);
+app.use('/api/cases', authMiddleware, manpowerrequisitionRoutes);
 
 
 
