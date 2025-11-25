@@ -18,6 +18,7 @@ const { initializeSocketIO } = require('./socketManager');
 const authRoutes = require('./routes/auth'); // For authentication (login)
 
 const dashboardRoutes = require('./routes/dashboard'); // For dashboard summary data
+const mrfRoutes = require('./routes/manpowerrequisitionform'); // For MRF form data
 
 
 const authMiddleware = require('./middleware/auth'); // Middleware to verify JWT tokens
@@ -84,6 +85,9 @@ app.use('/api/auth', authRoutes);
 // All routes defined in dashboardRoutes will be prefixed with /api/dashboard
 // and will first pass through authMiddleware for token verification
 app.use('/api/dashboard', authMiddleware, dashboardRoutes);
+
+// Protected MRF routes
+app.use('/api/mrf', authMiddleware, mrfRoutes);
 
 
 

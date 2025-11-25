@@ -19,6 +19,7 @@
     "axios": "^1.11.0",
     "colorts": "^0.1.63",
     "file-saver": "^2.0.5",
+    "formik": "^2.4.9",
     "framer-motion": "^12.23.12",
     "jwt-decode": "^4.0.0",
     "lottie-react": "^2.4.1",
@@ -26,6 +27,7 @@
     "quill": "^2.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-drag-drop-files": "^3.1.0",
     "react-icons": "^5.5.0",
     "react-quill-new": "^3.6.0",
     "react-quilljs": "^2.0.5",
@@ -36,7 +38,8 @@
     "redux-thunk": "^3.1.0",
     "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.22.5",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
