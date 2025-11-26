@@ -23,7 +23,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, logoutUser } from "../../redux/auth/authSlice";
-import Logo from "../../assets/images/logo_MRF.png";
+import Logo from "../../assets/images/logo_MRF_new.png";
 import Swal from "sweetalert2";
 //import { fetchTodayLogin, shiftUpdateUser } from "../../redux/cases/caseEntrySlice";
 
@@ -64,7 +64,7 @@ const useHeaderStyles = () => {
       gap: theme.spacing(10),
     },
     logo: {
-      height: 145, // Corrected logo size for the navbar
+      height: 40, // Corrected logo size for the navbar
       width: "auto",
       cursor: "pointer",
       userSelect: "none",

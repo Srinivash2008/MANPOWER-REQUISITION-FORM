@@ -97,6 +97,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 

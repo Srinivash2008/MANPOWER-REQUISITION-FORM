@@ -223,6 +223,38 @@ export const addManpowerRequisition = createAsyncThunk(
     }
   }
 );
+
+// Async thunk to update a Manpower Requisition Form entry
+export const updateManpowerRequisition = createAsyncThunk(
+  'manpowerRequisition/updateManpowerRequisition',
+  async ({ id, data }, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.put(
+        `${API_URL}/api/mrf/update-manpower-requisition/${id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update MRF request.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
 const manpowerrequisitionSlice = createSlice({
   name: 'manpowerRequisition',
   initialState: {
@@ -300,6 +332,20 @@ const manpowerrequisitionSlice = createSlice({
         state.data.push(action.payload.mrfData);
       })
       .addCase(addManpowerRequisition.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+
+      // Handle updateManpowerRequisition
+      .addCase(updateManpowerRequisition.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateManpowerRequisition.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        // Optionally update the specific item in the state if needed
+      })
+      .addCase(updateManpowerRequisition.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })

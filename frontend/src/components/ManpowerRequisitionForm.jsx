@@ -121,6 +121,10 @@ const ManpowerRequisition = () => {
       });
   },[status, user, dispatch]);
 
+  useEffect(() => {
+     dispatch(fetchManpowerRequisition());
+  }, [dispatch]);
+
   const currentUserId = user?.emp_id || null;
   const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
   const formattedDate = new Date().toISOString().split('T')[0]; 
@@ -303,9 +307,11 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
 
   const handleViewClick = (id) => {
     navigate(`/manpower_requisition_view/${id}`);
-    // dispatch(fetchManpowerRequisitionById(id));
-    // setIsManpowerRequisitionViewModelOpen(true);
   } 
+  const handleEditClick = (id) => {
+    navigate(`/manpower_requisition_edit/${id}`);
+  }
+
 
     return (
       <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
@@ -438,7 +444,7 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                               aria-label="edit"
                               color="primary"
                               sx={{ mr: 1, width: "30px" }}
-                              //onClick={() => handleEditClick(email)}
+                               onClick={() => handleEditClick(manpower.id)}
                             >
                               <EditIcon />
                             </IconButton>

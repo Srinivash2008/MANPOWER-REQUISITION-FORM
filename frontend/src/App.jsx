@@ -74,6 +74,8 @@ function App() {
 
            <Route path="/mrf-list" element={<ManpowerRequisition />} />
            <Route path="/manpower_requisition_view/:id" element={<ManpowerRequisitionView/>} />
+           <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionView/>} />
+
 
           </Routes>
         </main>

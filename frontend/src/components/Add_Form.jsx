@@ -37,7 +37,7 @@ const App_Form = () => {
         experience: "",
         ctcRange: "",
         specificInfo: "",
-        hiringTAT: { fastag: false, normalCat1: false, normalCat2: false },
+        hiringTAT: "",
         created_by: user?.emp_id || "",
         requestorSign: null,
         directorSign: null,
@@ -67,7 +67,7 @@ const App_Form = () => {
             experience: "",
             ctcRange: "",
             specificInfo: "",
-            hiringTAT: { fastag: false, normalCat1: false, normalCat2: false },
+            hiringTAT: "",
             created_by: user?.emp_id || "",
         };
 
@@ -165,8 +165,8 @@ const App_Form = () => {
                 else delete newErrors.ctcRange;
                 break;
             case 'hiringTAT':
-                if (!Object.values(value).some(option => option)) {
-                    newErrors.hiringTAT = 'At least one Hiring TAT option must be selected.';
+                if (!value) {
+                    newErrors.hiringTAT = 'A Hiring TAT option must be selected.';
                 } else {
                     delete newErrors.hiringTAT;
                 }
@@ -224,7 +224,7 @@ const App_Form = () => {
         if (!formData.education) newErrors.education = 'Educational Qualification is required.';
         if (!formData.experience) newErrors.experience = 'Experience is required.';
         if (!formData.ctcRange) newErrors.ctcRange = 'Approx. CTC Range is required.';
-        if (!Object.values(formData.hiringTAT).some(option => option)) newErrors.hiringTAT = 'At least one Hiring TAT option must be selected.';
+        if (!formData.hiringTAT) newErrors.hiringTAT = 'A Hiring TAT option must be selected.';
 
         // Requirement type specific validations
         if (formData.requirementType === "Ramp up") {
@@ -268,25 +268,12 @@ const App_Form = () => {
     // --- Form Handlers ---
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        
-        if (name.startsWith('hiringTAT.')) {
-            const tatField = name.split('.')[1];
-            setFormData(prev => ({
-                ...prev,
-                hiringTAT: {
-                    ...prev.hiringTAT,
-                    [tatField]: checked
-                }
-            }));
-            validateField('hiringTAT', { ...formData.hiringTAT, [tatField]: checked });
-        } else {
-            const newValue = type === 'number' ? parseInt(value) : value;
-            setFormData(prev => ({
-                ...prev,
-                [name]: newValue
-            }));
-            validateField(name, newValue);
-        }
+        const newValue = type === 'number' ? parseInt(value) : value;
+        setFormData(prev => ({
+            ...prev,
+            [name]: newValue
+        }));
+        validateField(name, newValue);
     };
 
     const handleFileChange = (fieldName, file) => {
@@ -363,11 +350,11 @@ const App_Form = () => {
 
         // Append all form fields to the FormData object
         for (const key in formData) {
-            if (key === 'hiringTAT') {
-                // Append hiring TAT fields separately as booleans
-                data.append('hiring_tat_fastag', formData.hiringTAT.fastag);
-                data.append('hiring_tat_normal_cat1', formData.hiringTAT.normalCat1);
-                data.append('hiring_tat_normal_cat2', formData.hiringTAT.normalCat2);
+            if (key === 'hiringTAT' && formData.hiringTAT) {
+                // Append hiring TAT fields based on the selected radio button
+                data.append('hiring_tat_fastag', formData.hiringTAT === 'fastag');
+                data.append('hiring_tat_normal_cat1', formData.hiringTAT === 'normalCat1');
+                data.append('hiring_tat_normal_cat2', formData.hiringTAT === 'normalCat2');
                 continue;
             }
             if (formData[key] !== null && formData[key] !== "") {
@@ -399,7 +386,7 @@ const App_Form = () => {
                     experience: "",
                     ctcRange: "",
                     specificInfo: "",
-                    hiringTAT: { fastag: false, normalCat1: false, normalCat2: false },
+                    hiringTAT: "",
                     created_by: user?.emp_id || "",
                     requestorSign: null,
                     directorSign: null,
@@ -724,34 +711,37 @@ const App_Form = () => {
                         <div className="form-section">
                             <h3 className="section-title"><FiClock /> Turnaround time in detail, please tick required hiring TAT for the request<span className="required-star">*</span></h3>
                             <div className={`checkbox-group ${getFieldClassName('hiringTAT')}`}>
-                                <label className="checkbox-label">
+                                <label className="radio-label">
                                     <input 
-                                        type="checkbox"
-                                        name="hiringTAT.fastag" 
-                                        checked={formData.hiringTAT.fastag} 
+                                        type="radio"
+                                        name="hiringTAT"
+                                        value="fastag"
+                                        checked={formData.hiringTAT === 'fastag'} 
                                         onChange={handleInputChange}
                                     />
-                                    <span className="custom-checkbox"></span>
-                                    Fastag Hiring (45 Days)
+                                    <span className="custom-radio"></span>
+                                    Fastag Hiring (60 Days)
                                 </label>
-                                <label className="checkbox-label">
+                                <label className="radio-label">
                                     <input 
-                                        type="checkbox"
-                                        name="hiringTAT.normalCat1" 
-                                        checked={formData.hiringTAT.normalCat1} 
+                                        type="radio"
+                                        name="hiringTAT"
+                                        value="normalCat1"
+                                        checked={formData.hiringTAT === 'normalCat1'} 
                                         onChange={handleInputChange}
                                     />
-                                    <span className="custom-checkbox"></span>
+                                    <span className="custom-radio"></span>
                                     Normal Hiring – Cat 1 (90 Days)
                                 </label>
-                                <label className="checkbox-label">
+                                <label className="radio-label">
                                     <input 
-                                        type="checkbox"
-                                        name="hiringTAT.normalCat2" 
-                                        checked={formData.hiringTAT.normalCat2} 
+                                        type="radio"
+                                        name="hiringTAT"
+                                        value="normalCat2"
+                                        checked={formData.hiringTAT === 'normalCat2'} 
                                         onChange={handleInputChange}
                                     />
-                                    <span className="custom-checkbox"></span>
+                                    <span className="custom-radio"></span>
                                     Normal Hiring – Cat 2 (120 Days)
                                 </label>
                             </div>

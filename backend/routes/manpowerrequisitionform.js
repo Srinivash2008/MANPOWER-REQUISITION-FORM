@@ -155,6 +155,8 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
             designation: row.designation,
             num_resources: row.num_resources,
             requirement_type: row.requirement_type,
+             project_name: row.project_name,
+            ramp_up_file: row.ramp_up_file,
             replacement_detail: row.replacement_detail,
             ramp_up_reason: row.ramp_up_reason,
             job_description: row.job_description,
@@ -269,50 +271,106 @@ router.put('/delete-manpower/:id', authMiddleware, async (req, res) => {
 
 
 
-router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) => {
-    try {
-        const { id } = req.params;
+// router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) => {
+//     try {
+//         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT * FROM manpower_requisition AS mr WHERE mr.id = ? AND mr.isdelete = "Active" LIMIT 1`, [id] );
+//         const [rows] = await pool.execute(`SELECT * FROM manpower_requisition AS mr WHERE mr.id = ? AND mr.isdelete = "Active" LIMIT 1`, [id] );
 
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'Manpower requisition not found.' });
+//         if (rows.length === 0) {
+//             return res.status(404).json({ message: 'Manpower requisition not found.' });
+//         }
+
+//         const row = rows[0];
+
+//         const fetchManpowerRequisitionById = {
+//             id: row.id,
+//             department: row.department,
+//             employment_status: row.employment_status,
+//             designation: row.designation,
+//             num_resources: row.num_resources,
+//             requirement_type: row.requirement_type,
+//             project_name: row.project_name,
+//             ramp_up_file: row.ramp_up_file,
+//             replacement_detail: row.replacement_detail,
+//             ramp_up_reason: row.ramp_up_reason,
+//             job_description: row.job_description,
+//             education: row.education,
+//             experience: row.experience,
+//             ctc_range: row.ctc_range,
+//             specific_info: row.specific_info,
+//             hiring_tat_fastag: row.hiring_tat_fastag,
+//             hiring_tat_normal_cat1: row.hiring_tat_normal_cat1,
+//             hiring_tat_normal_cat2: row.hiring_tat_normal_cat2,
+//             requestor_sign: row.requestor_sign,
+//             director_sign: row.director_sign,
+//             mrf_number: row.mrf_number,
+//             status: row.status,
+//             created_by: row.created_by,
+//             isdelete: row.isdelete,
+//             emp_name: row.emp_name,
+//         };
+
+//         res.json(fetchManpowerRequisitionById);
+
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Server error.' });
+//     }
+// });
+
+router.put(
+    '/update-manpower-requisition/:id',
+    authMiddleware,
+    mrfUpload.fields([
+        { name: 'requestorSign', maxCount: 1 },
+        { name: 'directorSign', maxCount: 1 },
+        { name: 'rampUpFile', maxCount: 1 }
+    ]),
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            const {
+                department, employmentStatus, designation, numResources, requirementType, projectName, replacementDetail,
+                rampUpReason, jobDescription, education, experience, ctcRange, specificInfo, mrfNumber,
+                tatAgreed, hrReview, deliveryPhase,
+                hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2
+            } = req.body;
+
+            // File paths from multer
+            const requestorSignPath = req.files?.requestorSign?.[0]?.path;
+            const directorSignPath = req.files?.directorSign?.[0]?.path;
+            const rampUpFilePath = req.files?.rampUpFile?.[0]?.path;
+
+            const fieldsToUpdate = {
+                department, employment_status: employmentStatus, designation, num_resources: numResources, requirement_type: requirementType,
+                project_name: projectName, replacement_detail: replacementDetail, ramp_up_reason: rampUpReason, job_description: jobDescription,
+                education, experience, ctc_range: ctcRange, specific_info: specificInfo, mrf_number: mrfNumber,
+                tat_agreed: tatAgreed, hr_review: hrReview, delivery_phase: deliveryPhase,
+                hiring_tat_fastag: hiring_tat_fastag === 'true',
+                hiring_tat_normal_cat1: hiring_tat_normal_cat1 === 'true',
+                hiring_tat_normal_cat2: hiring_tat_normal_cat2 === 'true',
+            };
+
+            if (requestorSignPath) fieldsToUpdate.requestor_sign = requestorSignPath;
+            if (directorSignPath) fieldsToUpdate.director_sign = directorSignPath;
+            if (rampUpFilePath) fieldsToUpdate.ramp_up_file = rampUpFilePath;
+
+            const updateEntries = Object.entries(fieldsToUpdate).filter(([_, value]) => value !== undefined && value !== null);
+            const setClause = updateEntries.map(([key]) => `${key} = ?`).join(', ');
+            const params = [...updateEntries.map(([_, value]) => value), id];
+
+            if (setClause) {
+                const sql = `UPDATE manpower_requisition SET ${setClause} WHERE id = ?`;
+                await pool.execute(sql, params);
+            }
+
+            res.status(200).json({ message: 'Manpower requisition form updated successfully!' });
+        } catch (error) {
+            console.error('Error updating MRF:', error);
+            res.status(500).json({ message: 'Server error while updating the form.' });
         }
-
-        const row = rows[0];
-
-        const fetchManpowerRequisitionById = {
-            id: row.id,
-            department: row.department,
-            employment_status: row.employment_status,
-            designation: row.designation,
-            num_resources: row.num_resources,
-            requirement_type: row.requirement_type,
-            replacement_detail: row.replacement_detail,
-            ramp_up_reason: row.ramp_up_reason,
-            job_description: row.job_description,
-            education: row.education,
-            experience: row.experience,
-            ctc_range: row.ctc_range,
-            specific_info: row.specific_info,
-            hiring_tat_fastag: row.hiring_tat_fastag,
-            hiring_tat_normal_cat1: row.hiring_tat_normal_cat1,
-            hiring_tat_normal_cat2: row.hiring_tat_normal_cat2,
-            requestor_sign: row.requestor_sign,
-            director_sign: row.director_sign,
-            mrf_number: row.mrf_number,
-            status: row.status,
-            created_by: row.created_by,
-            isdelete: row.isdelete,
-            emp_name: row.emp_name,
-        };
-
-        res.json(fetchManpowerRequisitionById);
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error.' });
     }
-});
+);
 
 module.exports = router;

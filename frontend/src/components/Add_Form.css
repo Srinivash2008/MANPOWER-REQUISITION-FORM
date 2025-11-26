@@ -166,6 +166,15 @@
   cursor: pointer;
 }
 
+/* --- Custom Radio Button Styles --- */
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
 /* --- Submit Button --- */
 .submit-button {
   width: 100%;
@@ -240,6 +249,52 @@
 .checkbox-label input[type="checkbox"]:checked~.custom-checkbox::after {
   display: block;
 }
+
+/* Hide the default browser radio button */
+.radio-label input[type="radio"] {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Create a custom radio button appearance */
+.custom-radio {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: #fff;
+  border: 2px solid #C0D1C8;
+  border-radius: 50%; /* Make it a circle */
+  margin-right: 12px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Style the inner dot */
+.custom-radio::after {
+  content: '';
+  position: absolute;
+  display: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+}
+
+/* Show the inner dot and change background when the hidden radio is checked */
+.radio-label input[type="radio"]:checked ~ .custom-radio {
+  background-color: #2A7F66; /* Accent color for the checked state */
+  border-color: #2A7F66;
+}
+
+.radio-label input[type="radio"]:checked ~ .custom-radio::after {
+  display: block; /* Show the inner dot */
+}
+
 
 /* --- Custom File Uploader Styles --- */
 .file-uploader-custom {
