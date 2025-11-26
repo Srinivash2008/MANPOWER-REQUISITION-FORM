@@ -58,7 +58,7 @@ router.post(
                 department, employmentStatus, designation, numResources, requirementType, projectName, replacementDetail,
                 rampUpReason, jobDescription, education, experience, ctcRange, specificInfo, mrfNumber,
                 receivedBy, tatAgreed, hrReview, deliveryPhase,
-                hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2 ,created_by// Receive separate fields
+                hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2 ,created_by,status,
             } = req.body;
 
             // Get file paths from multer
@@ -72,8 +72,8 @@ router.post(
                     replacement_detail, ramp_up_reason, job_description, education,
                     experience, ctc_range, specific_info, requestor_sign, director_sign, ramp_up_file,
                     hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2,
-                    mrf_number, received_by, tat_agreed, hr_review, delivery_phase , created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    mrf_number, received_by, tat_agreed, hr_review, delivery_phase , created_by,status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
             `;
 
             const params = [
@@ -85,7 +85,8 @@ router.post(
                 hiring_tat_normal_cat1 === 'true',
                 hiring_tat_normal_cat2 === 'true',
                 mrfNumber || null, receivedBy || null, tatAgreed || null, hrReview || null, deliveryPhase || null,
-                created_by || null
+                created_by || null,
+                status || 'Pending',
             ];
 
             const [result] = await pool.execute(sql, params);

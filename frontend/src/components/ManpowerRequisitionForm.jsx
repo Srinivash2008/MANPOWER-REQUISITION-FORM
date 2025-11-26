@@ -420,6 +420,9 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                                 },
                               }}
                             >
+                              <MenuItem value="Draft" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
+                                Draft
+                              </MenuItem>
                               <MenuItem value="Pending" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
                                 Pending
                               </MenuItem>

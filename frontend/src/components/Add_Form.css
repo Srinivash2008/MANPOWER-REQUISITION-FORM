@@ -105,6 +105,7 @@
   color: #333333;
   /* darkText from Login.jsx */
 }
+
 .required-star {
   color: #d32f2f;
   margin-left: 4px;
@@ -175,7 +176,40 @@
   font-size: 0.95rem;
   cursor: pointer;
 }
+
 /* --- Submit Button --- */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.draft-button {
+
+  /* width: 100%; */
+  padding: 0.9rem;
+  margin-top: 2rem;
+  border: 1px solid #28a745;
+  /* Green border */
+  color: #28a745;
+  /* Green text to match the border */
+  border-radius: 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background-color: #ffffff;
+  /* darkAccent from Login.jsx */
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.draft-button:hover {
+ transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(42, 127, 102, 0.3);
+  background-color: #226a55;
+  color: #ffffff;
+}
+
 .submit-button {
   width: 100%;
   padding: 0.9rem;
@@ -191,10 +225,16 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.form-actions .submit-button {
+  width: auto;
+  /* Override width when in flex container */
+  padding: 0.9rem 1.5rem;
+}
+
 .submit-button:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 15px rgba(42, 127, 102, 0.3);
-  background-color: #226a55;
+  background-color: #f44336;
   /* Darker shade of accent */
 }
 
@@ -266,7 +306,8 @@
   height: 18px;
   background-color: #fff;
   border: 2px solid #C0D1C8;
-  border-radius: 50%; /* Make it a circle */
+  border-radius: 50%;
+  /* Make it a circle */
   margin-right: 12px;
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
@@ -286,13 +327,15 @@
 }
 
 /* Show the inner dot and change background when the hidden radio is checked */
-.radio-label input[type="radio"]:checked ~ .custom-radio {
-  background-color: #2A7F66; /* Accent color for the checked state */
+.radio-label input[type="radio"]:checked~.custom-radio {
+  background-color: #2A7F66;
+  /* Accent color for the checked state */
   border-color: #2A7F66;
 }
 
-.radio-label input[type="radio"]:checked ~ .custom-radio::after {
-  display: block; /* Show the inner dot */
+.radio-label input[type="radio"]:checked~.custom-radio::after {
+  display: block;
+  /* Show the inner dot */
 }
 
 
@@ -392,7 +435,7 @@
   }
 }
 
-.error-message{
+.error-message {
   color: #d32f2f;
   font-size: 0.875rem;
   margin-top: 4px;

@@ -407,6 +407,74 @@ const App_Form = () => {
             });
     };
 
+    const handleSaveAsDraft = (e) => {
+        e.preventDefault();
+
+        // Mark all fields as touched to show errors
+        const allTouched = {};
+        Object.keys(formData).forEach(key => {
+            allTouched[key] = true;
+        });
+        setTouched(allTouched);
+
+        if (!validateForm()) {
+            setNotification({
+                open: true,
+                message: 'Please fix the validation errors before saving as a draft.',
+                severity: 'error'
+            });
+            return;
+        }
+        const data = new FormData();
+
+        // Append all form fields to the FormData object
+        for (const key in formData) {
+            if (key === 'hiringTAT' && formData.hiringTAT) {
+                data.append('hiring_tat_fastag', formData.hiringTAT === 'fastag');
+                data.append('hiring_tat_normal_cat1', formData.hiringTAT === 'normalCat1');
+                data.append('hiring_tat_normal_cat2', formData.hiringTAT === 'normalCat2');
+                continue;
+            }
+            if (formData[key] !== null && formData[key] !== "") {
+                data.append(key, formData[key]);
+            }
+        }
+
+        // Add status to indicate it's a draft
+        data.append('status', 'Draft');
+
+        dispatch(addManpowerRequisition(data))
+            .unwrap()
+            .then(() => {
+                setNotification({
+                    open: true,
+                    message: 'MRF saved as draft successfully!',
+                    severity: 'success'
+                });
+                // Reset form
+                setFormData({
+                    department: "", employmentStatus: "", designation: "", numResources: 1,
+                    requirementType: "Ramp up", projectName: "", replacementDetail: "",
+                    rampUpFile: null, rampUpReason: "", jobDescription: "", education: "",
+                    experience: "", ctcRange: "", specificInfo: "", hiringTAT: "",
+                    created_by: user?.emp_id || "", requestorSign: null, directorSign: null,
+                    mrfNumber: "", tatAgreed: "", hrReview: "", deliveryPhase: ""
+                });
+                setErrors({});
+                setTouched({});
+            })
+            .catch((error) => {
+                setNotification({
+                    open: true,
+                    message: `Failed to save draft: ${error.message || "Please try again."}`,
+                    severity: 'error'
+                });
+            });
+    };
+
+
+
+
     const isFormValid = () => {
         return Object.keys(errors).length === 0;
     };
@@ -879,13 +947,23 @@ const App_Form = () => {
                         )}
                     </div>
 
-                    <button
-                        type="submit"
-                        className="submit-button"
-                        disabled={submissionStatus === 'loading' || !isFormValid()}
-                    >
-                        {submissionStatus === 'loading' ? 'Submitting...' : 'Submit MRF Request'}
-                    </button>
+                    <div className="form-actions">
+                        <button
+                            type="button"
+                            className="draft-button"
+                            onClick={handleSaveAsDraft}
+                            disabled={submissionStatus === 'loading'}
+                        >
+                            {submissionStatus === 'loading' ? 'Saving...' : 'Save as Draft'}
+                        </button>
+                        <button
+                            type="submit"
+                            className="submit-button"
+                            disabled={submissionStatus === 'loading' || !isFormValid()}
+                        >
+                            {submissionStatus === 'loading' ? 'Submitting...' : 'Submit MRF Request'}
+                        </button>
+                    </div>
                 </form>
             </div>
 
