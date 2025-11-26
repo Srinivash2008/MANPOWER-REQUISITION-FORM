@@ -5,16 +5,18 @@ const authMiddleware = require('../middleware/auth');
 const pool = require('../config/database');
 const mrfUpload = require('../middleware/mrfUpload');
 const { emitManpowerRequisitionRefresh } = require('../socketManager');
+const { transporter } = require('../utils/transporter');
+const { compareSync } = require('bcrypt');
 require('dotenv').config();
 
 const COMPREHENSIVE_VIEW_ROLES = ['Senior Manager', 'Senior Client Support Executive'];
 const ALL_DASHBOARD_ACCESS_ROLES = ['Senior Manager', 'Senior Client Support Executive', 'Client Support Executive'];
 
 
-router.get('/getmanpowerrequisition', authMiddleware , async (req, res) => {
-    
+router.get('/getmanpowerrequisition', authMiddleware, async (req, res) => {
+
     try {
-        const [rows] = await pool.execute('SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE mr.isdelete = "Active" ORDER BY mr.id DESC' );
+        const [rows] = await pool.execute('SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE mr.isdelete = "Active" ORDER BY mr.id DESC');
 
         const fetchManpowerRequisition = rows.map((row, index) => ({
             id: row.id,
@@ -32,8 +34,8 @@ router.get('/getmanpowerrequisition', authMiddleware , async (req, res) => {
             ctc_range: row.ctc_range,
             specific_info: row.specific_info,
             mrf_number: row.mrf_number,
-            status:row.status,
-            created_by:row.created_by,
+            status: row.status,
+            created_by: row.created_by,
             isdelete: row.isdelete,
             emp_name: row.emp_name,
         }));
@@ -58,7 +60,7 @@ router.post(
                 department, employmentStatus, designation, numResources, requirementType, projectName, replacementDetail,
                 rampUpReason, jobDescription, education, experience, ctcRange, specificInfo, mrfNumber,
                 receivedBy, tatAgreed, hrReview, deliveryPhase,
-                hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2 ,created_by,status,
+                hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, created_by, status, buttonClicked, emp_name
             } = req.body;
 
             // Get file paths from multer
@@ -79,9 +81,9 @@ router.post(
             const params = [
                 department || null, employmentStatus || null, designation || null, numResources || 1, requirementType || null,
                 projectName || null,
-                replacementDetail || null, rampUpReason || null, jobDescription || null, education || null, 
+                replacementDetail || null, rampUpReason || null, jobDescription || null, education || null,
                 experience || null, ctcRange || null, specificInfo || null, requestorSignPath, directorSignPath, rampUpFilePath,
-                hiring_tat_fastag === 'true', 
+                hiring_tat_fastag === 'true',
                 hiring_tat_normal_cat1 === 'true',
                 hiring_tat_normal_cat2 === 'true',
                 mrfNumber || null, receivedBy || null, tatAgreed || null, hrReview || null, deliveryPhase || null,
@@ -90,6 +92,107 @@ router.post(
             ];
 
             const [result] = await pool.execute(sql, params);
+            if (buttonClicked === 'submit') {
+                // 1. Email to the Requestor/FH (Confirmation) 📧
+                // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
+                // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
+                const requestorMailOptions = {
+                    from: process.env.EMAIL_USER,
+                    // The 'to' email should be the submitter's email address (emp_email)
+                    // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
+                    to: "srinivasan@pdmrindia.com",
+                    // You might want to CC HR/Recruitment on the FH/Requestor email as well
+                    cc: "gomathi@pdmrindia.com",
+                    subject: `Manpower Requisition Form (MRF) Submitted - Confirmation`,
+                    html: `
+            <div style="
+                font-family: Arial, sans-serif;
+                max-width: 600px;
+                margin: auto;
+                border: 1px solid #ddd;
+                padding: 20px;
+            ">
+                <h2 style="color: #333;">Manpower Requisition Form Submitted Successfully!</h2>
+
+                <p>Hello ${emp_name},</p>
+
+                <p>
+                    Your <strong>Manpower Requisition Form</strong> has been successfully submitted. 
+                    Your request will now be reviewed by the HR/Recruitment team.
+                </p>
+
+                <h3 style="color: #007bff; margin-top: 25px;">Submission Details</h3>
+                <p><strong>Submitted By:</strong> ${emp_name}</p>
+                <p><strong>Submission Date:</strong> ${new Date().toLocaleString()}</p>
+
+                <p style="margin-top: 20px;">
+                    Please feel free to reach out to the HR team if you need further assistance.
+                </p>
+
+                <p style="margin-top: 30px; color: #555;">
+                    Regards,<br>
+                    HR Team
+                </p>
+            </div>
+        `
+                };
+
+                // 2. Email to the HR Team (Action/Notification) 🔔
+                const hrMailOptions = {
+                    from: process.env.EMAIL_USER,
+                    // The 'to' email is the HR team's primary recipient
+                    to: "srinivasan@pdmrindia.com",
+                    // You might want to CC HR/Recruitment on the FH/Requestor email as well
+                    cc: "gomathi@pdmrindia.com",
+                    subject: `ACTION REQUIRED: New MRF Submitted by ${emp_name}`,
+                    html: `
+            <div style="
+                font-family: Arial, sans-serif;
+                max-width: 600px;
+                margin: auto;
+                border: 1px solid #ddd;
+                padding: 20px;
+            ">
+                <h2 style="color: #d9534f;">New Manpower Requisition Form Awaiting Review</h2>
+
+                <p>Dear HR Team,</p>
+
+                <p>
+                    A new **Manpower Requisition Form (MRF)** has been submitted and is ready for your review and processing.
+                </p>
+
+                <h3 style="color: #007bff; margin-top: 25px;">Requisition Summary</h3>
+                <p><strong>Submitted By:</strong> ${emp_name}</p>
+                <p><strong>Submission Date:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Action:</strong> Please log in to the portal to review the complete details and begin the hiring process.</p>
+
+                <p style="margin-top: 30px; color: #555;">
+                    System Notification
+                </p>
+            </div>
+        `
+                };
+
+                // Send the two emails sequentially
+                try {
+                    await transporter.sendMail(requestorMailOptions);
+                    console.log('Confirmation email sent to requestor/FH.');
+
+                    await transporter.sendMail(hrMailOptions);
+                    console.log('Notification email sent to HR.');
+
+                    // Update the response message to reflect the successful submission
+                    res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+
+                } catch (error) {
+                    console.error('Error sending email:', error);
+                    // You might want to send a different status if the form was saved but email failed
+                    res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
+                }
+            }
+
+
+
 
             res.status(201).json({
                 message: 'Manpower requisition form submitted successfully!',
@@ -129,7 +232,7 @@ router.get('/departments-by-manager/:managerId', authMiddleware, async (req, res
         }
 
         const [departments] = await pool.execute(query, params);
-        
+
         res.json(departments);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching departments.' });
@@ -141,7 +244,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     try {
         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT * FROM manpower_requisition AS mr WHERE mr.id = ? AND mr.isdelete = "Active" LIMIT 1`, [id] );
+        const [rows] = await pool.execute(`SELECT * FROM manpower_requisition AS mr WHERE mr.id = ? AND mr.isdelete = "Active" LIMIT 1`, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Manpower requisition not found.' });
@@ -156,7 +259,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
             designation: row.designation,
             num_resources: row.num_resources,
             requirement_type: row.requirement_type,
-             project_name: row.project_name,
+            project_name: row.project_name,
             ramp_up_file: row.ramp_up_file,
             replacement_detail: row.replacement_detail,
             ramp_up_reason: row.ramp_up_reason,
@@ -186,33 +289,33 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
 });
 
 router.post('/add-query-form', authMiddleware, async (req, res) => {
-  const { query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete} = req.body;
+    const { query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete } = req.body;
 
-  if (!query_name) {
-    return res.status(400).json({ message: 'Missing required fields' });
-  }
-  try {
+    if (!query_name) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+    try {
 
-    const insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
+        const insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
 
-    const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
+        const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
 
-    const [result] = await pool.execute(insertQuery, insertParams);
+        const [result] = await pool.execute(insertQuery, insertParams);
 
-    emitManpowerRequisitionRefresh();
+        emitManpowerRequisitionRefresh();
 
-    res.status(201).json({
-      message: 'New Query List created successfully.',
-      manpowerId: result.insertId,
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error.' });
-  }
+        res.status(201).json({
+            message: 'New Query List created successfully.',
+            manpowerId: result.insertId,
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' });
+    }
 });
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status } = req.body; 
+    const { status } = req.body;
 
     if (!manpowerId || !status) {
         return res.status(400).json({ message: 'Missing required fields' });
@@ -221,15 +324,15 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
         const query = `UPDATE manpower_requisition SET status = ? WHERE id = ?`;
 
-        const params = [status, manpowerId ];
+        const params = [status, manpowerId];
 
         const [result] = await pool.execute(query, params);
 
         emitManpowerRequisitionRefresh();
-        
+
         res.status(200).json({
-        message: 'Manpower status updated successfully Updated.',
-        id: manpowerId
+            message: 'Manpower status updated successfully Updated.',
+            id: manpowerId
         });
 
     } catch (err) {

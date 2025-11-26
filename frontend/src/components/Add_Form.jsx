@@ -347,7 +347,8 @@ const App_Form = () => {
         }
 
         const data = new FormData();
-
+        data.append('buttonClicked', 'submit');
+        data.append("emp_name", user?.emp_name || "")
         // Append all form fields to the FormData object
         for (const key in formData) {
             if (key === 'hiringTAT' && formData.hiringTAT) {
@@ -442,6 +443,8 @@ const App_Form = () => {
 
         // Add status to indicate it's a draft
         data.append('status', 'Draft');
+        data.append("buttonClicked", "Draft");
+        data.append("emp_name", user?.emp_name || "")
 
         dispatch(addManpowerRequisition(data))
             .unwrap()
