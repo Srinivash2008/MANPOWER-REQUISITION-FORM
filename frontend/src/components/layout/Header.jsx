@@ -18,6 +18,8 @@ import {
 } from "@mui/material";
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -41,12 +43,17 @@ const useHeaderStyles = () => {
 
   return {
     appBar: {
-      // position: "fixed",
-      width: "100%",
-      background: colors.lightGreenBg, // Use light green background
-      height: 64, // Slightly taller for better spacing
-      boxShadow: 'none', // Remove shadow for a flatter, modern look
-      borderBottom: `1px solid ${colors.lightBorder}`, // Use a subtle border instead
+      position: "fixed",
+      top: theme.spacing(2),
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '97%',
+      maxWidth: '1600px',
+      background: 'rgba(255, 255, 255, 0.75)',
+      backdropFilter: 'blur(12px)',
+      borderRadius: '99px', // Fully rounded ends
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(255, 255, 255, 0.5)',
       zIndex: theme.zIndex.drawer + 1,
       padding: 0,
       margin: 0,
@@ -55,7 +62,7 @@ const useHeaderStyles = () => {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      minHeight: '64px !important', // Ensure toolbar height is consistent
+      minHeight: '68px !important',
       padding: theme.spacing(0, 3),
     },
     leftSection: {
@@ -78,43 +85,54 @@ const useHeaderStyles = () => {
       width: "fit-content",
     },
     navItem: {
-      color: colors.mediumText, // Use medium text for inactive items
+      color: theme.palette.text.secondary,
       cursor: "pointer",
-      fontWeight: 500,
-      fontSize: "0.9rem",
-      padding: theme.spacing(0.5, 0), // Adjust padding for underline effect
-      margin: theme.spacing(0, 1.5),
-      borderBottom: '3px solid transparent', // Placeholder for hover/active underline
+      fontWeight: 600,
+      fontSize: "0.95rem",
+      padding: theme.spacing(1.2, 2.5),
+      margin: theme.spacing(0, 0.5),
+      borderRadius: '5px',
+      position: 'relative', // Needed for the active indicator
       transition: "all 0.3s ease",
       "&:hover": {
-        color: colors.darkAccent, // Accent color on hover
-        borderBottomColor: colors.darkAccent, // Show underline on hover
+        color: theme.palette.primary.main,
+        backgroundColor: 'rgba(79, 70, 229, 0.08)',
       },
     },
     activeNavItem: {
-      color: colors.darkAccent, // Use accent color for active text
-      fontWeight: 600,
-      borderBottomColor: colors.darkAccent, // Persistent underline for active item
+      color: colors.darkAccent, // Use dark green for active text
+      backgroundColor: '#E9F5F2', // Use light green for background
       '&:hover': {
-        borderBottomColor: colors.darkAccent,
-      }
+        color: colors.darkAccent,
+      },
+      // Add a distinct bottom border as the active indicator
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        bottom: '6px', // Position the line below the text
+        left: '15%',
+        right: '15%',
+        height: '3px',
+        borderRadius: '2px',
+        background: colors.darkAccent, // Solid green underline
+      },
     },
     rightSection: {
       marginLeft: "auto",
       display: "flex",
       alignItems: "center",
-      gap: theme.spacing(1),
+      gap: theme.spacing(1.5),
       cursor: "pointer",
       padding: theme.spacing(0.75, 1.5),
       width: "fit-content",
-      borderRadius: 2, // Pill shape
+      borderRadius: '99px',
       transition: 'background-color 0.3s ease',
       "&:hover": {
-        backgroundColor: "rgba(42, 127, 102, 0.08)", // Subtle hover effect
+        backgroundColor: "rgba(0, 0, 0, 0.04)",
       },
     },
     userName: {
-      color: colors.darkText,
+      color: theme.palette.text.primary,
       fontWeight: 500,
       textAlign: "right",
       whiteSpace: "nowrap",
@@ -124,14 +142,15 @@ const useHeaderStyles = () => {
       width: 36,
       height: 36,
       fontSize: "1rem",
-      bgcolor: colors.darkAccent, // Use accent for avatar
+      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
     },
     menuPaper: {
-      mt: theme.spacing(1.5),
+      mt: '2px',
       width: 200,
-      
-      boxShadow: theme.shadows[4],
-      backgroundColor: colors.white,
+      borderRadius: '0 0 16px 16px',
+      boxShadow: '0 12px 24px rgba(0, 0, 0, 0.1)',
+      backdropFilter: 'blur(10px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.85)',
     },
     menuItem: {
       display: 'flex',
@@ -141,7 +160,7 @@ const useHeaderStyles = () => {
       padding: theme.spacing(1, 2),
       color: colors.darkText,
       "&:hover": {
-        backgroundColor: "rgba(42, 127, 102, 0.08)",
+        backgroundColor: 'rgba(0, 0, 0, 0.06)',
       },
     },
     logoutItem: {
@@ -155,19 +174,24 @@ const useHeaderStyles = () => {
     drawerPaper: {
       width: 240,
       background: colors.white,
+      backdropFilter: 'blur(10px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
       color: colors.darkText,
     },
     drawerItem: {
       color: colors.mediumText,
+      borderRadius: '8px',
+      margin: theme.spacing(0.5, 1),
       "&:hover": {
-        backgroundColor: "rgba(42, 127, 102, 0.08)",
+        backgroundColor: 'rgba(0, 0, 0, 0.06)',
       },
     },
     activeDrawerItem: {
-      backgroundColor: colors.darkAccent,
-      color: colors.white,
+      backgroundColor: '#E9F5F2', // Light green background
+      color: colors.darkAccent, // Dark green text for contrast
+      fontWeight: 700,
       '&:hover': {
-        backgroundColor: colors.darkAccent,
+        backgroundColor: '#E9F5F2',
       }
     },
     logoutDropdownItem: {
@@ -192,6 +216,12 @@ const Header = () => {
   const [hoveredMenu, setHoveredMenu] = useState(null);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false); // 👈 State for mobile drawer
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token, navigate]);
 
   //const { userLoginStatus } = useSelector((state) => state.caseEntry);
 
@@ -246,11 +276,16 @@ const Header = () => {
 
 
   
-  const menuItems = [
-    { label: "Dashboard", link: "/dashboard", icon: "dashboard" },
-    { label: "ADD MRF", link: "/add-mrf", icon: "add" },
-     { label: "View MRF", link: "/mrf-list" },
-  ];
+ const menuItems = [
+  { label: "Dashboard", link: "/dashboard" },
+  {
+    label: "MRF",
+    submenu: [
+      { label: "Add MRF", link: "/add-mrf" },
+      { label: "View MRF", link: "/mrf-list" },
+    ],
+  },
+];
 
   const renderMobileMenu = (
     <Drawer
@@ -375,9 +410,13 @@ const Header = () => {
                           sx={{
                             ...styles.navItem,
                             ...(isParentActive ? styles.activeNavItem : {}),
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
                           }}
                         >
                           {item.label}
+                          {Boolean(anchorEl) && hoveredMenu === item.label ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                         </Typography>
                         <Menu
                           anchorEl={anchorEl}
@@ -397,9 +436,12 @@ const Header = () => {
                                 key={subIndex}
                                 sx={{
                                   ...styles.menuItem,
-                                  ...(isSubActive
-                                    ? { backgroundColor: "#1976d2", color: "#fff" }
-                                    : {}),
+                                  ...(isSubActive && {
+                                    backgroundColor: '#E9F5F2', // Light green background
+                                    color: '#2A7F66', // Dark green text
+                                    fontWeight: 700,
+                                    '&:hover': { backgroundColor: '#E9F5F2' } // Keep background on hover
+                                  }),
                                 }}
                                 onClick={() => handleNavigation(subItem.link)}
                               >
@@ -420,10 +462,10 @@ const Header = () => {
         {/* {token && user && ( */}
           <Box sx={styles.rightSection} onClick={handleUserMenuClick}>
             <Typography sx={styles.userName}>
-              {user.emp_name || "User"}
+              {user?.emp_name || "User"}
             </Typography>
             <Avatar sx={styles.avatar}>
-              {user.emp_name?.charAt(0).toUpperCase() || "U"}
+              {user?.emp_name?.charAt(0).toUpperCase() || "U"}
             </Avatar>
           </Box>
         {/* )} */}

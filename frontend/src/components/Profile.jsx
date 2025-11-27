@@ -32,7 +32,7 @@ const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(12),
   height: theme.spacing(12),
   marginBottom: theme.spacing(2),
-  backgroundColor: theme.palette.primary.main,
+  backgroundColor: '#2A7F66', // Green from theme
 }));
 
 const Profile = () => {
@@ -180,7 +180,16 @@ const Profile = () => {
         </Grid>
 
         <Box sx={{ mt: 2 }}>
-          <Button variant="contained" onClick={handleOpenPasswordDialog} startIcon={<LockIcon />}>Change&nbsp;Password</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleOpenPasswordDialog} 
+            startIcon={<LockIcon />}
+            sx={{ 
+              backgroundColor: '#2A7F66',
+              '&:hover': { backgroundColor: '#256e5a' }
+            }}
+          >
+            Change&nbsp;Password</Button>
         </Box>
       </StyledPaper>
 
@@ -195,7 +204,13 @@ const Profile = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePasswordDialog}>Cancel</Button>
-          <Button onClick={handlePasswordSubmit} variant="contained" disabled={passwordStatus === 'loading'}>Change</Button>
+          <Button 
+            onClick={handlePasswordSubmit} 
+            variant="contained" 
+            disabled={passwordStatus === 'loading'}
+            sx={{ backgroundColor: '#2A7F66', '&:hover': { backgroundColor: '#256e5a' } }}
+          >
+            Change</Button>
         </DialogActions>
       </Dialog>
 

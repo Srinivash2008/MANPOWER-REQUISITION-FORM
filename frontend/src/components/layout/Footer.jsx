@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Box, Container, Typography, Divider, IconButton, Zoom } from "@mui/material";
+import { Box, Container, Typography, Link, IconButton, Zoom } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import Logo from "../../assets/images/logo_MRF_new.png"; // Assuming you have the logo here
 
 const Footer = () => {
   // State to control the visibility of the "Back to Top" button
@@ -33,31 +34,41 @@ const Footer = () => {
       <Box
         component="footer"
         sx={{
-          bgcolor: (theme) =>
-            theme.palette.mode === "light"
-              ? theme.palette.grey[100]
-              : theme.palette.grey[900],
-          py: 4,
-          mt: 8,
-          borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+          background: '#F3FAF8', // Light green background from your theme
+          py: 3,
+          mt: 'auto', // Pushes footer to the bottom
+          borderTop: '1px solid #C0D1C8', // Light green border
         }}
       >
         <Container maxWidth="lg">
-          <Divider sx={{ mb: 3 }} />
-          <Box display="flex" alignItems="center" justifyContent="center">
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <img src={Logo} alt="Logo" style={{ height: '28px', opacity: 0.8 }} />
+              <Typography variant="body2" color="text.secondary">
+                © {new Date().getFullYear()} Manpower Requisition
+              </Typography>
+            </Box>
             <Typography
               variant="body2"
               color="text.secondary"
-              sx={{ fontSize: "0.9rem" }}
+              sx={{ textAlign: { xs: 'center', sm: 'right' } }}
             >
-              © {new Date().getFullYear()}{" "}
-              <Box
-                component="span"
-                sx={{ fontWeight: 600, color: "text.primary" }}
+              Developed by{' '}
+              <Link
+                href="#"
+                color="#2A7F66" // Dark accent green
+                sx={{ fontWeight: 'bold', textDecoration: 'none' }}
               >
-                PDMR Manpower Requisition Form
-              </Box>
-              . All rights reserved.
+                PDMR
+              </Link>
             </Typography>
           </Box>
         </Container>
@@ -78,17 +89,18 @@ const Footer = () => {
           <IconButton
             color="primary"
             sx={{
-              width:'fit-content',
-              float:'right',
-              bgcolor: 'background.paper',
+              bgcolor: '#2A7F66', // Dark accent green
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              transition: 'all 0.3s ease',
               '&:hover': {
-                bgcolor: 'background.paper',
+                bgcolor: '#256e5a', // Slightly darker green on hover
+                transform: 'scale(1.1)',
               },
-              boxShadow: 3,
             }}
             aria-label="Back to Top"
           >
-            <ArrowUpwardIcon sx={{fontSize:'25px'}}/>
+            <ArrowUpwardIcon />
           </IconButton>
         </Box>
       </Zoom>

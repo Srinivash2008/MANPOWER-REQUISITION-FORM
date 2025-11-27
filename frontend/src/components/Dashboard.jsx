@@ -9,236 +9,117 @@ import {
   createTheme,
   useTheme,
   CssBaseline,
+  Tooltip,
 } from '@mui/material';
 // Icons - Direct imports for use in the component
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CloseIcon from '@mui/icons-material/Close';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import DescriptionIcon from '@mui/icons-material/Description';
 import PendingIcon from '@mui/icons-material/Pending';
 // New icon for the summary section
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { useDispatch, useSelector } from 'react-redux';
 import { getMFRCounts } from '../redux/cases/manpowerrequisitionSlice';
 
 // --- Custom Theme Definition for Aesthetic Light Mode ---
 const lightTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#4F46E5', // Indigo
-    },
-    secondary: {
-      main: '#EC4899', // Pink
-    },
-    background: {
-      default: '#f8f9fa',
-      paper: 'rgba(255, 255, 255, 0.7)',
-    },
-    success: {
-      main: '#00BFA5', // Teal
-      light: '#4dccb2',
-    },
-    error: {
-      main: '#FF5252', // Red
-      light: '#ff7070',
-    },
-    warning: {
-      main: '#FFC107', // Gold/Amber
-      light: '#ffcd38',
-    },
-    info: {
-      main: '#2979FF', // Light Blue
-      light: '#539eff',
-    },
-    text: {
-      primary: '#1F2937',
-      secondary: '#6B7280',
-    },
-  },
-  typography: {
-    fontFamily: 'Inter, sans-serif',
-    h3: {
-      fontWeight: 800,
-    },
-    h5: {
-      fontWeight: 700,
-    },
-  },
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 20,
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+    palette: {
+        mode: 'light',
+        primary: {
+            main: '#2A7F66', // Dark accent green from Login page
+            light: '#559985',
+            dark: '#1D5947',
         },
-      },
+        secondary: {
+            main: '#F2994A', // A complementary warm amber/orange
+        },
+        background: {
+            default: '#F3FAF8', // Light green background from Login page
+            paper: 'rgba(255, 255, 255, 0.85)', // Slightly more opaque for better readability
+        },
+        success: {
+            main: '#34D399', // A vibrant, modern green
+            light: '#6EE7B7',
+        },
+        error: {
+            main: '#DC3545', // Consistent with Login page
+            light: '#E4606D',
+        },
+        warning: {
+            main: '#F59E0B', // A rich, golden amber
+            light: '#FBBF24',
+        },
+        info: {
+            main: '#3B82F6', // A clear, friendly blue
+            light: '#60A5FA',
+        },
+        text: {
+            primary: '#1F2937', // Dark gray for high contrast
+            secondary: '#4B5563', // Softer gray for secondary text
+        },
     },
-  },
+    typography: {
+        fontFamily: '"Poppins", "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+        h3: {
+            fontWeight: 800,
+        },
+        h5: {
+            fontWeight: 700,
+        },
+    },
+    components: {
+        MuiCard: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 16, // Slightly reduced for a sharper look
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.05)',
+                    backdropFilter: 'blur(10px)',
+                },
+            },
+        },
+    },
 });
 
-// --- Status Card Component ---
-const StatusCard = ({ status, count, icon: Icon, color, description, total }) => {
+// --- Stat Row Component (New Vertical Design) ---
+const StatRow = ({ status, count, icon: Icon, color, total }) => {
   const theme = useTheme();
   const percentage = total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
-  const progressLabel = "Requisition Share";
   const paletteColor = theme.palette[color];
 
   return (
-    <Card
-      sx={{
-        p: { xs: 1.5, sm: 2, md: 2.5, lg: 3 },
-        borderRadius: 6, // Slightly more rounded corners
-        backdropFilter: 'blur(16px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-        bgcolor: 'rgba(255, 255, 255, 0.65)', // More translucent
-        border: `1px solid ${paletteColor.main}20`,
-        height: '100%',
-        minHeight: { xs: 170, sm: 180, md: 200, lg: 210 }, // Made smaller
-        transition: 'all 0.3s ease-in-out',
-        boxShadow: '0 5px 20px rgba(0, 0, 0, 0.08)',
-        '&:hover': {
-          transform: 'translateY(-7px) scale(1.03)',
-          boxShadow: `0 15px 45px rgba(0, 0, 0, 0.2), 0 0 30px ${paletteColor.main}50`,
-          borderColor: paletteColor.main,
-        },
-      }}
-    >
-      <CardContent sx={{ p: 0, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" flex="0 0 auto">
-          <Box sx={{ flex: 1, pr: 1 }}>
-            <Typography
-              variant="subtitle2"
-              fontWeight="bold"
-              letterSpacing={1.5}
-              textTransform="uppercase"
-              sx={{
-                color: paletteColor.main,
-                fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem', lg: '0.8rem' }
-              }}
-            >
-              {status}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              mt={0.5}
-              display="block"
-              sx={{
-                fontSize: { xs: '0.55rem', sm: '0.6rem', md: '0.65rem', lg: '0.7rem' },
-                lineHeight: 1.2
-              }}
-            >
-              {description}
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              p: { xs: 0.7, sm: 0.8, md: 0.9, lg: 1 },
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${paletteColor.light || paletteColor.main}, ${paletteColor.main})`,
-              color: theme.palette.common.white,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: `0 4px 20px ${paletteColor.main}80`,
-              flexShrink: 0,
-              ml: 1
-            }}
-          >
-            <Icon sx={{
-              width: { xs: 18, sm: 20, md: 22, lg: 25 },
-              height: { xs: 18, sm: 20, md: 22, lg: 25 }
-            }} />
-          </Box>
-        </Box>
-
-        <Box mt={2} flex="1 0 auto" sx={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          {/* Gradient Glow Effect */}
-          <Box sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '120%',
-            height: '120%',
-            background: `radial-gradient(circle, ${paletteColor.main}1A 0%, transparent 60%)`,
-            filter: 'blur(20px)',
-            zIndex: 0,
-          }} />
-          <Typography
-            variant="h3"
-            fontWeight={900}
-            color="text.primary"
-            sx={{
-              fontSize: { xs: '2rem', sm: '2.2rem', md: '2.5rem', lg: '2.8rem' },
-              lineHeight: 1.1,
-              zIndex: 1,
-            }}
-          >
-            {count.toLocaleString()}
-          </Typography>
-          <Typography
-            variant="body2"
-            color={paletteColor.main}
-            fontWeight={600}
-            sx={{
-              fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem', lg: '0.8rem' }
-            }}
-          >
-            Total: {total.toLocaleString()}
-          </Typography>
-        </Box>
-
-        <Box mt={2} flex="0 0 auto">
-          <Box display="flex" justifyContent="space-between" mb={0.5}>
-            <Typography
-              variant="body2"
-              color="text.primary"
-              fontWeight={600}
-              sx={{
-                fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem', lg: '0.8rem' }
-              }}
-            >
-              {progressLabel}
-            </Typography>
-            <Typography
-              variant="body2"
-              fontWeight={700}
-              color={paletteColor.main}
-              sx={{
-                fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem', lg: '0.9rem' }
-              }}
-            >
-              {percentage}%
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              height: { xs: 6, sm: 7, md: 8, lg: 10 },
-              borderRadius: 6,
-              bgcolor: theme.palette.grey[200],
-              overflow: 'hidden',
-              position: 'relative', 
-              boxShadow: `inset 0 0 3px rgba(0,0,0,0.1)`,
-            }}
-          >
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                height: '100%',
-                width: `${percentage}%`,
-                borderRadius: 6,
-                background: `linear-gradient(90deg, ${paletteColor.light || paletteColor.main}, ${paletteColor.main})`,
-                transition: 'width 0.8s ease-out',
-              }}
-            />
-          </Box>
-        </Box>
-      </CardContent>
+    <Card sx={{
+      display: 'flex',
+      alignItems: 'center',
+      p: 2,
+      mb: 2,
+      borderRadius: 4,
+      boxShadow: 'none',
+      bgcolor: 'rgba(255, 255, 255, 0.8)',
+      border: `1px solid ${theme.palette.grey[200]}`,
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        transform: 'translateX(8px)',
+        boxShadow: `0 8px 20px -5px ${theme.palette.mode === 'light' ? '#2A7F66' : paletteColor.main}30`,
+        borderColor: theme.palette.mode === 'light' ? '#2A7F66' : paletteColor.main,
+      }
+    }}>
+      <Box sx={{
+        width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: `linear-gradient(135deg, ${paletteColor.light || paletteColor.main}, ${paletteColor.main})`,
+        color: 'white', flexShrink: 0, mr: 2,
+      }}>
+        <Icon sx={{ fontSize: 22 }} />
+      </Box>
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="subtitle1" fontWeight={700} color="text.primary">{status}</Typography>
+        <Typography variant="caption" color="text.secondary">{percentage}% of total requisitions</Typography>
+      </Box>
+      <Typography variant="h5" fontWeight={800} color={paletteColor.main}>{count.toLocaleString()}</Typography>
+   
     </Card>
   );
 };
@@ -246,7 +127,7 @@ const StatusCard = ({ status, count, icon: Icon, color, description, total }) =>
 // --- Radial Progress Bar Component ---
 const RadialProgressBar = ({ percentage, color, size = 150, strokeWidth = 15, count, isLarge = false }) => {
   const theme = useTheme();
-  const radius = (size - strokeWidth) / 2;
+  const radius = (size - strokeWidth) / 2; //NOSONAR
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (percentage / 100) * circumference;
   const paletteColor = theme.palette[color];
@@ -310,6 +191,385 @@ const RadialProgressBar = ({ percentage, color, size = 150, strokeWidth = 15, co
   );
 };
 
+// --- Donut Chart for Pending Breakdown ---
+const DonutChart = ({ data, total, size = 200, strokeWidth = 25 }) => {
+  const theme = useTheme();
+  const radius = (size - strokeWidth) / 2; //NOSONAR
+  const circumference = 2 * Math.PI * radius;
+console.log("Donut Chart Data:", data, "Total:", total);
+  let accumulatedPercentage = 0;
+
+  return (
+    <Box sx={{ width: size, height: size, position: 'relative' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+        {/* Background Circle */}
+        <circle
+          stroke={theme.palette.grey[200]}
+          fill="transparent"
+          strokeWidth={strokeWidth}
+          r={radius}
+          cx={size / 2}
+          cy={size / 2}
+        />
+        {/* Data Segments */}
+        
+       // --- Inside the DonutChart component's return statement ---
+{data.map((item, mapIndex) => {
+    const percentage = total > 0 ? (item.count / total) * 100 : 0;
+    const segmentLength = (percentage / 100) * circumference;
+    const paletteColor = theme.palette[item.color];
+    
+    // 1. Calculate the starting point (offset) based on the accumulated percentage *before* the current item.
+    // NOTE: This MUST be calculated using the previous accumulated value.
+    const startingOffset = (accumulatedPercentage / 100) * circumference;
+    
+    // 2. The strokeDashoffset is used to *position* the beginning of the stroke array. 
+    // Since the SVG circle is rotated -90deg (to start at the top), we subtract the startingOffset from the circumference.
+    // This correctly positions the start of the current segment.
+    const strokeDashoffset = circumference - startingOffset; 
+
+    // Update accumulated percentage for the next iteration
+    accumulatedPercentage += percentage;
+
+    console.log("Donut Segment:", item.status, "Count:", item.count, "Percentage:", percentage, "Offset:", strokeDashoffset);
+
+    // Skip drawing segments with zero count to avoid rendering issues with 0 length
+    if (segmentLength <= 0) return null;
+
+    return (
+        <circle
+            key={item.status}
+            stroke={paletteColor.main}
+            fill="transparent"
+            strokeWidth={strokeWidth}
+            
+            // CRITICAL CHANGE: Set the length of the stroke and the gap after it.
+            // [Segment Length] [Gap Length (Circumference - Segment Length)]
+            strokeDasharray={`${segmentLength} ${circumference - segmentLength}`} 
+            
+            // Use the calculated offset to position the start of the segment.
+            strokeDashoffset={strokeDashoffset} 
+            r={radius}
+            cx={size / 2}
+            cy={size / 2}
+            style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+        />
+    );
+})}
+      </svg>
+      <Box
+        sx={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <Typography variant="h4" fontWeight={900} color="text.primary">{total.toLocaleString()}</Typography>
+        <Typography variant="body1" color="text.secondary" style={{fontSize:"11px",fontWeight:"900"}}>Total</Typography>
+      </Box>
+    </Box>
+  );
+};
+
+// --- Funnel Bar Component for the Insights Card ---
+const FunnelBar = ({ data }) => {
+  const theme = useTheme();
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  return (
+    <Box sx={{ width: '100%', mt: 2 }}>
+      <Box sx={{ display: 'flex', height: '28px', borderRadius: 2, overflow: 'hidden', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
+        {data.map(item => {
+          const itemPercent = total > 0 ? (item.value / total) * 100 : 0;
+          const paletteColor = theme.palette[item.color];
+          return (
+            <Tooltip title={`${item.label}: ${item.value.toLocaleString()} (${itemPercent.toFixed(1)}%)`} key={item.label}>
+              <Box sx={{
+                width: `${itemPercent}%`,
+                bgcolor: paletteColor.main,
+                transition: 'width 0.5s ease-in-out',
+                '&:hover': {
+                  bgcolor: paletteColor.light,
+                }
+              }} />
+            </Tooltip>
+          );
+        })}
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2.5, mt: 2 }}>
+        {data.map(item => (
+          <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: theme.palette[item.color].main }} />
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>{item.label}:</Typography>
+            <Typography variant="caption" fontWeight={700} color="text.primary">{item.value.toLocaleString()}</Typography>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+// --- Small Insight Card Component ---
+const InsightCard = ({ title, value, description, color, icon: Icon }) => {
+  const theme = useTheme();
+  const paletteColor = theme.palette[color];
+
+  return (
+    <Card sx={{
+      p: 2.5,
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      borderLeft: `4px solid ${paletteColor.main}`,
+      bgcolor: `${paletteColor.main}0D`, // Very light background tint
+    }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Typography variant="subtitle1" fontWeight={700} color="text.primary">{title}</Typography>
+        <Icon sx={{ color: paletteColor.main, fontSize: 28, opacity: 0.8 }} />
+      </Box>
+      <Box sx={{ mt: 1 }}>
+        <Typography variant="h4" fontWeight={800} color={paletteColor.main}>{value}</Typography>
+        <Typography variant="caption" color="text.secondary">{description}</Typography>
+      </Box>
+    </Card>
+  );
+};
+
+// --- Drafts Card Component ---
+const DraftsCard = ({ count }) => {
+  const theme = useTheme();
+  return (
+    <Card sx={{
+      p: 2.5,
+      height: '100%',
+      textAlign: 'center',
+      border: `2px dashed ${theme.palette.grey[400]}`,
+      bgcolor: 'transparent',
+      boxShadow: 'none',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'border-color 0.3s, background-color 0.3s',
+      '&:hover': {
+        borderColor: theme.palette.primary.main,
+        bgcolor: `${theme.palette.primary.main}0A`,
+      }
+    }}>
+      <Typography variant="h4" fontWeight={800} color="text.primary">{count}</Typography>
+      <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
+        In Drafts
+      </Typography>
+      <Typography variant="caption" color="text.secondary">Awaiting completion</Typography>
+    </Card>
+  );
+};
+
+// --- New "Super Cool" Card Components ---
+
+// 1. Gauge Card for Approval Rate
+const GaugeCard = ({ title, value, color, icon: Icon }) => {
+  const theme = useTheme();
+  const paletteColor = theme.palette[color];
+  const strokeWidth = 12;
+  const size = 120;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (value / 100) * circumference;
+
+  return (
+    <Card sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', bgcolor: `${paletteColor.main}0D` }}>
+      <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>{title}</Typography>
+      <Box sx={{ position: 'relative', width: size, height: size, mb: 1.5 }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
+          <circle stroke={theme.palette.grey[300]} fill="transparent" strokeWidth={strokeWidth} r={radius} cx={size / 2} cy={size / 2} />
+          <circle
+            stroke={paletteColor.main} fill="transparent" strokeWidth={strokeWidth} strokeDasharray={circumference}
+            strokeDashoffset={offset} r={radius} cx={size / 2} cy={size / 2} strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
+          />
+        </svg>
+        <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography variant="h4" fontWeight={800} color={paletteColor.main}>{`${value}%`}</Typography>
+        </Box>
+      </Box>
+      <Typography variant="caption" color="text.secondary">Based on finalized requisitions</Typography>
+    </Card>
+  );
+};
+
+// 2. Animated Counter Card for Total Requisitions
+const CounterCard = ({ title, value, color, icon: Icon }) => {
+  const theme = useTheme();
+  const paletteColor = theme.palette[color];
+
+  return (
+    <Card sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', borderTop: `4px solid ${paletteColor.main}` }}>
+      <Icon sx={{ color: paletteColor.main, fontSize: 36, mb: 1 }} />
+      <Typography variant="subtitle1" fontWeight={700} color="text.primary">{title}</Typography>
+      <Typography variant="h3" fontWeight={900} color={paletteColor.main} sx={{ my: 0.5 }}>
+        {value.toLocaleString()}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">All submitted forms</Typography>
+    </Card>
+  );
+};
+
+// 3. Interactive Drafts Card
+const InteractiveDraftsCard = ({ count }) => {
+  const theme = useTheme();
+  return (
+    <Card sx={{
+      p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+      textAlign: 'center', border: `2px dashed ${theme.palette.grey[400]}`, boxShadow: 'none', bgcolor: 'transparent',
+      cursor: 'pointer', transition: 'all 0.3s ease',
+      '&:hover': {
+        borderColor: theme.palette.warning.main,
+        bgcolor: `${theme.palette.warning.main}1A`,
+        transform: 'translateY(-4px)',
+        boxShadow: `0 8px 16px ${theme.palette.warning.main}30`,
+        '& .draft-icon': {
+          transform: 'scale(1.15) rotate(-5deg)',
+          color: theme.palette.warning.dark,
+        },
+      }
+    }}>
+      <DescriptionIcon className="draft-icon" sx={{
+        fontSize: 40,
+        color: theme.palette.warning.main,
+        mb: 1,
+        transition: 'all 0.3s ease',
+      }} />
+      <Typography variant="h4" fontWeight={800} color="text.primary">{count.toLocaleString()}</Typography>
+      <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
+        In Drafts
+      </Typography>
+      <Typography variant="caption" color="text.secondary">Click to complete</Typography>
+    </Card>
+  );
+};
+
+// --- New Line Chart Component ---
+const LineChart = ({ data }) => {
+    const theme = useTheme();
+    if (!data || data.length === 0) {
+        return <Card sx={{ p: 3, textAlign: 'center' }}><Typography>No data available for chart.</Typography></Card>;
+    }
+
+    const maxValue = Math.max(...data.map(item => item.count), 1);
+    const chartHeight = 250;
+    const chartWidth = 950;
+    const padding = { top: 20, right: 40, bottom: 40, left: 40 }; // Increased side padding for better spacing
+    const drawingWidth = chartWidth - padding.left - padding.right;
+
+    // Calculate points with proper spacing from edges
+    const points = data.map((item, index) => {
+        const x = padding.left + (index / (data.length - 1 || 1)) * drawingWidth; // Handle single data point case
+        const y = padding.top + (1 - (item.count / maxValue)) * (chartHeight - padding.top - padding.bottom);
+        return { x, y, ...item };
+    });
+
+    // --- Path Generation ---
+    const createPath = (pts) => {
+        if (pts.length === 0) return "";
+        if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`; // Handle single point
+        
+        let path = `M ${pts[0].x},${pts[0].y}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+            const x_mid = (pts[i].x + pts[i + 1].x) / 2;
+            const y_mid = (pts[i].y + pts[i + 1].y) / 2;
+            const cp_x1 = (x_mid + pts[i].x) / 2;
+            const cp_x2 = (x_mid + pts[i + 1].x) / 2;
+            path += ` Q ${cp_x1},${pts[i].y} ${x_mid},${y_mid}`;
+            path += ` Q ${cp_x2},${pts[i + 1].y} ${pts[i + 1].x},${pts[i + 1].y}`;
+        }
+        return path;
+    };
+
+    const linePath = createPath(points);
+
+    // Area path with proper closure
+    const areaPath = points.length > 0 
+        ? `${linePath} L ${points[points.length - 1].x},${chartHeight - padding.bottom} L ${points[0].x},${chartHeight - padding.bottom} Z`
+        : "";
+
+    return (
+        <Card sx={{ p: { xs: 2, sm: 3 }, height: '100%', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Overall Requisition Status</Typography>
+            <Box sx={{ position: 'relative', height: chartHeight, width: '100%' }}>
+                <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                    <defs>
+                        <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
+                            <stop offset="100%" stopColor={theme.palette.primary.main} stopOpacity={0} />
+                        </linearGradient>
+                    </defs>
+                    
+                    {/* Area Path */}
+                    <path d={areaPath} fill="url(#areaGradient)" />
+
+                    {/* Line Path */}
+                    <path
+                        d={linePath}
+                        fill="none"
+                        stroke={theme.palette.primary.main}
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        sx={{
+                            strokeDasharray: 1000,
+                            strokeDashoffset: 1000,
+                            animation: 'dash 1.5s ease-out forwards',
+                            '@keyframes dash': { to: { strokeDashoffset: 0 } },
+                        }}
+                    />
+
+                    {/* Data Points */}
+                    {points.map((point) => (
+                        <Tooltip title={`${point.status}: ${point.count.toLocaleString()}`} key={point.status} placement="top">
+                            <g> 
+                                <circle
+                                    cx={point.x}
+                                    cy={point.y}
+                                    r="6"
+                                    fill={theme.palette.background.paper}
+                                    stroke={theme.palette[point.color]?.main || theme.palette.primary.main}
+                                    strokeWidth="3"
+                                    style={{
+                                        cursor: 'pointer',
+                                        transition: 'r 0.2s ease, fill 0.2s ease',
+                                    }}
+                                    onMouseOver={(e) => { 
+                                        e.currentTarget.setAttribute('r', '8'); 
+                                        e.currentTarget.style.fill = theme.palette[point.color]?.light || theme.palette.primary.light; 
+                                    }}
+                                    onMouseOut={(e) => { 
+                                        e.currentTarget.setAttribute('r', '6'); 
+                                        e.currentTarget.style.fill = theme.palette.background.paper; 
+                                    }}
+                                />
+                            </g>
+                        </Tooltip>
+                    ))}
+
+                    {/* X-Axis Labels (inside SVG for responsiveness) */}
+                    {points.map(point => (
+                        <text
+                            key={`label-${point.status}`}
+                            x={point.x}
+                            y={chartHeight - padding.bottom + 15} // Position below the chart line
+                            textAnchor="middle" // Center the text on the x-coordinate
+                            fill={theme.palette.text.secondary}
+                            style={{ fontSize: '10px', fontWeight: 600 }}
+                        >
+                            {point.status}
+                        </text>
+                    ))}
+                </svg>
+            </Box>
+        </Card>
+    );
+};
+
 // --- Main Dashboard Component ---
 const Dashboard = () => {
   const theme = useTheme();
@@ -327,13 +587,13 @@ const Dashboard = () => {
 
   // Convert string values to numbers and calculate dynamic values
   const counts = {
-    pending: parseInt(mfrCounts.pending_count) || 0,
-    approved: parseInt(mfrCounts.approve_count) || 0,
-    rejected: parseInt(mfrCounts.reject_count) || 0,
-    raiseQuery: parseInt(mfrCounts.raise_query_count) || 0,
-    onHold: parseInt(mfrCounts.on_hold_count) || 0,
-    draft: parseInt(mfrCounts.draft_count) || 0,
-    total: parseInt(mfrCounts.total_count) || 0
+    pending: parseInt(mfrCounts?.pending_count) || 0,
+    approved: parseInt(mfrCounts?.approve_count) || 0,
+    rejected: parseInt(mfrCounts?.reject_count) || 0,
+    raiseQuery: parseInt(mfrCounts?.raise_query_count) || 0,
+    onHold: parseInt(mfrCounts?.on_hold_count) || 0,
+    draft: parseInt(mfrCounts?.draft_count) || 0,
+    total: parseInt(mfrCounts?.total_count) || 0
   };
 
   // Dynamic status metrics based on API data - Now with 5 cards
@@ -381,27 +641,36 @@ const Dashboard = () => {
   );
   const totalPending = pendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
   const pendingPercentage = counts.total > 0 ? Number(((totalPending / counts.total) * 100).toFixed(1)) : 0;
+  
+  // Calculate Approval Rate
+  const totalFinalized = counts.approved + counts.rejected;
+  const approvalRate = totalFinalized > 0 ? Number(((counts.approved / totalFinalized) * 100).toFixed(1)) : 0;
+
+  // Combine all data for the new comprehensive chart
+  const comprehensiveData = [
+    ...statusMetrics,
+  ].sort((a, b) => b.count - a.count); // Sort by count descending
 
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${theme.palette.background.default}, #e0f7fa 20%, #f0f4c3 80%, ${theme.palette.background.default})`,
-        p: { xs: 2, sm: 3, md: 4, lg: 6 },
+        minHeight: 'calc(100vh - 64px)', // Adjust for header height if any
+        background: `radial-gradient(circle at top left, #F3FAF8, #e9f5f2 100%)`,
+        p: { xs: 2, sm: 3, md: 4, lg:8 },
         color: theme.palette.text.primary,
-        transition: 'padding 0.3s ease',
+        transition: 'all 0.3s ease',
       }}
     >
-      <Box mb={{ xs: 3, sm: 4, md: 5 }} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+      <Box mb={{ xs: 3, sm: 4, md: 5 }} mt={{xs: 10, sm: 10, md: 5 ,lg:9}} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
 
         <Typography
           variant="h4"
           fontWeight={900}
           color="text.primary"
-          mt={{ xs: 1.5, sm: 2, md: 2.5, lg: 4 }}
+          mt={{ xs: 1, sm: 2 }}
           sx={{
             fontSize: { xs: '1.8rem', sm: '2rem', md: '2.5rem', lg: '2rem' },
-            textShadow: '2px 2px 6px rgba(0,0,0,0.1)',
+            textShadow: '1px 1px 3px rgba(0,0,0,0.05)',
           }}
         >
           Welcome back, {user?.emp_name || 'User'}!
@@ -409,7 +678,7 @@ const Dashboard = () => {
         <Typography
           variant="h4"
           fontWeight={800}
-          color="text.secondary"
+          color="text.primary"
           mt={{ xs: 1.5, sm: 2, md: 2.5, lg: 2 }}
           sx={{
             fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem', lg: '1.2rem' }
@@ -420,169 +689,111 @@ const Dashboard = () => {
         </Typography>
       </Box>
 
-      {/* Status Cards Grid - Now with 5 cards (2-3 layout) */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 3, lg: 3 } }}>
-        {statusMetrics.map((metric) => (
-          <Box key={metric.status} sx={{ flex: '1 1 200px', minWidth: '350px' }}>
-            <StatusCard
-              status={metric.status}
-              count={metric.count}
-              icon={metric.icon}
-              color={metric.color}
-              description={metric.description}
-              total={counts.total}
-            />
-          </Box>
-        ))}
-      </Box>
-
-      {/* Overall Pending Rate Summary Card - Updated to include all pending types */}
-      <Card
-        sx={{
-          mt: { xs: 4, sm: 5, md: 6, lg: 7 },
-          p: { xs: 2, sm: 2.5, md: 3, lg: 4 },
-          borderRadius: 5,
-          backdropFilter: 'blur(20px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(200%)',
-          bgcolor: theme.palette.background.paper,
-          boxShadow: `0 20px 60px rgba(0, 0, 0, 0.1), 0 0 50px ${theme.palette.warning.main}20`,
-          border: `2px solid ${theme.palette.warning.light}30`,
-          position: 'relative',
-          textAlign: 'center',
-          transition: 'all 0.5s ease-in-out',
-        }}
-      >
-        <Box sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          alignItems: 'center',
-          justifyContent: 'space-around',
-          gap: 3
-        }}>
-          {/* Left Section: Title and Overview Text */}
-          <Box sx={{ flexShrink: 0, maxWidth: { xs: '100%', md: '45%' } }}>
-            <Typography
-              variant="h5"
-              fontWeight={800}
-              color="text.primary"
-              mb={1.5}
-              sx={{
-                borderBottom: `4px solid ${theme.palette.warning.main}`,
-                pb: 0.5,
-                display: 'inline-block',
-                textShadow: '1px 1px 3px rgba(0,0,0,0.1)',
-                fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem', lg: '1.6rem' }
-              }}
-            >
-              <HourglassEmptyIcon sx={{
-                verticalAlign: 'middle',
-                mr: 1,
-                color: theme.palette.warning.main,
-                fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem', lg: '1.8rem' }
-              }} />
-              Overall Pending Requisitions
-            </Typography>
-
-            <Typography
-              variant="h3"
-              color={theme.palette.warning.main}
-              sx={{
-                mt: 1.5,
-                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem', lg: '3.5rem' },
-                fontWeight: 900
-              }}
-            >
-              {totalPending.toLocaleString()}
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                mt: 1,
-                mb: 2,
-                fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem', lg: '1rem' }
-              }}
-            >
-              Requisitions are currently in <strong>Pending</strong>, <strong>On Hold</strong>, or <strong>Raise Query</strong> status. These {totalPending.toLocaleString()} forms represent {pendingPercentage}% of the total workload and require attention to move forward.
-            </Typography>
-
-            {/* Summary of pending categories - Now includes all three types */}
-            <Box sx={{
-              textAlign: 'left',
-              mt: 2,
-              p: 1.5,
-              bgcolor: 'rgba(255, 255, 255, 0.5)',
-              borderRadius: 3,
-              borderLeft: `5px solid ${theme.palette.warning.main}`
-            }}>
-              <Typography
-                variant="subtitle2"
-                fontWeight={700}
-                color="text.primary"
-                mb={1}
-                sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.9rem', lg: '1rem' } }}
-              >
-                Pending Breakdown:
+      {/* Main Grid Layout */}
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
+        {/* --- Left Column (Main Content) --- */}
+        <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}>
+          
+          
+          {/* New Row for Funnel and Pending Cards */}
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 3, md: 4 } }}>
+            {/* Requisition Funnel Card */}
+            <Card sx={{ flex: 1, p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
+              <Typography variant="h6" fontWeight={700}>Requisition Funnel</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Breakdown of all {counts.total.toLocaleString()} requisitions.
               </Typography>
-              {pendingStatuses.map(metric => (
-                <Box key={metric.status} display="flex" justifyContent="space-between" mb={0.5}>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem', lg: '0.85rem' } }}
-                  >
-                    {metric.status}:
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    fontWeight={600}
-                    color={theme.palette[metric.color].main}
-                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem', lg: '0.85rem' } }}
-                  >
-                    {metric.count.toLocaleString()}
-                  </Typography>
-                </Box>
-              ))}
-              <Box display="flex" justifyContent="space-between" mt={1} pt={1} sx={{ borderTop: '1px solid rgba(0,0,0,0.1)' }}>
-                <Typography
-                  variant="body2"
-                  fontWeight={700}
-                  color="text.primary"
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.85rem', lg: '0.9rem' } }}
-                >
-                  Total Pending:
-                </Typography>
-                <Typography
-                  variant="body2"
-                  fontWeight={700}
-                  color={theme.palette.warning.main}
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.85rem', lg: '0.9rem' } }}
-                >
-                  {totalPending.toLocaleString()}
-                </Typography>
+              <FunnelBar data={[
+                { label: 'Approved', value: counts.approved, color: 'success' },
+                { label: 'Pending', value: totalPending, color: 'primary' },
+                { label: 'Rejected', value: counts.rejected, color: 'error' },
+              ]} />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
+                This funnel shows the distribution of requisitions across their primary stages: Approved (green), Pending (blue), and Rejected (red).
+              </Typography>
+            </Card>
+
+            {/* Pending Requisitions Focus Area */}
+            <Card sx={{
+              flex: 1.2, // Give this card slightly more space
+              p: { xs: 2, sm: 3, md: 4 },
+              borderRadius: 4,
+              backdropFilter: 'blur(10px)',
+              bgcolor: 'rgba(255, 255, 255, 0.7)',
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr' },
+              gap: { xs: 3, sm: 4, md: 5 },
+              alignItems: 'center',
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <DonutChart data={pendingStatuses} total={totalPending} size={120} strokeWidth={13} />
               </Box>
-            </Box>
+              <Box>
+                <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 0.5 }}>Action Required</Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
+                  {totalPending.toLocaleString()} forms require attention.
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {pendingStatuses.map(metric => {
+                    const itemPercentage = totalPending > 0 ? (metric.count / totalPending) * 100 : 0;
+                    const paletteColor = theme.palette[metric.color];
+                    return (
+                      <Tooltip title={`${metric.status}: ${metric.count.toLocaleString()} (${itemPercentage.toFixed(1)}%)`} key={metric.status} placement="right">
+                        <Box sx={{
+                          transition: 'transform 0.2s ease-in-out',
+                          '&:hover': { transform: 'translateX(4px)' }
+                        }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="subtitle2" fontWeight={600} color="text.secondary">{metric.status}</Typography>
+                            <Typography variant="body2" fontWeight={700} color={paletteColor.main}>{metric.count.toLocaleString()}</Typography>
+                          </Box>
+                          <Box sx={{
+                            height: '8px',
+                            width: '100%',
+                            bgcolor: theme.palette.grey[200],
+                            borderRadius: '4px',
+                            overflow: 'hidden',
+                          }}>
+                            <Box sx={{
+                              height: '100%',
+                              width: `${itemPercentage}%`,
+                              bgcolor: paletteColor.main,
+                              borderRadius: '4px',
+                              transition: 'width 0.5s ease-out',
+                            }} />
+                          </Box>
+                        </Box>
+                      </Tooltip>
+                    );
+                  })}
+                </Box>
+              </Box>
+            </Card>
           </Box>
 
-          {/* Right Section: Large Radial Progress Bar */}
-          <Box sx={{
-            flexGrow: 1,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            p: { xs: 1, sm: 2, md: 0 }
-          }}>
-            <RadialProgressBar
-              percentage={pendingPercentage}
-              color="warning"
-              count={totalPending}
-              size={180}
-              strokeWidth={18}
-              isLarge={true}
-            />
+          {/* --- Bottom Row for Key Metrics --- */}
+          <Box sx={{ mt: 1 }}>
+            <LineChart data={comprehensiveData} />
           </Box>
         </Box>
-      </Card>
+
+        {/* --- Right Column (Status Overview) --- */}
+        <Box sx={{ flex: { lg: 4 } }}>
+          <Card sx={{ p: { xs: 2, sm: 3 }, height: 'fit-content', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Status Overview</Typography>
+            {statusMetrics.map((metric) => (
+              <StatRow
+                key={metric.status}
+                status={metric.status}
+                count={metric.count}
+                icon={metric.icon}
+                color={metric.color}
+                total={counts.total}
+              />
+            ))}
+          </Card>
+        </Box>
+      </Box>
     </Box>
   );
 };

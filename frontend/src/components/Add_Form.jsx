@@ -494,9 +494,9 @@ const App_Form = () => {
 
     return (
         <div className="page-wrapper">
-            <div className="form-panel">
+            <div className="form-panel" style={{marginTop:'2%'}}>
                 <div className="form-header">
-                    <h1 className="info-title">
+                    <h1 className="info-title" >
                         Manpower Requisition Form
                     </h1>
                     <p className="info-subtitle">

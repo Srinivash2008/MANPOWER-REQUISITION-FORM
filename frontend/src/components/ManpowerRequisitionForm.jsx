@@ -5,14 +5,16 @@ import {
   Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip   } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus } from '../redux/cases/manpowerrequisitionSlice';  
-import swal from "sweetalert2";
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import BackspaceIcon from '@mui/icons-material/Backspace';
+import swal from "sweetalert2"; 
+import ModeEditOutlineIcon from '@mui/icons-material/ModeEditOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import PreviewIcon from '@mui/icons-material/Preview';
 import CloseIcon from '@mui/icons-material/Close';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditSquareIcon from '@mui/icons-material/EditSquare';
+import BackspaceIcon from '@mui/icons-material/Backspace';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import "react-quill-new/dist/quill.snow.css";
 import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
@@ -449,17 +451,17 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                               sx={{ mr: 1, width: "30px" }}
                                onClick={() => handleEditClick(manpower.id)}
                             >
-                              <EditIcon />
+                              <EditDocumentIcon />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete Manpower" arrow placement="top">
-                            <IconButton
+                            <IconButton 
                               aria-label="delete"
                               color="error"
                               onClick={() => handleDeleteClick(manpower.id)}
                               sx={{ mr: 1, width: "30px" }}
                             >
-                              <BackspaceIcon />
+                              <DeleteForeverIcon />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="View Manpower" arrow placement="top">
@@ -469,7 +471,7 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                               sx={{ mr: 1, width: "30px" }}
                               onClick={() => handleViewClick(manpower.id)}
                             >
-                              <VisibilityIcon />
+                              <PreviewIcon />
                             </IconButton>
                           </Tooltip>
                         </StyledTableCell>

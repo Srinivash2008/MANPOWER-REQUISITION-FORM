@@ -2,7 +2,7 @@
 
 /* --- Page Wrapper --- */
 .page-wrapper {
-  background-color: #ffffff;
+  /* background-color: #ffffff; */
   padding-top: 4%;
   display: flex;
   /* Use flexbox to center the form panel */
