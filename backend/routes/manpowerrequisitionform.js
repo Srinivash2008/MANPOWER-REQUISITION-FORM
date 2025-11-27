@@ -423,6 +423,44 @@ router.put('/delete-manpower/:id', authMiddleware, async (req, res) => {
 //     }
 // });
 
+
+router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const specialManagers = [12345, 1400];
+
+        let query = `
+            SELECT
+                COALESCE(SUM(status = 'Pending'), 0) AS pending_count,
+                COALESCE(SUM(status = 'Approve'), 0) AS approve_count,
+                COALESCE(SUM(status = 'Reject'), 0) AS reject_count,
+                COALESCE(SUM(status = 'Raise Query'), 0) AS raise_query_count,
+                COALESCE(SUM(status = 'On Hold'), 0) AS on_hold_count,
+                COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
+                COALESCE(COUNT(*), 0) AS total_count
+            FROM manpower_requisition
+            WHERE isdelete = 0
+        `;
+
+        let params = [];
+
+        // Apply created_by filter only if NOT special manager
+        if (!specialManagers.includes(Number(id))) {
+            query += ` AND created_by = ?`;
+            params.push(id);
+        }
+
+        const [rows] = await pool.execute(query, params);
+
+        res.json(rows[0]);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error fetching MRF count.' });
+    }
+});
+
+
 router.put(
     '/update-manpower-requisition/:id',
     authMiddleware,

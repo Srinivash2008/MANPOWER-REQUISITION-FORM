@@ -29,6 +29,30 @@ export const fetchManpowerRequisition = createAsyncThunk(
   }
 );
 
+export const getMFRCounts = createAsyncThunk(
+  'manpowerRequisition/getMFRCounts',
+  async (managerId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/mrf/manager-mrf-counts/${managerId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch MRF counts.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
 
 export const fetchManpowerRequisitionById = createAsyncThunk(
   'manpowerRequisition/fetchManpowerRequisitionById',
@@ -259,6 +283,7 @@ const manpowerrequisitionSlice = createSlice({
   name: 'manpowerRequisition',
   initialState: {
     data: [],
+    mfrCounts: [],
     departments: [],
     status: 'idle',
     error: null,
@@ -305,6 +330,20 @@ const manpowerrequisitionSlice = createSlice({
         state.statusById = 'failed';
         state.errorById = action.payload;
         state.selectedRequisition = null;
+      })
+      .addCase(getMFRCounts.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(getMFRCounts.fulfilled, (state, action) => {
+        state.status = 'succeeded'; 
+        state.mfrCounts = action.payload;
+      }
+      )
+      .addCase(getMFRCounts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.mfrCounts = null;
       })
 
       // Handle fetchDepartments
