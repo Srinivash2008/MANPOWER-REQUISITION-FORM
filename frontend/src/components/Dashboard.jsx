@@ -23,6 +23,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { useDispatch, useSelector } from 'react-redux';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { useNavigate } from 'react-router-dom';
 import { getMFRCounts } from '../redux/cases/manpowerrequisitionSlice';
 
 // --- Custom Theme Definition for Aesthetic Light Mode ---
@@ -92,6 +93,7 @@ const lightTheme = createTheme({
 const StatRow = ({ status, count, icon: Icon, color, total }) => {
   const theme = useTheme();
   const percentage = total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
+  const navigate = useNavigate();
   const paletteColor = theme.palette[color];
 
   return (
@@ -110,8 +112,15 @@ const StatRow = ({ status, count, icon: Icon, color, total }) => {
         transform: 'translateX(8px)',
         boxShadow: `0 8px 20px -5px ${theme.palette.mode === 'light' ? '#2A7F66' : paletteColor.main}30`,
         borderColor: theme.palette.mode === 'light' ? '#2A7F66' : paletteColor.main,
-      }
-    }}>
+      },
+
+
+    }}
+      onClick={() => {
+        navigate(`/mrf-list/${status}`);
+
+      }}
+    >
       <Box sx={{
         width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: `linear-gradient(135deg, ${paletteColor.light || paletteColor.main}, ${paletteColor.main})`,
@@ -135,7 +144,7 @@ const DonutChart = ({ data, total, size = 200, strokeWidth = 25 }) => {
   const theme = useTheme();
   const radius = (size - strokeWidth) / 2; //NOSONAR
   const circumference = 2 * Math.PI * radius;
-  console.log("Donut Chart Data:", data, "Total:", total);
+  // console.log("Donut Chart Data:", data, "Total:", total);
   let accumulatedPercentage = 0;
 
   return (
@@ -170,7 +179,7 @@ const DonutChart = ({ data, total, size = 200, strokeWidth = 25 }) => {
           // Update accumulated percentage for the next iteration
           accumulatedPercentage += percentage;
 
-          console.log("Donut Segment:", item.status, "Count:", item.count, "Percentage:", percentage, "Offset:", strokeDashoffset);
+          // console.log("Donut Segment:", item.status, "Count:", item.count, "Percentage:", percentage, "Offset:", strokeDashoffset);
 
           // Skip drawing segments with zero count to avoid rendering issues with 0 length
           if (segmentLength <= 0) return null;
@@ -384,7 +393,7 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const { mfrCounts } = useSelector((state) => state.manpowerRequisition);
 
-  console.log("MFR Counts from Redux:", { ...mfrCounts });
+  // console.log("MFR Counts from Redux:", { ...mfrCounts });
 
   useEffect(() => {
     if (user?.emp_id) {

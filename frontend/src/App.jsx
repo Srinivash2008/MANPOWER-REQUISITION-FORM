@@ -23,6 +23,7 @@ import "./assets/css/Style.css";
 import Add_Form from "./components/Add_Form";
 import ManpowerRequisition from "./components/ManpowerRequisitionForm.jsx";
 import ManpowerRequisitionView from "./components/ManpowerRequisitionView";
+import ManpowerRequisitionByStatus from "./components/ManPowerRequestionFormByStatus.jsx";
 
 
 
@@ -73,6 +74,8 @@ function App() {
            <Route path="/add-mrf" element={<Add_Form />} />
 
            <Route path="/mrf-list" element={<ManpowerRequisition />} />
+           <Route path="/mrf-list/:param_status" element={<ManpowerRequisitionByStatus />} />
+
            <Route path="/manpower_requisition_view/:id" element={<ManpowerRequisitionView/>} />
            <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionView/>} />
 

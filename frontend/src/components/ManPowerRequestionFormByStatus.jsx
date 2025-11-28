@@ -1,0 +1,339 @@
+import React, { useState, useEffect } from 'react';
+import { styled, useTheme } from '@mui/material/styles';
+import { 
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  Box, Typography, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Tooltip   } from "@mui/material";
+import { fetchManpowerRequisitionByStatus } from '../redux/cases/manpowerrequisitionSlice';  
+import PreviewIcon from '@mui/icons-material/Preview';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import EditDocumentIcon from '@mui/icons-material/EditDocument';
+import "react-quill-new/dist/quill.snow.css";
+import { useDispatch, useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: { xs: '100%', md: '550px' },
+  bgcolor: 'background.paper',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+  maxHeight: '90vh',
+  overflowY: 'auto',
+};
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: '#2A7F66', // darkAccent
+    color: theme.palette.common.white,
+    fontWeight: theme.typography.fontWeightBold,
+    whiteSpace: "nowrap",
+    padding: theme.spacing(1.5, 2),
+    border: `1px solid #C0D1C8`, // lightBorder
+    textAlign: "center",
+    width: "auto",
+    minWidth: 80,
+    '&:first-of-type': {
+      width: "80px",
+      minWidth: "80px",
+    },
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: theme.typography.body2.fontSize,
+    minWidth: 80,
+    whiteSpace: "nowrap",
+    padding: theme.spacing(1.5, 2),
+    border: `1px solid #E0E0E0`,
+    textAlign: "center",
+    '&:first-of-type': {
+      width: "80px",
+      minWidth: "80px",
+    },
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:nth-of-type(even)': {
+    backgroundColor: '#F3FAF8', // lightGreenBg
+  },
+  '&:hover': {
+    backgroundColor: '#E9F5F2', // A slightly darker green for hover
+  },
+}));
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.05, ease: "easeOut" } },
+  exit: { opacity: 0, scale: 0.8, transition: { duration: 0.05, ease: "easeIn" } },
+};
+
+const tickVariants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 200, damping: 10, delay: 0.05 } },
+};
+
+const ManpowerRequisitionByStatus = () => {
+  const dispatch  = useDispatch();
+   const { param_status } = useParams(); // Returns { status: 'value-from-url' }
+  const manpowerRequisitionList = useSelector((state)=> state.manpowerRequisition.data);
+  const theme = useTheme();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (param_status) {
+        if(param_status === "Approved"){
+            dispatch(fetchManpowerRequisitionByStatus("Approve"));
+        }else if(param_status === "Rejected"){
+            dispatch(fetchManpowerRequisitionByStatus("Reject"));
+        }else{
+            dispatch(fetchManpowerRequisitionByStatus(param_status));
+        }
+    }
+  }, [param_status, dispatch]);
+
+  const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
+
+  const filteredManpower = manpowerArray.filter(manpower =>
+    manpower?.employment_status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    manpower?.designation.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const paginatedManpower =
+    rowsPerPage === -1
+      ? filteredManpower
+      : filteredManpower.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to first page
+  };
+
+  const TablePaginationActions = (props) => {
+    const { count, page, onPageChange } = props;
+    const isFirstPage = page === 0;
+    const isLastPage = page >= Math.ceil(count / rowsPerPage) - 1;
+    const isAllSelected = rowsPerPage === -1;
+  
+    const handleToggleShowAll = () => {
+      const newRowsPerPage = isAllSelected ? 10 : -1;
+      setRowsPerPage(newRowsPerPage);
+      setPage(0);
+    };
+
+    return (
+      <Box sx={{ flexShrink: 0, ml: 2.5, display: 'flex', gap: 1, alignItems: 'center' }}>
+        <Button
+          onClick={(event) => onPageChange(event, page - 1)}
+          disabled={isFirstPage || isAllSelected}
+          variant="outlined"
+          size="small"
+        >
+          Previous
+        </Button>
+        <Button
+          onClick={(event) => onPageChange(event, page + 1)}
+          disabled={isLastPage || isAllSelected}
+          variant="outlined"
+          size="small"
+        >
+          Next
+        </Button>
+        <Button
+          onClick={handleToggleShowAll}
+          variant="outlined"
+          size="small"
+        >
+          {isAllSelected ? "Hide All" : "Show All"}
+        </Button>
+      </Box>
+    );
+  };
+
+  const handleViewClick = (id) => {
+    navigate(`/manpower_requisition_view/${id}`);
+  } 
+  const handleEditClick = (id) => {
+    navigate(`/manpower_requisition_edit/${id}`);
+  }
+
+    return (
+      <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, sm: 12 }}>
+            <Paper sx={{ p: 2, borderRadius: '8px',marginTop: '12vh' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant='h6' sx={{
+                  flexGrow: 1,
+                  cursor: 'pointer',
+                  display: 'inline-block',
+                  '@keyframes moveWord': {
+                    '0%': { transform: 'translate(0, 0)' },
+                    '25%': { transform: 'translate(5px, -5px)' },   // Move right and up
+                    '50%': { transform: 'translate(10px, 0)' },    // Move further right
+                    '75%': { transform: 'translate(5px, 5px)' },   // Move right and down
+                    '100%': { transform: 'translate(0, 0)' },      // Back to initial
+                  },
+                  '&:hover': {
+                    animation: 'moveWord 1s ease-in-out forwards',
+                  },
+                  }}
+                >
+                  Manpower Requisition List
+                </Typography>
+                <TextField
+                  label="Search"
+                  variant="outlined"
+                  size="small"
+                  value={searchTerm}
+                  onChange={(e) => { //NOSONAR
+                    setSearchTerm(e.target.value);
+                    setPage(0); // Reset to first page when searching
+                  }}
+                  sx={{ mr: 2, maxWidth: '250px' }}
+                />
+              </Box>
+              <TableContainer
+                component={Paper}
+                sx={{
+                  borderRadius: theme.shape.borderRadius,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  overflow: "auto",
+                  maxWidth: "100%",
+                }}
+              >
+                <Table sx={{ minWidth: 700 }}>
+                  <TableHead className="custom-header">
+                    <TableRow>
+                      <StyledTableCell>S.No</StyledTableCell>
+                      <StyledTableCell>Emp Id/Name</StyledTableCell>
+                      <StyledTableCell>Department</StyledTableCell>
+                      <StyledTableCell>Status of Employment</StyledTableCell>
+                      <StyledTableCell>Designation</StyledTableCell>
+                      {/* <StyledTableCell>No of Resources</StyledTableCell> */}
+                      <StyledTableCell>Requirement Type</StyledTableCell>
+                      {/* <StyledTableCell>Resigned Employee</StyledTableCell> */}
+                      {/* <StyledTableCell>Reason for Additional Resources</StyledTableCell> */}
+                      <StyledTableCell>Job Description</StyledTableCell>
+                      {/* <StyledTableCell>Education</StyledTableCell>
+                      <StyledTableCell>Experience</StyledTableCell>
+                      <StyledTableCell>CTC Range</StyledTableCell>
+                      <StyledTableCell>Specific Info</StyledTableCell>
+                      <StyledTableCell>MRF Number</StyledTableCell> */}
+                      <StyledTableCell>Status</StyledTableCell>
+                      <StyledTableCell>
+                        Action
+                      </StyledTableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedManpower.map((manpower, index) => (
+                      <StyledTableRow key={manpower.id}>
+                        <StyledTableCell component="th" scope="row">
+                          {page * rowsPerPage + index + 1}
+                        </StyledTableCell>
+                        <StyledTableCell>{manpower.created_by === 0 ? "-"  : `${manpower.created_by}/${manpower.emp_name}`}</StyledTableCell>
+                        <StyledTableCell>{manpower.department}</StyledTableCell>
+                        <StyledTableCell>{manpower.employment_status}</StyledTableCell>
+                        <StyledTableCell>{manpower.designation}</StyledTableCell>
+                        {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
+                        <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
+                        {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
+                        <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
+                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.job_description}</StyledTableCell>
+                        {/* <StyledTableCell>{manpower.education}</StyledTableCell>
+                        <StyledTableCell>{manpower.experience}</StyledTableCell>
+                        <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
+                        <StyledTableCell>{manpower.specific_info}</StyledTableCell>
+                        <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
+                        <StyledTableCell>
+                          <Typography>{manpower.status}</Typography>
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <Tooltip title="Edit Manpower" arrow placement="top">
+                            <IconButton
+                              aria-label="edit"
+                              color="primary"
+                               onClick={() => handleEditClick(manpower.id)}
+                            >
+                              <EditDocumentIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete Manpower" arrow placement="top">
+                            <IconButton 
+                              aria-label="delete"
+                              color="error"
+                              // onClick={() => handleDeleteClick(manpower.id)}
+                            >
+                              <DeleteForeverIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="View Manpower" arrow placement="top">
+                            <IconButton
+                              aria-label="view"
+                              color="info"
+                              onClick={() => handleViewClick(manpower.id)}
+                            >
+                              <PreviewIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[10, 25, 50, 100]}
+                component="div"
+                count={filteredManpower.length}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage === -1 ? paginatedManpower.length : rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                labelRowsPerPage="Rows per page"
+                labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : `All ${assessmentList.length}`} cases`}
+                ActionsComponent={TablePaginationActions}
+                sx={{
+                  mt: 2,
+                  '& .MuiTablePagination-toolbar': {
+                    justifyContent: 'flex-end',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: { xs: 1, sm: 0 },
+                    minHeight: 'auto',
+                  },
+                  '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                    mb: { xs: 1, sm: 0 },
+                  },
+                  '& .MuiTablePagination-actions': {
+                    ml: { xs: 0, sm: 2 }
+                  },
+                  '& .MuiInputBase-root': {
+                    minWidth: { xs: 'auto', sm: 80 }
+                  },
+                  '& .MuiTablePagination-select': {
+                    paddingRight: '24px !important',
+                  },
+                }}
+              /> 
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+    );
+
+}
+
+export default ManpowerRequisitionByStatus;

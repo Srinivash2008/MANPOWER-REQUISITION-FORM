@@ -423,6 +423,36 @@ router.put('/delete-manpower/:id', authMiddleware, async (req, res) => {
 //     }
 // });
 
+router.get('/getmanpowerrequisitionbystatus/:status', authMiddleware, async (req, res) => {
+    try {
+        const { status } = req.params;
+        const [rows] = await pool.execute('SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE mr.status = ? AND mr.isdelete = "Active" ORDER BY mr.id DESC', [status]);
+        const fetchManpowerRequisitionByStatus = rows.map((row, index) => ({
+            id: row.id,
+            s_no: index + 1,
+            department: row.department,
+            employment_status: row.employment_status,
+            designation: row.designation,
+            num_resources: row.num_resources,
+            requirement_type: row.requirement_type,
+            replacement_detail: row.replacement_detail,
+            ramp_up_reason: row.ramp_up_reason,
+            job_description: row.job_description,
+            education: row.education,
+            experience: row.experience,
+            ctc_range: row.ctc_range,
+            specific_info: row.specific_info,
+            mrf_number: row.mrf_number,
+            status: row.status,
+            created_by: row.created_by,
+            isdelete: row.isdelete,
+            emp_name: row.emp_name,
+        }));
+        res.json(fetchManpowerRequisitionByStatus);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
 
 router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
     try {
