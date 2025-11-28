@@ -444,7 +444,9 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                           </FormControl>
                         </StyledTableCell>
                         <StyledTableCell>
-                          <Tooltip title="Edit Manpower" arrow placement="top">
+                          {manpower.status === "Pending" && (
+                            <>
+                            <Tooltip title="Edit Manpower" arrow placement="top">
                             <IconButton
                               aria-label="edit"
                               color="primary"
@@ -464,6 +466,8 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                               <DeleteForeverIcon />
                             </IconButton>
                           </Tooltip>
+                          </>
+                          )}
                           <Tooltip title="View Manpower" arrow placement="top">
                             <IconButton
                               aria-label="view"

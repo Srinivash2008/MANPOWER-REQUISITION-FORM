@@ -1,10 +1,8 @@
-import React, { useEffect } from 'react';
+import  { useEffect } from 'react';
 import {
   Box,
   Typography,
-  Grid,
   Card,
-  CardContent,
   ThemeProvider,
   createTheme,
   useTheme,
@@ -16,13 +14,11 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CloseIcon from '@mui/icons-material/Close';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import DescriptionIcon from '@mui/icons-material/Description';
 import PendingIcon from '@mui/icons-material/Pending';
 // New icon for the summary section
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import { PieChart } from '@mui/x-charts/PieChart';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useDispatch, useSelector } from 'react-redux';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { useNavigate } from 'react-router-dom';
 import { getMFRCounts } from '../redux/cases/manpowerrequisitionSlice';
 
@@ -133,7 +129,7 @@ const StatRow = ({ status, count, icon: Icon, color, total }) => {
         <Typography variant="caption" color="text.secondary">{percentage}% of total requisitions</Typography>
       </Box>
       <Typography variant="h5" fontWeight={800} color={paletteColor.main}>{count.toLocaleString()}</Typography>
-
+      <ArrowForwardIosIcon sx={{ color: 'text.secondary', ml: 1.5, fontSize: '1rem' }} />
     </Card>
   );
 };
@@ -217,52 +213,6 @@ const DonutChart = ({ data, total, size = 200, strokeWidth = 25 }) => {
     </Box>
   );
 };
-
-// --- Funnel Bar Component for the Insights Card ---
-const FunnelBar = ({ data }) => {
-  const theme = useTheme();
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-
-  return (
-    <Box sx={{ width: '100%', mt: 3 }}>
-      <Box sx={{ display: 'flex', height: '28px', borderRadius: '14px', overflow: 'hidden', bgcolor: 'action.hover', boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.08)' }}>
-        {data.map(item => {
-          const itemPercent = total > 0 ? (item.value / total) * 100 : 0;
-          const paletteColor = theme.palette[item.color];
-          return (
-            <Tooltip title={`${item.label}: ${item.value.toLocaleString()} (${itemPercent.toFixed(1)}%)`} key={item.label} arrow>
-              <Box sx={{
-                width: `${itemPercent}%`,
-                background: `linear-gradient(145deg, ${paletteColor.light}, ${paletteColor.main})`,
-                transition: 'all 0.4s ease-in-out',
-                cursor: 'pointer',
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                  boxShadow: `0 0 12px ${paletteColor.main}90`,
-                  zIndex: 1,
-                }
-              }} />
-            </Tooltip>
-          );
-        })}
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2.5 }}>
-        {data.map(item => (
-          <Box key={item.label} sx={{ textAlign: 'center' }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: theme.palette[item.color].main }} />
-              {item.label}
-            </Typography>
-            <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-              {item.value.toLocaleString()}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-    </Box>
-  );
-};
-
 
 
 // --- New Line Chart Component ---
@@ -517,13 +467,40 @@ const Dashboard = () => {
             <Card sx={{ flex: 1, p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
               <Typography variant="h6" fontWeight={700}>Requisition Funnel</Typography>
               <Typography variant="body2" color="text.secondary">
-                Breakdown of all {counts.total.toLocaleString()} requisitions.
+                Breakdown of all {counts.total.toLocaleString()} requisitions
               </Typography>
-              <FunnelBar data={[
-                { label: 'Approved', value: counts.approved, color: 'success' },
-                { label: 'Pending', value: totalPending, color: 'primary' },
-                { label: 'Rejected', value: counts.rejected, color: 'error' },
-              ]} />
+              <Box sx={{ mt: 0, height: { xs: 200, sm: 220 } }}>
+                <PieChart
+                  series={[
+                    {
+                      data: [
+                        { id: 0, value: counts.approved, label: 'Approved', color: theme.palette.success.main },
+                        { id: 1, value: totalPending, label: 'Pending', color: theme.palette.primary.main },
+                        { id: 2, value: counts.rejected, label: 'Rejected', color: theme.palette.error.main },
+                      ],
+                      innerRadius: 65,
+                      outerRadius: 100,
+                      paddingAngle: 2,
+                      cornerRadius: 5,
+                      startAngle: -90,
+                      endAngle: 90,
+                      cy: '75%', // Adjust center to fit the new size
+                    },
+                  ]}
+                  legend={{
+                    direction: 'row',
+                    position: { vertical: 'bottom', horizontal: 'middle' },
+                    padding: 0,
+                    itemMarkWidth: 10,
+                    itemMarkHeight: 10,
+                  }}
+                >
+
+                </PieChart>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1, fontStyle: 'italic' }}>
+                *Pending includes On Hold and Raise Query statuses.
+              </Typography>
             </Card>
 
             {/* Pending Requisitions Focus Area */}

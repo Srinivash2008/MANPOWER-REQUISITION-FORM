@@ -423,6 +423,26 @@ router.put('/delete-manpower/:id', authMiddleware, async (req, res) => {
 //     }
 // });
 
+router.get('/getmanpowerrequisitionFH', authMiddleware , async (req, res) => {
+    
+    try {
+        const [rows] = await pool.execute('SELECT ep.employee_id, ep.emp_name, ep.emp_resign, ep.ReportingManager, mgr.emp_name AS ReportingManager_Name FROM employee_personal AS ep LEFT JOIN employee_personal AS mgr ON ep.ReportingManager = mgr.employee_id WHERE ep.emp_resign = "12/31/2030" AND ep.ReportingManager != 0 Group By ep.ReportingManager '); 
+
+        const fetchManpowerRequisition = rows.map((row, index) => ({
+            id: row.id,
+            s_no: index + 1,
+            emp_name: row.emp_name,
+            employee_id: row.ReportingManager,
+            ReportingManager: row.ReportingManager_Name,
+        }));
+        res.json(fetchManpowerRequisition);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' });
+    }
+
+});
+
 router.get('/getmanpowerrequisitionbystatus/:status', authMiddleware, async (req, res) => {
     try {
         const { status } = req.params;

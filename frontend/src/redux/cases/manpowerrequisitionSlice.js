@@ -114,6 +114,33 @@ export const fetchManpowerRequisitionById = createAsyncThunk(
   }
 );
 
+export const fetchManpowerRequisitionFH = createAsyncThunk(
+  'manpowerRequisition/fetchManpowerRequisitionFH',
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(`${API_URL}/api/cases/getmanpowerrequisitionFH`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch escalated cases.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 export const addQueryForm = createAsyncThunk(
   'manpowerRequisition/addQueryForm',
 
@@ -369,6 +396,19 @@ const manpowerrequisitionSlice = createSlice({
         state.statusById = 'failed';
         state.errorById = action.payload;
         state.selectedRequisition = null;
+      })
+      .addCase(fetchManpowerRequisitionFH.pending, (state) => {
+        state.statusById = 'loading';
+        state.errorById = null;
+      })
+      .addCase(fetchManpowerRequisitionFH.fulfilled, (state, action) => {
+        state.statusById = 'succeeded';
+        state.selectedRequisitionFH = action.payload;
+      })
+      .addCase(fetchManpowerRequisitionFH.rejected, (state, action) => {
+        state.statusById = 'failed';
+        state.errorById = action.payload;
+        state.selectedRequisitionFH = null;
       })
       .addCase(getMFRCounts.pending, (state) => {
         state.status = 'loading';

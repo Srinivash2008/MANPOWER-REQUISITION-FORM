@@ -212,7 +212,7 @@ const Header = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md")); // 👈 Check if screen is 'md' or smaller
 
   const isAdmin = user?.emp_pos === 'Senior Manager' || user?.emp_pos === 'Senior Client Support Executive';
-  
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [hoveredMenu, setHoveredMenu] = useState(null);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
@@ -226,14 +226,14 @@ const Header = () => {
 
   //const { userLoginStatus } = useSelector((state) => state.caseEntry);
 
- // console.log(userLoginStatus,"userLoginStatus");
-/* 
-  useEffect(() => {
-      if (user) {
-       dispatch(fetchTodayLogin());
-      }
-  }, [user]); */
-  
+  // console.log(userLoginStatus,"userLoginStatus");
+  /* 
+    useEffect(() => {
+        if (user) {
+         dispatch(fetchTodayLogin());
+        }
+    }, [user]); */
+
   // Menu handling
   const handleMenuEnter = (event, label) => {
     if (!isMobile) {
@@ -263,7 +263,7 @@ const Header = () => {
     setDrawerOpen(false); // Close drawer on navigation
   };
 
-  
+
 
   const handleLogout = () => {
     if (user?.emp_id) {
@@ -276,17 +276,19 @@ const Header = () => {
   };
 
 
-  
- const menuItems = [
-  { label: "Dashboard", link: "/dashboard" },
-  {
-    label: "MRF",
-    submenu: [
-      { label: "Add MRF", link: "/add-mrf" },
-      { label: "View MRF", link: "/mrf-list" },
-    ],
-  },
-];
+
+  const menuItems = [
+    { label: "Dashboard", link: "/dashboard" },
+    {
+      label: "MRF",
+      submenu: [
+        { label: "Add MRF", link: "/add-mrf" },
+        { label: "View MRF", link: "/mrf-list" },
+
+      ],
+    },
+    { label: "Reports", link: "/reports" },
+  ];
 
   const renderMobileMenu = (
     <Drawer
@@ -297,12 +299,12 @@ const Header = () => {
     >
       <Toolbar />
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-          <Box
-            component="img"
-            src={Logo}
-            alt="Logo"
-            sx={styles.logo}
-          />
+        <Box
+          component="img"
+          src={Logo}
+          alt="Logo"
+          sx={styles.logo}
+        />
       </Box>
 
 
@@ -461,14 +463,14 @@ const Header = () => {
         </Box>
         {/* Right Section: User Info */}
         {/* {token && user && ( */}
-          <Box sx={styles.rightSection} onClick={handleUserMenuClick}>
-            <Typography sx={styles.userName}>
-              {user?.emp_name || "User"}
-            </Typography>
-            <Avatar sx={styles.avatar}>
-              {user?.emp_name?.charAt(0).toUpperCase() || "U"}
-            </Avatar>
-          </Box>
+        <Box sx={styles.rightSection} onClick={handleUserMenuClick}>
+          <Typography sx={styles.userName}>
+            {user?.emp_name || "User"}
+          </Typography>
+          <Avatar sx={styles.avatar}>
+            {user?.emp_name?.charAt(0).toUpperCase() || "U"}
+          </Avatar>
+        </Box>
         {/* )} */}
 
         {/* User Dropdown Menu */}
