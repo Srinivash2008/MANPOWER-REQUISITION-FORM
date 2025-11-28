@@ -200,60 +200,60 @@ const ManpowerRequisition = () => {
   };
 
 
-  const handleStatusChange = (event, manpowerId) => {
-    const newStatus = event.target.value;
-    const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
+//   const handleStatusChange = (event, manpowerId) => {
+//     const newStatus = event.target.value;
+//     const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
 
-    if (!originalManpower || newStatus === originalManpower.status) {
-      return;
-    }
+//     if (!originalManpower || newStatus === originalManpower.status) {
+//       return;
+//     }
 
-    if (newStatus === "Raise Query") {
-      setManpowerId(manpowerId);
-      setManpowerStatus(newStatus);
-      setIsRaiseQueryModalOpen(true);
-      return;
-    }
+//     if (newStatus === "Raise Query") {
+//       setManpowerId(manpowerId);
+//       setManpowerStatus(newStatus);
+//       setIsRaiseQueryModalOpen(true);
+//       return;
+//     }
 
-    swal.fire({
-      title: "Are you sure?",
-      text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
-      icon: '',
-      iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-      showCancelButton: true,      
-      confirmButtonColor: theme.palette.primary.main,
-      cancelButtonColor: theme.palette.error.main,
-      confirmButtonText: "Yes, update it!",
-    }).then(async (result) => {
-      if (!result.isConfirmed) {
-        return;
-      }
+//     swal.fire({
+//       title: "Are you sure?",
+//       text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
+//       icon: '',
+//       iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+//       showCancelButton: true,      
+//       confirmButtonColor: theme.palette.primary.main,
+//       cancelButtonColor: theme.palette.error.main,
+//       confirmButtonText: "Yes, update it!",
+//     }).then(async (result) => {
+//       if (!result.isConfirmed) {
+//         return;
+//       }
 
-      dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
-console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with newStatus:', newStatus);
-       try {
-        await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
-        swal.fire({
-          title: 'Updated!',
-          text: 'Manpower status updated successfully.',
-          icon: '',
-          iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-          confirmButtonColor: theme.palette.error.main,
-          confirmButtonText: 'OK'
-        });
-      } catch (err) {
-        dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
-        swal.fire({
-          title: 'Error!',
-          text: err.message || 'Failed to update Manpower.',
-          icon: '',
-          iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-          confirmButtonColor: theme.palette.error.main,
-          confirmButtonText: 'OK'
-        });
-      }
-    });
-  }
+//       dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
+// console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with newStatus:', newStatus);
+//        try {
+//         await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
+//         swal.fire({
+//           title: 'Updated!',
+//           text: 'Manpower status updated successfully.',
+//           icon: '',
+//           iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+//           confirmButtonColor: theme.palette.error.main,
+//           confirmButtonText: 'OK'
+//         });
+//       } catch (err) {
+//         dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
+//         swal.fire({
+//           title: 'Error!',
+//           text: err.message || 'Failed to update Manpower.',
+//           icon: '',
+//           iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+//           confirmButtonColor: theme.palette.error.main,
+//           confirmButtonText: 'OK'
+//         });
+//       }
+//     });
+//   }
 
   const handleDeleteClick = (id) => {
     setDeleteId(id);
@@ -404,7 +404,9 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-                        <StyledTableCell>
+                         <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.status}</StyledTableCell>
+                        
+                        {/* <StyledTableCell>
                           <FormControl fullWidth size="small">
                             <Select
                               value={manpower.status || "Pending"}
@@ -442,7 +444,7 @@ console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with ne
                               </MenuItem>
                             </Select>
                           </FormControl>
-                        </StyledTableCell>
+                        </StyledTableCell> */}
                         <StyledTableCell>
                           {manpower.status === "Pending" && (
                             <>

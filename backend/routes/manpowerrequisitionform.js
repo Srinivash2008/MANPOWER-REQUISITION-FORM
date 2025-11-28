@@ -244,7 +244,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     try {
         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT * FROM manpower_requisition AS mr WHERE mr.id = ? AND mr.isdelete = "Active" LIMIT 1`, [id]);
+        const [rows] = await pool.execute(`SELECT mr.id AS mr_id, depart, employment_status, designation, num_resources, requirement_type, project_name, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, mrq.query_name, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id] );
 
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Manpower requisition not found.' });
@@ -253,8 +253,8 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
         const row = rows[0];
 
         const fetchManpowerRequisitionById = {
-            id: row.id,
-            department: row.department,
+            id: row.mr_id,
+            department: row.depart,
             employment_status: row.employment_status,
             designation: row.designation,
             num_resources: row.num_resources,
@@ -274,10 +274,14 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
             requestor_sign: row.requestor_sign,
             director_sign: row.director_sign,
             mrf_number: row.mrf_number,
+            tat_agreed: row.tat_agreed,
+            delivery_phase: row.delivery_phase,
+            hr_review: row.hr_review,
             status: row.status,
             created_by: row.created_by,
             isdelete: row.isdelete,
             emp_name: row.emp_name,
+            query_name: row.query_name,
         };
 
         res.json(fetchManpowerRequisitionById);
@@ -286,6 +290,26 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
         console.error(error);
         res.status(500).json({ message: 'Server error.' });
     }
+});
+
+router.get('/getmanpowerrequisitionFH', authMiddleware , async (req, res) => {
+    
+    try {
+        const [rows] = await pool.execute('SELECT ep.employee_id, ep.emp_name, ep.emp_resign, ep.ReportingManager, mgr.emp_name AS ReportingManager_Name FROM employee_personal AS ep LEFT JOIN employee_personal AS mgr ON ep.ReportingManager = mgr.employee_id WHERE ep.emp_resign = "12/31/2030" AND ep.ReportingManager != 0 Group By ep.ReportingManager '); 
+
+        const fetchManpowerRequisition = rows.map((row, index) => ({
+            id: row.id,
+            s_no: index + 1,
+            emp_name: row.emp_name,
+            employee_id: row.ReportingManager,
+            ReportingManager: row.ReportingManager_Name,
+        }));
+        res.json(fetchManpowerRequisition);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' });
+    }
+
 });
 
 router.post('/add-query-form', authMiddleware, async (req, res) => {

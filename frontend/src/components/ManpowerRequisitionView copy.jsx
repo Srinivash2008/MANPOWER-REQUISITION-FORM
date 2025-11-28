@@ -6,7 +6,7 @@ import "./Add_Form.css";
 import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField  } from "@mui/material";
 import { FileUploader } from "react-drag-drop-files";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus,optimisticUpdateManpowerStatus, revertManpowerStatus, addQueryForm, fetchDepartmentsManagerId } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus,optimisticUpdateManpowerStatus, revertManpowerStatus, addQueryForm } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import swal from "sweetalert2";
 import { FaCommentDots } from 'react-icons/fa';
@@ -54,7 +54,7 @@ const ManpowerRequisitionView = () => {
 
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
-    
+
     const [notification, setNotification] = useState({
         open: false,
         message: "",
@@ -70,22 +70,14 @@ const ManpowerRequisitionView = () => {
         dispatch(fetchManpowerRequisitionById(id));
     }, [dispatch, id]);
 
-    const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
-
     useEffect(() => {
-        if (user?.emp_id) {
-            dispatch(fetchDepartmentsManagerId(user.emp_id));
-        }
-    }, [dispatch, user?.emp_id]);
+        dispatch(fetchManpowerRequisition());
+    }, [dispatch]);
+
+    const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
 
     useEffect(() => {
         if (selectedRequisition) {
-            console.log("Selected Requisition:", selectedRequisition);
-            let tatValue = "";
-            if (selectedRequisition.hiring_tat_fastag == 1) tatValue = "fastag";
-            else if (selectedRequisition.hiring_tat_normal_cat1 == 1) tatValue = "normalCat1";
-            else if (selectedRequisition.hiring_tat_normal_cat2 == 1) tatValue = "normalCat2";
-
             setFormData({
                 id: selectedRequisition.id || "",
                 department: selectedRequisition.department || "",
@@ -102,7 +94,11 @@ const ManpowerRequisitionView = () => {
                 experience: selectedRequisition.experience || "",
                 ctcRange: selectedRequisition.ctc_range || "",
                 specificInfo: selectedRequisition.specific_info || "",
-                hiringTAT: tatValue,
+                hiringTAT: {
+                    fastag: !!selectedRequisition.hiring_tat_fastag,
+                    normalCat1: !!selectedRequisition.hiring_tat_normal_cat1,
+                    normalCat2: !!selectedRequisition.hiring_tat_normal_cat2,
+                },
                 requestorSign: selectedRequisition.requestor_sign || null,
                 directorSign: selectedRequisition.director_sign || null,
                 mrfNumber: selectedRequisition.mrf_number || "",
@@ -113,7 +109,7 @@ const ManpowerRequisitionView = () => {
                 query_name: selectedRequisition.query_name || "",
             });
         }
-    }, [selectedRequisition, departments]);
+    }, [selectedRequisition]);
     
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -194,8 +190,8 @@ const ManpowerRequisitionView = () => {
                 else delete newErrors.ctcRange;
                 break;
             case 'hiringTAT':
-                if (!value) {
-                    newErrors.hiringTAT = 'A Hiring TAT option must be selected.';
+                if (!Object.values(value).some(option => option)) {
+                    newErrors.hiringTAT = 'At least one Hiring TAT option must be selected.';
                 } else {
                     delete newErrors.hiringTAT;
                 }
@@ -275,9 +271,19 @@ const ManpowerRequisitionView = () => {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        const newValue = type === 'number' ? parseInt(value, 10) : value;
-        setFormData(prev => ({ ...prev, [name]: newValue }));
-        if (isEditMode) validateField(name, newValue);
+        
+        if (name.startsWith('hiringTAT.')) {
+            const tatField = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                hiringTAT: { ...prev.hiringTAT, [tatField]: checked }
+            }));
+            if (isEditMode) validateField('hiringTAT', { ...formData.hiringTAT, [tatField]: checked });
+        } else {
+            const newValue = type === 'number' ? parseInt(value, 10) : value;
+            setFormData(prev => ({ ...prev, [name]: newValue }));
+            if (isEditMode) validateField(name, newValue);
+        }
     };
 
     const handleFileChange = (fieldName, file) => {
@@ -350,11 +356,11 @@ const ManpowerRequisitionView = () => {
 
         // Append all form fields to the FormData object
         for (const key in formData) {
-            if (key === 'hiringTAT' && formData.hiringTAT) {
-                data.append('hiring_tat_fastag', formData.hiringTAT === 'fastag');
-                data.append('hiring_tat_normal_cat1', formData.hiringTAT === 'normalCat1');
-                data.append('hiring_tat_normal_cat2', formData.hiringTAT === 'normalCat2');
-            } else if (key !== 'hiringTAT' && formData[key] !== null && formData[key] !== "") {
+            if (key === 'hiringTAT') {
+                data.append('hiring_tat_fastag', formData.hiringTAT.fastag);
+                data.append('hiring_tat_normal_cat1', formData.hiringTAT.normalCat1);
+                data.append('hiring_tat_normal_cat2', formData.hiringTAT.normalCat2);
+            } else if (formData[key] !== null && formData[key] !== "") {
                 data.append(key, formData[key]);
             }
         }
@@ -374,27 +380,31 @@ const ManpowerRequisitionView = () => {
             });
     };
 
-    const handleDownload = async (filePath) => {
-        if (!filePath || typeof filePath !== 'string') {
-            console.error("Invalid file path provided for download.");
-            setNotification({ open: true, message: 'File path is invalid.', severity: 'error' });
+    const handleDownload = async () => {
+        let filePath = "";
+    
+        if (formData.rampUpFile) {
+            filePath = formData.rampUpFile;
+        } else if (formData.requestorSign) {
+            filePath = formData.requestorSign;
+        } else if (formData.directorSign) {
+            filePath = formData.directorSign;
+        } else {
+            console.error("No file available to download.");
             return;
         }
- 
+
         try {
             const response = await fetch(`${API_URL}/${filePath}`);
-            if (!response.ok) {
-                throw new Error(`File not found or server error. Status: ${response.status}`);
-            }
+            console.log("Download response:", response);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
- 
+
             const a = document.createElement("a");
             a.href = url;
             a.download = filePath.split(/[\\/]/).pop(); // Extract file name
-            document.body.appendChild(a);
             a.click();
-            a.remove();
+
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Download failed:", error);
@@ -407,7 +417,7 @@ const ManpowerRequisitionView = () => {
         
         const newStatus = event.target.value;
         const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
-        console.log("Status change triggered for Manpower ID:", newStatus);
+
         if (!originalManpower || newStatus === originalManpower.status) {
             return;
         }
@@ -513,39 +523,13 @@ const ManpowerRequisitionView = () => {
                             <div className="section-grid multi-col">
                                 <div>
                                     <label className="form-label">Department</label>
-                                    <select
-                                        name="department"
-                                        className={`form-select ${getFieldClassName('department')}`}
-                                        value={formData.department}
-                                        disabled={!isEditMode}
-                                        onChange={handleInputChange}
-                                        onBlur={handleBlur}
-                                    >
-                                        <option value="">Select Department</option>
-                                        {departments?.map((dept) => (
-                                            <option key={dept.id} value={dept.id}>
-                                                {dept.depart}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <input name="department" className={`form-input ${getFieldClassName('department')}`} value={formData.department} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
                                     {renderError('department')}
                                 </div>
                                 <div>
                                     <label className="form-label">Status of Employment</label>
-                                    <select
-                                        name="employmentStatus"
-                                        className={`form-select ${getFieldClassName('employmentStatus')}`}
-                                        value={formData.employmentStatus}
-                                        disabled={!isEditMode}
-                                        onChange={handleInputChange}
-                                        onBlur={handleBlur}
-                                    >
-                                        <option value="">Select Status</option>
-                                        <option value="Permanent">Permanent</option>
-                                        <option value="Contract">Contract</option>
-                                        <option value="Freelancer">Freelancer</option>
-                                    </select>
-                                    {renderError('employmentStatus')}
+                                     <input name="employmentStatus" className={`form-input ${getFieldClassName('employmentStatus')}`} value={formData.employmentStatus} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                     {renderError('employmentStatus')}
                                 </div>
                                 <div>
                                     <label className="form-label">Proposed Designation</label>
@@ -559,18 +543,7 @@ const ManpowerRequisitionView = () => {
                                 </div>
                                 <div className="full-width">
                                     <label className="form-label">Requirement Type</label>
-                                    <select
-                                        name="requirementType"
-                                        className={`form-select ${getFieldClassName('requirementType')}`}
-                                        value={formData.requirementType}
-                                        disabled={!isEditMode}
-                                        onChange={handleInputChange}
-                                        onBlur={handleBlur}
-                                    >
-                                        <option value="Ramp up">Ramp up</option>
-                                        <option value="New Requirement">New Requirement</option>
-                                        <option value="Replacement">Replacement</option>
-                                    </select>
+                                     <input name="requirementType" className="form-input" value={formData.requirementType} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
                                 </div>
 
                                 {/* Conditional Fields */}
@@ -602,12 +575,8 @@ const ManpowerRequisitionView = () => {
                                                     </FileUploader>
                                                     {formData.rampUpFile && (
                                                         <div className="file-display-card">
-                                                            <FiFile className="file-icon" />                                                            
-                                                            {typeof formData.rampUpFile === 'string' ? (
-                                                                <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.rampUpFile); }} className="file-name">{formData.rampUpFile.split(/[\\/]/).pop()}</a>
-                                                            ) : (
-                                                                <span className="file-name">{formData.rampUpFile.name}</span>
-                                                            )}
+                                                            <FiFile className="file-icon" />
+                                                            <span className="file-name">{typeof formData.rampUpFile === 'string' ? formData.rampUpFile.split(/[\\/]/).pop() : formData.rampUpFile.name}</span>
                                                             <button type="button" onClick={() => removeFile("rampUpFile")} className="remove-file-btn"><FiX /></button>
                                                         </div>
                                                     )}
@@ -616,7 +585,13 @@ const ManpowerRequisitionView = () => {
                                             ) : formData.rampUpFile ? (
                                                 <div className="file-display-card">
                                                     <FiFile className="file-icon" />
-                                                    <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.rampUpFile); }} className="file-name">{formData.rampUpFile.split(/[\\/]/).pop()}</a>
+                                                    <a
+                                                        href="#"
+                                                        onClick={handleDownload}
+                                                        className="file-name"
+                                                    >
+                                                        {formData.rampUpFile.split(/[\\/]/).pop()}
+                                                    </a>
                                                 </div>
                                             ) : (<p>No file uploaded.</p>)
                                             }
@@ -698,31 +673,19 @@ const ManpowerRequisitionView = () => {
                         <div className="form-section">
                             <h3 className="section-title"><FiClock /> Turnaround time in detail, please tick required hiring TAT for the request</h3>
                             <div className={`checkbox-group ${getFieldClassName('hiringTAT')}`}>
-                                <label className="radio-label">
-                                    <input
-                                        type="radio"
-                                        name="hiringTAT"
-                                        value="fastag"
-                                        checked={formData.hiringTAT === 'fastag'}
-                                        disabled={!isEditMode}
-                                        onChange={handleInputChange} />
-                                    <span className="custom-radio"></span>
+                                <label className="checkbox-label">
+                                    <input name="hiringTAT.fastag" type="checkbox" checked={formData.hiringTAT.fastag} readOnly={!isEditMode} disabled={!isEditMode} onChange={handleInputChange} />
+                                    <span className="custom-checkbox"></span>
                                     Fastag Hiring (60 Days)
                                 </label>
-                                <label className="radio-label">
-                                    <input
-                                        type="radio"
-                                        name="hiringTAT"
-                                        value="normalCat1"
-                                        checked={formData.hiringTAT === 'normalCat1'}
-                                        disabled={!isEditMode}
-                                        onChange={handleInputChange} />
-                                    <span className="custom-radio"></span>
+                                <label className="checkbox-label">
+                                    <input name="hiringTAT.normalCat1" type="checkbox" checked={formData.hiringTAT.normalCat1} readOnly={!isEditMode} disabled={!isEditMode} onChange={handleInputChange} />
+                                    <span className="custom-checkbox"></span>
                                     Normal Hiring – Cat 1 (90 Days)
                                 </label>
-                                <label className="radio-label">
-                                    <input type="radio" name="hiringTAT" value="normalCat2" checked={formData.hiringTAT === 'normalCat2'} disabled={!isEditMode} onChange={handleInputChange} />
-                                    <span className="custom-radio"></span>
+                                <label className="checkbox-label">
+                                    <input name="hiringTAT.normalCat2" type="checkbox" checked={formData.hiringTAT.normalCat2} readOnly={!isEditMode} disabled={!isEditMode} onChange={handleInputChange} />
+                                    <span className="custom-checkbox"></span>
                                     Normal Hiring – Cat 2 (120 Days)
                                 </label>
                             </div>
@@ -751,22 +714,29 @@ const ManpowerRequisitionView = () => {
                                                     </FileUploader>
                                                     {formData.requestorSign && (
                                                         <div className="file-display-card">
-                                                            <FiFile className="file-icon" />                                                            
-                                                            {typeof formData.requestorSign === 'string' ? (
-                                                                <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.requestorSign); }} className="file-name">{formData.requestorSign.split(/[\\/]/).pop()}</a>
-                                                            ) : (
-                                                                <span className="file-name">{formData.requestorSign.name}</span>
-                                                            )}
+                                                            <FiFile className="file-icon" />
+                                                            <span className="file-name">{typeof formData.requestorSign === 'string' ? formData.requestorSign.split(/[\\/]/).pop() : formData.requestorSign.name}</span>
                                                             <button type="button" onClick={() => removeFile("requestorSign")} className="remove-file-btn"><FiX /></button>
                                                         </div>
                                                     )}
                                                     {renderError('requestorSign')}
                                                 </>
                                             ) : formData.requestorSign ? (
-                                                <div className="file-display-card">
-                                                    <FiFile className="file-icon" />
-                                                    <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.requestorSign); }} className="file-name">{formData.requestorSign.split(/[\\/]/).pop()}</a>
-                                                </div>
+                                                // <div className="file-display-card"><FiFile className="file-icon" /><a href='#!' onClick={handleDownload}  className="file-name">{formData.requestorSign.split(/[\\/]/).pop()}</a></div>
+                                                // <div className="file-display-card">
+                                                //     <FiFile className="file-icon" />
+                                                //     <a
+                                                //         href="#"
+                                                //         onClick={handleDownload}
+                                                //         className="file-name"
+                                                //     >
+                                                //         {formData.requestorSign.split(/[\\/]/).pop()}
+                                                //     </a>
+                                                // </div>
+    <img
+        src={`${API_URL}/${formData.requestorSign}`}
+         
+    />
                                             ) : (<p>Not provided.</p>)}
                                         </div>
                                     )}
@@ -785,22 +755,13 @@ const ManpowerRequisitionView = () => {
                                                     >
                                                         <div className="upload-area"><div className="upload-instruction"><span>Drag & Drop or Click to Upload</span><span className="file-types">(Accepted: JPEG, PNG, JPG)</span></div></div>
                                                     </FileUploader>
-                                                    {formData.directorSign && (                                                        
-                                                        <div className="file-display-card">
-                                                            <FiFile className="file-icon" />                                                            
-                                                            {typeof formData.directorSign === 'string' ? (
-                                                                <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.directorSign); }} className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a>
-                                                            ) : (<span className="file-name">{formData.directorSign.name}</span>)}
-                                                            <button type="button" onClick={() => removeFile("directorSign")} className="remove-file-btn"><FiX /></button>
-                                                        </div>
+                                                    {formData.directorSign && (
+                                                        <div className="file-display-card"><FiFile className="file-icon" /><span className="file-name">{typeof formData.directorSign === 'string' ? formData.directorSign.split(/[\\/]/).pop() : formData.directorSign.name}</span><button type="button" onClick={() => removeFile("directorSign")} className="remove-file-btn"><FiX /></button></div>
                                                     )}
                                                     {renderError('directorSign')}
                                                 </>
                                             ) : formData.directorSign ? (
-                                                <div className="file-display-card">
-                                                    <FiFile className="file-icon" />
-                                                    <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.directorSign); }} className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a>
-                                                </div>
+                                                <div className="file-display-card"><FiFile className="file-icon" /><a href={`${API_URL}/${formData.directorSign}`} target="_blank" rel="noopener noreferrer" className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a></div>
                                             ) : (<p>Not provided.</p>)}
                                         </div>
                                     )}
@@ -836,7 +797,8 @@ const ManpowerRequisitionView = () => {
                                 </div>
                             </div>
                         )}
-                         {(isSeniorManager || isDirector || isHr) && (
+
+                        {(isSeniorManager || isDirector || isHr) && (
                             <>
                                 <div className="form-section">
                                     <h3 className="section-title"><FaUserCheck /> Status Updation</h3>
@@ -875,11 +837,13 @@ const ManpowerRequisitionView = () => {
                                             </Select>
                                         </FormControl>
                                     </div>
-                                
+                                </div>
 
                                 {(isRaiseQueryOpen || formData.status === "Raise Query") && (
-                                    <div style = {{ marginTop: '1rem' }}>
-                                      
+                                    <div className="form-section">
+                                        <h3 className="section-title">
+                                            <FaCommentDots /> Query Details
+                                        </h3>
                                         <input type="hidden" name="query_manpower_requisition_pid" value={manpowerId} />
                                         <input type="hidden" name="status" value={manpowerStatus} />
                                         <TextField
@@ -902,11 +866,9 @@ const ManpowerRequisitionView = () => {
                                         )}
                                     </div>
                                 )}
-                                </div>
                             </>
                         )}
                     </div>
-                    
                     {isEditMode && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
                             <Button type="submit" variant="contained" color="primary">
