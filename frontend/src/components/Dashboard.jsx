@@ -475,7 +475,7 @@ const Dashboard = () => {
                     {
                       data: [
                         { id: 0, value: counts.approved, label: 'Approved', color: theme.palette.success.main },
-                        { id: 1, value: totalPending, label: 'Pending', color: theme.palette.primary.main },
+                        { id: 1, value: totalPending, label: 'Pending', color: theme.palette.secondary.main },
                         { id: 2, value: counts.rejected, label: 'Rejected', color: theme.palette.error.main },
                       ],
                       innerRadius: 65,

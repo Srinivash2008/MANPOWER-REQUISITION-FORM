@@ -2,7 +2,7 @@
 
 /* --- Page Wrapper --- */
 .page-wrapper {
-  background-color: #ffffff;
+  /* background-color: #ffffff; */
   padding-top: 4%;
   display: flex;
   /* Use flexbox to center the form panel */
@@ -109,6 +109,7 @@
   color: #333333;
   /* darkText from Login.jsx */
 }
+
 .required-star {
   color: #d32f2f;
   margin-left: 4px;
@@ -170,7 +171,49 @@
   cursor: pointer;
 }
 
+/* --- Custom Radio Button Styles --- */
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
 /* --- Submit Button --- */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.draft-button {
+
+  /* width: 100%; */
+  padding: 0.9rem;
+  margin-top: 2rem;
+  border: 1px solid #28a745;
+  /* Green border */
+  color: #28a745;
+  /* Green text to match the border */
+  border-radius: 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background-color: #ffffff;
+  /* darkAccent from Login.jsx */
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.draft-button:hover {
+ transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(42, 127, 102, 0.3);
+  background-color: #226a55;
+  color: #ffffff;
+}
+
 .submit-button {
   width: 100%;
   padding: 0.9rem;
@@ -184,6 +227,12 @@
   /* darkAccent from Login.jsx */
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.form-actions .submit-button {
+  width: auto;
+  /* Override width when in flex container */
+  padding: 0.9rem 1.5rem;
 }
 
 .submit-button:hover {
@@ -244,6 +293,55 @@
 .checkbox-label input[type="checkbox"]:checked~.custom-checkbox::after {
   display: block;
 }
+
+/* Hide the default browser radio button */
+.radio-label input[type="radio"] {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Create a custom radio button appearance */
+.custom-radio {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: #fff;
+  border: 2px solid #C0D1C8;
+  border-radius: 50%;
+  /* Make it a circle */
+  margin-right: 12px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Style the inner dot */
+.custom-radio::after {
+  content: '';
+  position: absolute;
+  display: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+}
+
+/* Show the inner dot and change background when the hidden radio is checked */
+.radio-label input[type="radio"]:checked~.custom-radio {
+  background-color: #2A7F66;
+  /* Accent color for the checked state */
+  border-color: #2A7F66;
+}
+
+.radio-label input[type="radio"]:checked~.custom-radio::after {
+  display: block;
+  /* Show the inner dot */
+}
+
 
 /* --- Custom File Uploader Styles --- */
 .file-uploader-custom {
@@ -341,7 +439,7 @@
   }
 }
 
-.error-message{
+.error-message {
   color: #d32f2f;
   font-size: 0.875rem;
   margin-top: 4px;
