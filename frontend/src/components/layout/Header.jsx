@@ -142,7 +142,7 @@ const useHeaderStyles = () => {
       width: 36,
       height: 36,
       fontSize: "1rem",
-      background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+      background: `linear-gradient(45deg, #66BB6A, #388E3C)`,
     },
     menuPaper: {
       mt: '2px',
@@ -160,7 +160,8 @@ const useHeaderStyles = () => {
       padding: theme.spacing(1, 2),
       color: colors.darkText,
       "&:hover": {
-        backgroundColor: 'rgba(0, 0, 0, 0.06)',
+        backgroundColor: colors.lightGreenBg,
+        color: colors.darkAccent,
       },
     },
     logoutItem: {

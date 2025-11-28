@@ -22,65 +22,70 @@ import PendingIcon from '@mui/icons-material/Pending';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { useDispatch, useSelector } from 'react-redux';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { getMFRCounts } from '../redux/cases/manpowerrequisitionSlice';
 
 // --- Custom Theme Definition for Aesthetic Light Mode ---
 const lightTheme = createTheme({
-    palette: {
-        mode: 'light',
-        primary: {
-            main: '#2A7F66', // Dark accent green from Login page
-            light: '#559985',
-            dark: '#1D5947',
-        },
-        secondary: {
-            main: '#F2994A', // A complementary warm amber/orange
-        },
-        background: {
-            default: '#F3FAF8', // Light green background from Login page
-            paper: 'rgba(255, 255, 255, 0.85)', // Slightly more opaque for better readability
-        },
-        success: {
-            main: '#34D399', // A vibrant, modern green
-            light: '#6EE7B7',
-        },
-        error: {
-            main: '#DC3545', // Consistent with Login page
-            light: '#E4606D',
-        },
-        warning: {
-            main: '#F59E0B', // A rich, golden amber
-            light: '#FBBF24',
-        },
-        info: {
-            main: '#3B82F6', // A clear, friendly blue
-            light: '#60A5FA',
-        },
-        text: {
-            primary: '#1F2937', // Dark gray for high contrast
-            secondary: '#4B5563', // Softer gray for secondary text
-        },
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#2A7F66', // Dark accent green from Login page
+      light: '#559985',
+      dark: '#1D5947',
     },
-    typography: {
-        fontFamily: '"Poppins", "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-        h3: {
-            fontWeight: 800,
-        },
-        h5: {
-            fontWeight: 700,
-        },
+    secondary: {
+      main: '#F2994A', // A complementary warm amber/orange
     },
-    components: {
-        MuiCard: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 16, // Slightly reduced for a sharper look
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                },
-            },
-        },
+    tertitary: {
+      main: '#BFA2DB', // Soft lavender complementing tertitary purple
+      light: '#D8CBF8',
     },
+    background: {
+      default: '#F3FAF8', // Light green background from Login page
+      paper: 'rgba(255, 255, 255, 0.85)', // Slightly more opaque for better readability
+    },
+    success: {
+      main: '#34D399', // A vibrant, modern green
+      light: '#6EE7B7',
+    },
+    error: {
+      main: '#DC3545', // Consistent with Login page
+      light: '#E4606D',
+    },
+    warning: {
+      main: '#F59E0B', // A rich, golden amber
+      light: '#FBBF24',
+    },
+    info: {
+      main: '#3B82F6', // A clear, friendly blue
+      light: '#60A5FA',
+    },
+    text: {
+      primary: '#1F2937', // Dark gray for high contrast
+      secondary: '#4B5563', // Softer gray for secondary text
+    },
+  },
+  typography: {
+    fontFamily: '"Poppins", "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h3: {
+      fontWeight: 800,
+    },
+    h5: {
+      fontWeight: 700,
+    },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16, // Slightly reduced for a sharper look
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.05)',
+          backdropFilter: 'blur(10px)',
+        },
+      },
+    },
+  },
 });
 
 // --- Stat Row Component (New Vertical Design) ---
@@ -119,84 +124,18 @@ const StatRow = ({ status, count, icon: Icon, color, total }) => {
         <Typography variant="caption" color="text.secondary">{percentage}% of total requisitions</Typography>
       </Box>
       <Typography variant="h5" fontWeight={800} color={paletteColor.main}>{count.toLocaleString()}</Typography>
-   
+
     </Card>
   );
 };
 
-// --- Radial Progress Bar Component ---
-const RadialProgressBar = ({ percentage, color, size = 150, strokeWidth = 15, count, isLarge = false }) => {
-  const theme = useTheme();
-  const radius = (size - strokeWidth) / 2; //NOSONAR
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (percentage / 100) * circumference;
-  const paletteColor = theme.palette[color];
-
-  return (
-    <Box
-      sx={{
-        width: size,
-        height: size,
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-        borderRadius: '50%',
-      }}
-    >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute' }}>
-        <circle
-          stroke={theme.palette.grey[200]}
-          fill="transparent"
-          strokeWidth={strokeWidth}
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-        <circle
-          stroke={paletteColor.main}
-          fill="transparent"
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference + ' ' + circumference}
-          style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s ease-out' }}
-          strokeLinecap="round"
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1,
-        }}
-      >
-        <Typography variant="h4" fontWeight={900} sx={{
-          color: paletteColor.main,
-          fontSize: isLarge ? '2.5rem' : '1.8rem',
-          textShadow: `0 0 5px ${paletteColor.main}50`
-        }}>
-          {percentage}%
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: isLarge ? '1rem' : '0.9rem' }}>
-          {Number(count || 0).toLocaleString()} forms
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
 
 // --- Donut Chart for Pending Breakdown ---
 const DonutChart = ({ data, total, size = 200, strokeWidth = 25 }) => {
   const theme = useTheme();
   const radius = (size - strokeWidth) / 2; //NOSONAR
   const circumference = 2 * Math.PI * radius;
-console.log("Donut Chart Data:", data, "Total:", total);
+  console.log("Donut Chart Data:", data, "Total:", total);
   let accumulatedPercentage = 0;
 
   return (
@@ -212,50 +151,50 @@ console.log("Donut Chart Data:", data, "Total:", total);
           cy={size / 2}
         />
         {/* Data Segments */}
-        
+
        // --- Inside the DonutChart component's return statement ---
-{data.map((item, mapIndex) => {
-    const percentage = total > 0 ? (item.count / total) * 100 : 0;
-    const segmentLength = (percentage / 100) * circumference;
-    const paletteColor = theme.palette[item.color];
-    
-    // 1. Calculate the starting point (offset) based on the accumulated percentage *before* the current item.
-    // NOTE: This MUST be calculated using the previous accumulated value.
-    const startingOffset = (accumulatedPercentage / 100) * circumference;
-    
-    // 2. The strokeDashoffset is used to *position* the beginning of the stroke array. 
-    // Since the SVG circle is rotated -90deg (to start at the top), we subtract the startingOffset from the circumference.
-    // This correctly positions the start of the current segment.
-    const strokeDashoffset = circumference - startingOffset; 
+        {data.map((item, mapIndex) => {
+          const percentage = total > 0 ? (item.count / total) * 100 : 0;
+          const segmentLength = (percentage / 100) * circumference;
+          const paletteColor = theme.palette[item.color];
 
-    // Update accumulated percentage for the next iteration
-    accumulatedPercentage += percentage;
+          // 1. Calculate the starting point (offset) based on the accumulated percentage *before* the current item.
+          // NOTE: This MUST be calculated using the previous accumulated value.
+          const startingOffset = (accumulatedPercentage / 100) * circumference;
 
-    console.log("Donut Segment:", item.status, "Count:", item.count, "Percentage:", percentage, "Offset:", strokeDashoffset);
+          // 2. The strokeDashoffset is used to *position* the beginning of the stroke array. 
+          // Since the SVG circle is rotated -90deg (to start at the top), we subtract the startingOffset from the circumference.
+          // This correctly positions the start of the current segment.
+          const strokeDashoffset = circumference - startingOffset;
 
-    // Skip drawing segments with zero count to avoid rendering issues with 0 length
-    if (segmentLength <= 0) return null;
+          // Update accumulated percentage for the next iteration
+          accumulatedPercentage += percentage;
 
-    return (
-        <circle
-            key={item.status}
-            stroke={paletteColor.main}
-            fill="transparent"
-            strokeWidth={strokeWidth}
-            
-            // CRITICAL CHANGE: Set the length of the stroke and the gap after it.
-            // [Segment Length] [Gap Length (Circumference - Segment Length)]
-            strokeDasharray={`${segmentLength} ${circumference - segmentLength}`} 
-            
-            // Use the calculated offset to position the start of the segment.
-            strokeDashoffset={strokeDashoffset} 
-            r={radius}
-            cx={size / 2}
-            cy={size / 2}
-            style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
-        />
-    );
-})}
+          console.log("Donut Segment:", item.status, "Count:", item.count, "Percentage:", percentage, "Offset:", strokeDashoffset);
+
+          // Skip drawing segments with zero count to avoid rendering issues with 0 length
+          if (segmentLength <= 0) return null;
+
+          return (
+            <circle
+              key={item.status}
+              stroke={paletteColor.main}
+              fill="transparent"
+              strokeWidth={strokeWidth}
+
+              // CRITICAL CHANGE: Set the length of the stroke and the gap after it.
+              // [Segment Length] [Gap Length (Circumference - Segment Length)]
+              strokeDasharray={`${segmentLength} ${circumference - segmentLength}`}
+
+              // Use the calculated offset to position the start of the segment.
+              strokeDashoffset={strokeDashoffset}
+              r={radius}
+              cx={size / 2}
+              cy={size / 2}
+              style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+            />
+          );
+        })}
       </svg>
       <Box
         sx={{
@@ -264,7 +203,7 @@ console.log("Donut Chart Data:", data, "Total:", total);
         }}
       >
         <Typography variant="h4" fontWeight={900} color="text.primary">{total.toLocaleString()}</Typography>
-        <Typography variant="body1" color="text.secondary" style={{fontSize:"11px",fontWeight:"900"}}>Total</Typography>
+        <Typography variant="body1" color="text.secondary" style={{ fontSize: "11px", fontWeight: "900" }}>Total</Typography>
       </Box>
     </Box>
   );
@@ -276,31 +215,38 @@ const FunnelBar = ({ data }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <Box sx={{ width: '100%', mt: 2 }}>
-      <Box sx={{ display: 'flex', height: '28px', borderRadius: 2, overflow: 'hidden', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)' }}>
+    <Box sx={{ width: '100%', mt: 3 }}>
+      <Box sx={{ display: 'flex', height: '28px', borderRadius: '14px', overflow: 'hidden', bgcolor: 'action.hover', boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.08)' }}>
         {data.map(item => {
           const itemPercent = total > 0 ? (item.value / total) * 100 : 0;
           const paletteColor = theme.palette[item.color];
           return (
-            <Tooltip title={`${item.label}: ${item.value.toLocaleString()} (${itemPercent.toFixed(1)}%)`} key={item.label}>
+            <Tooltip title={`${item.label}: ${item.value.toLocaleString()} (${itemPercent.toFixed(1)}%)`} key={item.label} arrow>
               <Box sx={{
                 width: `${itemPercent}%`,
-                bgcolor: paletteColor.main,
-                transition: 'width 0.5s ease-in-out',
+                background: `linear-gradient(145deg, ${paletteColor.light}, ${paletteColor.main})`,
+                transition: 'all 0.4s ease-in-out',
+                cursor: 'pointer',
                 '&:hover': {
-                  bgcolor: paletteColor.light,
+                  transform: 'scale(1.05)',
+                  boxShadow: `0 0 12px ${paletteColor.main}90`,
+                  zIndex: 1,
                 }
               }} />
             </Tooltip>
           );
         })}
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2.5 }}>
         {data.map(item => (
-          <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: theme.palette[item.color].main }} />
-            <Typography variant="caption" color="text.secondary" fontWeight={600}>{item.label}:</Typography>
-            <Typography variant="caption" fontWeight={700} color="text.primary">{item.value.toLocaleString()}</Typography>
+          <Box key={item.label} sx={{ textAlign: 'center' }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: theme.palette[item.color].main }} />
+              {item.label}
+            </Typography>
+            <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+              {item.value.toLocaleString()}
+            </Typography>
           </Box>
         ))}
       </Box>
@@ -308,266 +254,127 @@ const FunnelBar = ({ data }) => {
   );
 };
 
-// --- Small Insight Card Component ---
-const InsightCard = ({ title, value, description, color, icon: Icon }) => {
-  const theme = useTheme();
-  const paletteColor = theme.palette[color];
 
-  return (
-    <Card sx={{
-      p: 2.5,
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      borderLeft: `4px solid ${paletteColor.main}`,
-      bgcolor: `${paletteColor.main}0D`, // Very light background tint
-    }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography variant="subtitle1" fontWeight={700} color="text.primary">{title}</Typography>
-        <Icon sx={{ color: paletteColor.main, fontSize: 28, opacity: 0.8 }} />
-      </Box>
-      <Box sx={{ mt: 1 }}>
-        <Typography variant="h4" fontWeight={800} color={paletteColor.main}>{value}</Typography>
-        <Typography variant="caption" color="text.secondary">{description}</Typography>
-      </Box>
-    </Card>
-  );
-};
-
-// --- Drafts Card Component ---
-const DraftsCard = ({ count }) => {
-  const theme = useTheme();
-  return (
-    <Card sx={{
-      p: 2.5,
-      height: '100%',
-      textAlign: 'center',
-      border: `2px dashed ${theme.palette.grey[400]}`,
-      bgcolor: 'transparent',
-      boxShadow: 'none',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'border-color 0.3s, background-color 0.3s',
-      '&:hover': {
-        borderColor: theme.palette.primary.main,
-        bgcolor: `${theme.palette.primary.main}0A`,
-      }
-    }}>
-      <Typography variant="h4" fontWeight={800} color="text.primary">{count}</Typography>
-      <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
-        In Drafts
-      </Typography>
-      <Typography variant="caption" color="text.secondary">Awaiting completion</Typography>
-    </Card>
-  );
-};
-
-// --- New "Super Cool" Card Components ---
-
-// 1. Gauge Card for Approval Rate
-const GaugeCard = ({ title, value, color, icon: Icon }) => {
-  const theme = useTheme();
-  const paletteColor = theme.palette[color];
-  const strokeWidth = 12;
-  const size = 120;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (value / 100) * circumference;
-
-  return (
-    <Card sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', bgcolor: `${paletteColor.main}0D` }}>
-      <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ mb: 1.5 }}>{title}</Typography>
-      <Box sx={{ position: 'relative', width: size, height: size, mb: 1.5 }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
-          <circle stroke={theme.palette.grey[300]} fill="transparent" strokeWidth={strokeWidth} r={radius} cx={size / 2} cy={size / 2} />
-          <circle
-            stroke={paletteColor.main} fill="transparent" strokeWidth={strokeWidth} strokeDasharray={circumference}
-            strokeDashoffset={offset} r={radius} cx={size / 2} cy={size / 2} strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
-          />
-        </svg>
-        <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography variant="h4" fontWeight={800} color={paletteColor.main}>{`${value}%`}</Typography>
-        </Box>
-      </Box>
-      <Typography variant="caption" color="text.secondary">Based on finalized requisitions</Typography>
-    </Card>
-  );
-};
-
-// 2. Animated Counter Card for Total Requisitions
-const CounterCard = ({ title, value, color, icon: Icon }) => {
-  const theme = useTheme();
-  const paletteColor = theme.palette[color];
-
-  return (
-    <Card sx={{ p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', borderTop: `4px solid ${paletteColor.main}` }}>
-      <Icon sx={{ color: paletteColor.main, fontSize: 36, mb: 1 }} />
-      <Typography variant="subtitle1" fontWeight={700} color="text.primary">{title}</Typography>
-      <Typography variant="h3" fontWeight={900} color={paletteColor.main} sx={{ my: 0.5 }}>
-        {value.toLocaleString()}
-      </Typography>
-      <Typography variant="caption" color="text.secondary">All submitted forms</Typography>
-    </Card>
-  );
-};
-
-// 3. Interactive Drafts Card
-const InteractiveDraftsCard = ({ count }) => {
-  const theme = useTheme();
-  return (
-    <Card sx={{
-      p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-      textAlign: 'center', border: `2px dashed ${theme.palette.grey[400]}`, boxShadow: 'none', bgcolor: 'transparent',
-      cursor: 'pointer', transition: 'all 0.3s ease',
-      '&:hover': {
-        borderColor: theme.palette.warning.main,
-        bgcolor: `${theme.palette.warning.main}1A`,
-        transform: 'translateY(-4px)',
-        boxShadow: `0 8px 16px ${theme.palette.warning.main}30`,
-        '& .draft-icon': {
-          transform: 'scale(1.15) rotate(-5deg)',
-          color: theme.palette.warning.dark,
-        },
-      }
-    }}>
-      <DescriptionIcon className="draft-icon" sx={{
-        fontSize: 40,
-        color: theme.palette.warning.main,
-        mb: 1,
-        transition: 'all 0.3s ease',
-      }} />
-      <Typography variant="h4" fontWeight={800} color="text.primary">{count.toLocaleString()}</Typography>
-      <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
-        In Drafts
-      </Typography>
-      <Typography variant="caption" color="text.secondary">Click to complete</Typography>
-    </Card>
-  );
-};
 
 // --- New Line Chart Component ---
 const LineChart = ({ data }) => {
-    const theme = useTheme();
-    if (!data || data.length === 0) {
-        return <Card sx={{ p: 3, textAlign: 'center' }}><Typography>No data available for chart.</Typography></Card>;
+  const theme = useTheme();
+  if (!data || data.length === 0) {
+    return <Card sx={{ p: 3, textAlign: 'center' }}><Typography>No data available for chart.</Typography></Card>;
+  }
+
+  const maxValue = Math.max(...data.map(item => item.count), 1);
+  const chartHeight = 250;
+  const chartWidth = 950;
+  const padding = { top: 20, right: 40, bottom: 40, left: 40 }; // Increased side padding for better spacing
+  const drawingWidth = chartWidth - padding.left - padding.right;
+
+  // Calculate points with proper spacing from edges
+  const points = data.map((item, index) => {
+    const x = padding.left + (index / (data.length - 1 || 1)) * drawingWidth; // Handle single data point case
+    const y = padding.top + (1 - (item.count / maxValue)) * (chartHeight - padding.top - padding.bottom);
+    return { x, y, ...item };
+  });
+
+  // --- Path Generation ---
+  const createPath = (pts) => {
+    if (pts.length === 0) return "";
+    if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`; // Handle single point
+
+    let path = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const x_mid = (pts[i].x + pts[i + 1].x) / 2;
+      const y_mid = (pts[i].y + pts[i + 1].y) / 2;
+      const cp_x1 = (x_mid + pts[i].x) / 2;
+      const cp_x2 = (x_mid + pts[i + 1].x) / 2;
+      path += ` Q ${cp_x1},${pts[i].y} ${x_mid},${y_mid}`;
+      path += ` Q ${cp_x2},${pts[i + 1].y} ${pts[i + 1].x},${pts[i + 1].y}`;
     }
+    return path;
+  };
 
-    const maxValue = Math.max(...data.map(item => item.count), 1);
-    const chartHeight = 250;
-    const chartWidth = 950;
-    const padding = { top: 20, right: 40, bottom: 40, left: 40 }; // Increased side padding for better spacing
-    const drawingWidth = chartWidth - padding.left - padding.right;
+  const linePath = createPath(points);
 
-    // Calculate points with proper spacing from edges
-    const points = data.map((item, index) => {
-        const x = padding.left + (index / (data.length - 1 || 1)) * drawingWidth; // Handle single data point case
-        const y = padding.top + (1 - (item.count / maxValue)) * (chartHeight - padding.top - padding.bottom);
-        return { x, y, ...item };
-    });
+  // Area path with proper closure
+  const areaPath = points.length > 0
+    ? `${linePath} L ${points[points.length - 1].x},${chartHeight - padding.bottom} L ${points[0].x},${chartHeight - padding.bottom} Z`
+    : "";
 
-    // --- Path Generation ---
-    const createPath = (pts) => {
-        if (pts.length === 0) return "";
-        if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`; // Handle single point
-        
-        let path = `M ${pts[0].x},${pts[0].y}`;
-        for (let i = 0; i < pts.length - 1; i++) {
-            const x_mid = (pts[i].x + pts[i + 1].x) / 2;
-            const y_mid = (pts[i].y + pts[i + 1].y) / 2;
-            const cp_x1 = (x_mid + pts[i].x) / 2;
-            const cp_x2 = (x_mid + pts[i + 1].x) / 2;
-            path += ` Q ${cp_x1},${pts[i].y} ${x_mid},${y_mid}`;
-            path += ` Q ${cp_x2},${pts[i + 1].y} ${pts[i + 1].x},${pts[i + 1].y}`;
-        }
-        return path;
-    };
+  return (
+    <Card sx={{ p: { xs: 2, sm: 3 }, height: '100%', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
+      <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Overall Requisition Status</Typography>
+      <Box sx={{ position: 'relative', height: chartHeight, width: '100%' }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={theme.palette.primary.main} stopOpacity={0} />
+            </linearGradient>
+          </defs>
 
-    const linePath = createPath(points);
+          {/* Area Path */}
+          <path d={areaPath} fill="url(#areaGradient)" />
 
-    // Area path with proper closure
-    const areaPath = points.length > 0 
-        ? `${linePath} L ${points[points.length - 1].x},${chartHeight - padding.bottom} L ${points[0].x},${chartHeight - padding.bottom} Z`
-        : "";
+          {/* Line Path */}
+          <path
+            d={linePath}
+            fill="none"
+            stroke={theme.palette.primary.main}
+            strokeWidth="3"
+            strokeLinecap="round"
+            sx={{
+              strokeDasharray: 1000,
+              strokeDashoffset: 1000,
+              animation: 'dash 1.5s ease-out forwards',
+              '@keyframes dash': { to: { strokeDashoffset: 0 } },
+            }}
+          />
 
-    return (
-        <Card sx={{ p: { xs: 2, sm: 3 }, height: '100%', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Overall Requisition Status</Typography>
-            <Box sx={{ position: 'relative', height: chartHeight, width: '100%' }}>
-                <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-                    <defs>
-                        <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
-                            <stop offset="100%" stopColor={theme.palette.primary.main} stopOpacity={0} />
-                        </linearGradient>
-                    </defs>
-                    
-                    {/* Area Path */}
-                    <path d={areaPath} fill="url(#areaGradient)" />
+          {/* Data Points */}
+          {points.map((point) => (
+            <Tooltip title={`${point.status}: ${point.count.toLocaleString()}`} key={point.status} placement="top">
+              <g>
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r="6"
+                  fill={theme.palette.background.paper}
+                  stroke={theme.palette[point.color]?.main || theme.palette.primary.main}
+                  strokeWidth="3"
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'r 0.2s ease, fill 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.setAttribute('r', '8');
+                    e.currentTarget.style.fill = theme.palette[point.color]?.light || theme.palette.primary.light;
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.setAttribute('r', '6');
+                    e.currentTarget.style.fill = theme.palette.background.paper;
+                  }}
+                />
+              </g>
+            </Tooltip>
+          ))}
 
-                    {/* Line Path */}
-                    <path
-                        d={linePath}
-                        fill="none"
-                        stroke={theme.palette.primary.main}
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        sx={{
-                            strokeDasharray: 1000,
-                            strokeDashoffset: 1000,
-                            animation: 'dash 1.5s ease-out forwards',
-                            '@keyframes dash': { to: { strokeDashoffset: 0 } },
-                        }}
-                    />
-
-                    {/* Data Points */}
-                    {points.map((point) => (
-                        <Tooltip title={`${point.status}: ${point.count.toLocaleString()}`} key={point.status} placement="top">
-                            <g> 
-                                <circle
-                                    cx={point.x}
-                                    cy={point.y}
-                                    r="6"
-                                    fill={theme.palette.background.paper}
-                                    stroke={theme.palette[point.color]?.main || theme.palette.primary.main}
-                                    strokeWidth="3"
-                                    style={{
-                                        cursor: 'pointer',
-                                        transition: 'r 0.2s ease, fill 0.2s ease',
-                                    }}
-                                    onMouseOver={(e) => { 
-                                        e.currentTarget.setAttribute('r', '8'); 
-                                        e.currentTarget.style.fill = theme.palette[point.color]?.light || theme.palette.primary.light; 
-                                    }}
-                                    onMouseOut={(e) => { 
-                                        e.currentTarget.setAttribute('r', '6'); 
-                                        e.currentTarget.style.fill = theme.palette.background.paper; 
-                                    }}
-                                />
-                            </g>
-                        </Tooltip>
-                    ))}
-
-                    {/* X-Axis Labels (inside SVG for responsiveness) */}
-                    {points.map(point => (
-                        <text
-                            key={`label-${point.status}`}
-                            x={point.x}
-                            y={chartHeight - padding.bottom + 15} // Position below the chart line
-                            textAnchor="middle" // Center the text on the x-coordinate
-                            fill={theme.palette.text.secondary}
-                            style={{ fontSize: '10px', fontWeight: 600 }}
-                        >
-                            {point.status}
-                        </text>
-                    ))}
-                </svg>
-            </Box>
-        </Card>
-    );
+          {/* X-Axis Labels (inside SVG for responsiveness) */}
+          {points.map(point => (
+            <text
+              key={`label-${point.status}`}
+              x={point.x}
+              y={chartHeight - padding.bottom + 15} // Position below the chart line
+              textAnchor="middle" // Center the text on the x-coordinate
+              fill={theme.palette.text.secondary}
+              style={{ fontSize: '10px', fontWeight: 600 }}
+            >
+              {point.status}
+            </text>
+          ))}
+        </svg>
+      </Box>
+    </Card>
+  );
 };
 
 // --- Main Dashboard Component ---
@@ -602,7 +409,7 @@ const Dashboard = () => {
       status: 'Pending',
       count: counts.pending,
       icon: (props) => <PendingIcon {...props} />,
-      color: 'primary',
+      color: 'secondary',
       description: 'Requisitions awaiting initial review.',
     },
     {
@@ -616,7 +423,7 @@ const Dashboard = () => {
       status: 'On Hold',
       count: counts.onHold,
       icon: (props) => <AccessTimeIcon {...props} />,
-      color: 'warning',
+      color: 'tertitary',
       description: 'Awaiting primary manager approval.',
     },
     {
@@ -641,7 +448,7 @@ const Dashboard = () => {
   );
   const totalPending = pendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
   const pendingPercentage = counts.total > 0 ? Number(((totalPending / counts.total) * 100).toFixed(1)) : 0;
-  
+
   // Calculate Approval Rate
   const totalFinalized = counts.approved + counts.rejected;
   const approvalRate = totalFinalized > 0 ? Number(((counts.approved / totalFinalized) * 100).toFixed(1)) : 0;
@@ -656,12 +463,12 @@ const Dashboard = () => {
       sx={{
         minHeight: 'calc(100vh - 64px)', // Adjust for header height if any
         background: `radial-gradient(circle at top left, #F3FAF8, #e9f5f2 100%)`,
-        p: { xs: 2, sm: 3, md: 4, lg:8 },
+        p: { xs: 2, sm: 3, md: 4, lg: 8 },
         color: theme.palette.text.primary,
         transition: 'all 0.3s ease',
       }}
     >
-      <Box mb={{ xs: 3, sm: 4, md: 5 }} mt={{xs: 10, sm: 10, md: 5 ,lg:9}} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+      <Box mb={{ xs: 3, sm: 4, md: 5 }} mt={{ xs: 10, sm: 10, md: 5, lg: 9 }} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
 
         <Typography
           variant="h4"
@@ -693,8 +500,8 @@ const Dashboard = () => {
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
         {/* --- Left Column (Main Content) --- */}
         <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}>
-          
-          
+
+
           {/* New Row for Funnel and Pending Cards */}
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 3, md: 4 } }}>
             {/* Requisition Funnel Card */}
@@ -708,9 +515,6 @@ const Dashboard = () => {
                 { label: 'Pending', value: totalPending, color: 'primary' },
                 { label: 'Rejected', value: counts.rejected, color: 'error' },
               ]} />
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
-                This funnel shows the distribution of requisitions across their primary stages: Approved (green), Pending (blue), and Rejected (red).
-              </Typography>
             </Card>
 
             {/* Pending Requisitions Focus Area */}
