@@ -56,8 +56,10 @@ const ManpowerRequisitionView = () => {
         tatAgreed: "",
         hrReview: "",
         deliveryPhase: "",
-        status: "",
-        query_name: "",
+        hrstatus: "",
+        directorstatus: "",
+        query_name_hr: "",
+        query_name_director: "",
     });
 
     const [errors, setErrors] = useState({});
@@ -163,8 +165,10 @@ const ManpowerRequisitionView = () => {
                 tatAgreed: selectedRequisition.tat_agreed || "",
                 hrReview: selectedRequisition.hr_review || "",
                 deliveryPhase: selectedRequisition.delivery_phase || "",
-                status: selectedRequisition.status || "",
-                query_name: selectedRequisition.query_name || "",
+                hrstatus: selectedRequisition.hr_status || "",
+                directorstatus: selectedRequisition.director_status || "",
+                query_name_hr: selectedRequisition.query_name_hr || "",
+                query_name_director: selectedRequisition.query_name_director || "",
             });
 
             // Set URLs for signatures
@@ -1060,7 +1064,7 @@ const ManpowerRequisitionView = () => {
                                             )}
                                         </div>
                                     )}
-                                    {(isDirector || isHr) && (
+                                    {!isEditMode && (isSeniorManager || isDirector || isHr) && (
                                         <div>
                                             <label className="form-label">Director Sign<span className="required-star">*</span></label>
                                             {isEditMode ? (
@@ -1098,7 +1102,7 @@ const ManpowerRequisitionView = () => {
                         )}
 
                         {/* HR Use Only Section - Conditionally Rendered */}
-                        {isHr && (
+                        {!isEditMode && (isSeniorManager || isDirector || isHr) && (
                             <div className="form-section">
                                 <h3 className="section-title"><FiEdit3 /> HR Use Only</h3>
                                 <div className="section-grid multi-col">
@@ -1195,6 +1199,66 @@ const ManpowerRequisitionView = () => {
                                         </div>
                                     )}
                                 </div>
+                            </>
+                        )}
+
+                        {!isEditMode && (isSeniorManager || isDirector || isHr) && (
+                            <>
+                                <div className="form-section">
+                                    <h3 className="section-title"><FaUserCheck /> Director Status</h3>
+                                    <div className="section-grid multi-col">
+                                        <div>
+                                            <label className="form-label">Status Name<span className="required-star">*</span></label>
+                                            <input name="directorstatus" className={`form-input ${getFieldClassName('directorstatus')}`} value={formData.directorstatus} readOnly={!isEditMode}  />
+                                            {renderError('directorstatus')}
+                                        </div>
+                                    </div>
+                                    {(formData.directorstatus === "Raise Query") && (
+                                        <div style={{ marginTop: '1rem' }}>
+                                            <label className="form-label">Director Query<span className="required-star">*</span></label>
+                                            <input
+                                                type="text"
+                                                name="query_name_director"
+                                                className={`form-input ${getFieldClassName('query_name_director')}`}
+                                                value={formData.query_name_director || ''}
+                                                onChange={(e) => handleInputChange(e)}
+                                                readOnly={!isEditMode}
+                                            />
+                                            {renderError('query_name_director')}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                            </>
+                        )}
+
+                        {!isEditMode && (isSeniorManager || isDirector || isHr) && (
+                            <>
+                                <div className="form-section">
+                                    <h3 className="section-title"><FaUserCheck /> HR Status</h3>
+                                    <div className="section-grid multi-col">
+                                        <div>
+                                            <label className="form-label">Status Name<span className="required-star">*</span></label>
+                                            <input name="hrstatus" className={`form-input ${getFieldClassName('hrstatus')}`} value={formData.hrstatus} readOnly={!isEditMode}  />
+                                            {renderError('hrstatus')}
+                                        </div>
+                                    </div>
+                                    {(formData.hrstatus === "Raise Query") && (
+                                        <div style={{ marginTop: '1rem' }}>
+                                            <label className="form-label">HR Query<span className="required-star">*</span></label>
+                                            <input
+                                                type="text"
+                                                name="query_name_hr"
+                                                className={`form-input ${getFieldClassName('query_name_hr')}`}
+                                                value={formData.query_name_hr || ''}
+                                                onChange={(e) => handleInputChange(e)}
+                                                readOnly={!isEditMode}
+                                            />
+                                            {renderError('query_name_hr')}
+                                        </div>
+                                    )}
+                                </div>
+                                
                             </>
                         )}
                     </div>

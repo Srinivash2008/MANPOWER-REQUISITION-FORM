@@ -383,7 +383,7 @@ const ManpowerRequisition = () => {
                       <StyledTableCell>CTC Range</StyledTableCell>
                       <StyledTableCell>Specific Info</StyledTableCell>
                       <StyledTableCell>MRF Number</StyledTableCell> */}
-                      <StyledTableCell>Status</StyledTableCell>
+                      {/* <StyledTableCell>Status</StyledTableCell> */}
                       <StyledTableCell>
                         Action
                       </StyledTableCell>
@@ -409,7 +409,7 @@ const ManpowerRequisition = () => {
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-                         <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.status}</StyledTableCell>
+                         {/* <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.status}</StyledTableCell> */}
                         
                         {/* <StyledTableCell>
                           <FormControl fullWidth size="small">
