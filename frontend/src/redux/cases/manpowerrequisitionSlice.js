@@ -2,6 +2,36 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 // Async thunk to fetch email Template data
+
+// Async thunk to fetch email Template data
+export const fetchManpowerRequisitionByuserId = createAsyncThunk(
+  'manpowerRequisition/fetchManpowerRequisitionByuserId',
+  async (userId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(`${API_URL}/api/cases/getmanpowerrequisitionbyuser/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch manpower requisition by user ID.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+
 export const fetchManpowerRequisition = createAsyncThunk(
   'manpowerRequisition/fetchManpowerRequisition',
   async (_, { rejectWithValue, getState }) => {
@@ -31,7 +61,7 @@ export const fetchManpowerRequisition = createAsyncThunk(
 
 export const fetchManpowerRequisitionByStatus = createAsyncThunk(
   'manpowerRequisition/fetchManpowerRequisitionByStatus',
-  async (status, { rejectWithValue, getState }) => {
+  async (data, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
       const token = auth.token;
@@ -40,7 +70,7 @@ export const fetchManpowerRequisitionByStatus = createAsyncThunk(
       }
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const response = await axios.get(
-        `${API_URL}/api/cases/getmanpowerrequisitionbystatus/${status}`,
+        `${API_URL}/api/cases/getmanpowerrequisitionbystatus/${data?.status}/${data?.emp_id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -79,6 +109,31 @@ export const getMFRCounts = createAsyncThunk(
     }
   }
 );
+export const fetchManagerList = createAsyncThunk(
+  'manpowerRequisition/fetchManagerrList',
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/mrf/manager-list`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch Manager list.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 
 export const fetchManpowerRequisitionById = createAsyncThunk(
   'manpowerRequisition/fetchManpowerRequisitionById',
@@ -101,7 +156,7 @@ export const fetchManpowerRequisitionById = createAsyncThunk(
           },
         }
       );
-
+console.log("Fetched MRF by ID Response:", response.data);
       return response.data;
     } catch (error) {
       const errorMessage =
@@ -180,7 +235,7 @@ export const addQueryForm = createAsyncThunk(
 export const updateManpowerStatus = createAsyncThunk(
   'manpowerRequisition/updateManpowerStatus',
   async ({ manpowerId, newStatus }, { rejectWithValue, getState }) => {
-    console.log('updateManpowerStatus called with:', { manpowerId });
+    console.log('updateManpowerStatus called with:', { manpowerId ,newStatus});
     try {
       const { auth } = getState();
       const token = auth.token;
@@ -262,6 +317,7 @@ export const fetchDepartmentsManagerId = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
+      
       return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch departments.';
@@ -338,19 +394,20 @@ const manpowerrequisitionSlice = createSlice({
     data: [],
     mfrCounts: [],
     departments: [],
+    managerList: [],
     status: 'idle',
     error: null,
   },
   reducers: {
     optimisticUpdateManpowerStatus: (state, action) => {
       const { manpowerId, newStatus } = action.payload;
-      state.data = state.data.map(manpowerItem =>
+      state.data = state.data?.map(manpowerItem =>
         manpowerItem.id === manpowerId ? { ...manpowerItem, status: newStatus } : manpowerItem
       );
     },
     revertManpowerStatus: (state, action) => {
       const { manpowerId, originalManpower } = action.payload;
-      state.data = state.data.map(manpowerItem =>
+      state.data = state?.data?.map(manpowerItem =>
         manpowerItem.id === manpowerId ? originalManpower : manpowerItem
       );
     },
@@ -367,6 +424,19 @@ const manpowerrequisitionSlice = createSlice({
         state.data = action.payload;
       })
       .addCase(fetchManpowerRequisition.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.data = [];
+      })
+      .addCase(fetchManpowerRequisitionByuserId.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchManpowerRequisitionByuserId.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = action.payload;
+      })
+      .addCase(fetchManpowerRequisitionByuserId.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
         state.data = [];
@@ -423,6 +493,19 @@ const manpowerrequisitionSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
         state.mfrCounts = null;
+      })
+      .addCase(fetchManagerList.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      } )
+      .addCase(fetchManagerList.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.managerList = action.payload;
+      })
+      .addCase(fetchManagerList.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.managerList = [];
       })
 
       // Handle fetchDepartments

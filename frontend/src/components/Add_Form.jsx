@@ -1,25 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiX, FiFile } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { FileUploader } from "react-drag-drop-files";
 import "./Add_Form.css";
-import { addManpowerRequisition, fetchDepartmentsManagerId } from "../redux/cases/manpowerrequisitionSlice";
+import { addManpowerRequisition, fetchDepartmentsManagerId, fetchManagerList } from "../redux/cases/manpowerrequisitionSlice";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
+import { useNavigate } from 'react-router-dom';
 
 const App_Form = () => {
+
+    const dispatch = useDispatch();
+     const navigate = useNavigate();
     const { token, user } = useSelector((state) => state.auth);
+    const { managerList } = useSelector((state) => state.manpowerRequisition);
+        const {
+        status: submissionStatus,
+        departments
+    } = useSelector((state) => state.manpowerRequisition) || {};
+    console.log("departments from Redux:", departments);
     const [notification, setNotification] = useState({
         open: false,
         message: "",
         severity: "success",
     });
+    useEffect(() => {
+        if (token) {
+            dispatch(fetchManagerList());
+        }
+    }, [token]);
+
 
     // --- Role-based visibility flags ---
-    const isHr = user?.emp_id === "12345";
-    const isDirector = user?.emp_dept === "Director" && !isHr;
-    const isSeniorManager = user?.emp_pos === "Senior Manager" && !isHr && !isDirector;
+    const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
+    const isDirector = user?.emp_id == "1400";
+    const isSeniorManager = managerList.some(manager => manager.employee_id == user?.emp_id);
 
     // --- Form State ---
     const [formData, setFormData] = useState({
@@ -88,11 +104,8 @@ const App_Form = () => {
         setFormData(initialData);
     }, [user, isHr, isDirector, isSeniorManager]);
 
-    const dispatch = useDispatch();
-    const {
-        status: submissionStatus,
-        departments
-    } = useSelector((state) => state.manpowerRequisition) || {};
+
+
 
     // --- Validation Functions ---
     const validateField = (name, value) => {
@@ -116,10 +129,10 @@ const App_Form = () => {
                 else delete newErrors.numResources;
                 break;
             case 'projectName':
-                if (formData.requirementType && !value && 
-                    (formData.requirementType === "Ramp up" || 
-                     formData.requirementType === "New Requirement" || 
-                     formData.requirementType === "Replacement")) {
+                if (formData.requirementType && !value &&
+                    (formData.requirementType === "Ramp up" ||
+                        formData.requirementType === "New Requirement" ||
+                        formData.requirementType === "Replacement")) {
                     newErrors.projectName = 'Project Name is required for this requirement type.';
                 } else {
                     delete newErrors.projectName;
@@ -312,6 +325,13 @@ const App_Form = () => {
         }
     }, [dispatch, user?.emp_id]);
 
+    useEffect(() => {
+        if (departments && departments.length === 1) {
+            setFormData(prev => ({ ...prev, department: departments[0].id }));
+            validateField('department', departments[0].id);
+        }
+    }, [departments]);
+
     const onSizeError = (file) => {
         setNotification({
             open: true,
@@ -329,7 +349,7 @@ const App_Form = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Mark all fields as touched
         const allTouched = {};
         Object.keys(formData).forEach(key => {
@@ -371,6 +391,7 @@ const App_Form = () => {
                     message: 'MRF request submitted successfully!',
                     severity: 'success'
                 });
+                 setTimeout(() => navigate('/mrf-list'), 2000);
                 // Reset form
                 setFormData({
                     department: "",
@@ -398,6 +419,8 @@ const App_Form = () => {
                 });
                 setErrors({});
                 setTouched({});
+               
+                
             })
             .catch((error) => {
                 setNotification({
@@ -465,6 +488,7 @@ const App_Form = () => {
                 });
                 setErrors({});
                 setTouched({});
+                setTimeout(() => navigate('/mrf-list'), 2000);
             })
             .catch((error) => {
                 setNotification({
@@ -494,7 +518,7 @@ const App_Form = () => {
 
     return (
         <div className="page-wrapper">
-            <div className="form-panel" style={{marginTop:'2%'}}>
+            <div className="form-panel" style={{ marginTop: '2%' }}>
                 <div className="form-header">
                     <h1 className="info-title" >
                         Manpower Requisition Form
@@ -513,9 +537,9 @@ const App_Form = () => {
                             <div className="section-grid multi-col">
                                 <div>
                                     <label className="form-label">Department<span className="required-star">*</span></label>
-                                    <select 
-                                        name="department" 
-                                        value={formData.department} 
+                                    <select
+                                        name="department"
+                                        value={formData.department}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
                                         className={`form-select ${getFieldClassName('department')}`}
@@ -532,9 +556,9 @@ const App_Form = () => {
 
                                 <div>
                                     <label className="form-label">Status of Employment<span className="required-star">*</span></label>
-                                    <select 
-                                        name="employmentStatus" 
-                                        value={formData.employmentStatus} 
+                                    <select
+                                        name="employmentStatus"
+                                        value={formData.employmentStatus}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
                                         className={`form-select ${getFieldClassName('employmentStatus')}`}
@@ -549,38 +573,38 @@ const App_Form = () => {
 
                                 <div>
                                     <label className="form-label">Proposed Designation<span className="required-star">*</span></label>
-                                    <input 
+                                    <input
                                         type="text"
-                                        name="designation" 
-                                        value={formData.designation} 
+                                        name="designation"
+                                        value={formData.designation}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
                                         className={`form-input ${getFieldClassName('designation')}`}
-                                        placeholder="Enter designation" 
+                                        placeholder="Enter designation"
                                     />
                                     {renderError('designation')}
                                 </div>
 
                                 <div>
                                     <label className="form-label">No. of Resources<span className="required-star">*</span></label>
-                                    <input 
+                                    <input
                                         type="number"
-                                        name="numResources" 
-                                        value={formData.numResources} 
+                                        name="numResources"
+                                        value={formData.numResources}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
                                         min="1"
                                         className={`form-input ${getFieldClassName('numResources')}`}
-                                        placeholder="e.g., 1" 
+                                        placeholder="e.g., 1"
                                     />
                                     {renderError('numResources')}
                                 </div>
 
                                 <div className="full-width">
                                     <label className="form-label">Requirement Type</label>
-                                    <select 
-                                        name="requirementType" 
-                                        value={formData.requirementType} 
+                                    <select
+                                        name="requirementType"
+                                        value={formData.requirementType}
                                         onChange={handleInputChange}
                                         className="form-select"
                                     >
@@ -595,14 +619,14 @@ const App_Form = () => {
                                     <>
                                         <div className="full-width">
                                             <label className="form-label">Project Name<span className="required-star">*</span></label>
-                                            <input 
+                                            <input
                                                 type="text"
-                                                name="projectName" 
-                                                value={formData.projectName} 
+                                                name="projectName"
+                                                value={formData.projectName}
                                                 onChange={handleInputChange}
                                                 onBlur={handleBlur}
                                                 className={`form-input ${getFieldClassName('projectName')}`}
-                                                placeholder="Enter project name" 
+                                                placeholder="Enter project name"
                                             />
                                             {renderError('projectName')}
                                         </div>
@@ -641,27 +665,27 @@ const App_Form = () => {
                                     <>
                                         <div className="full-width">
                                             <label className="form-label">Project Name<span className="required-star">*</span></label>
-                                            <input 
+                                            <input
                                                 type="text"
-                                                name="projectName" 
-                                                value={formData.projectName} 
+                                                name="projectName"
+                                                value={formData.projectName}
                                                 onChange={handleInputChange}
                                                 onBlur={handleBlur}
                                                 className={`form-input ${getFieldClassName('projectName')}`}
-                                                placeholder="Enter project name" 
+                                                placeholder="Enter project name"
                                             />
                                             {renderError('projectName')}
                                         </div>
                                         <div className="full-width">
                                             <label className="form-label">Reason for Additional Resources<span className="required-star">*</span></label>
-                                            <input 
+                                            <input
                                                 type="text"
-                                                name="rampUpReason" 
-                                                value={formData.rampUpReason} 
+                                                name="rampUpReason"
+                                                value={formData.rampUpReason}
                                                 onChange={handleInputChange}
                                                 onBlur={handleBlur}
                                                 className={`form-input ${getFieldClassName('rampUpReason')}`}
-                                                placeholder="Required for New Requirement" 
+                                                placeholder="Required for New Requirement"
                                             />
                                             {renderError('rampUpReason')}
                                         </div>
@@ -672,27 +696,27 @@ const App_Form = () => {
                                     <>
                                         <div className="full-width">
                                             <label className="form-label">Project Name<span className="required-star">*</span></label>
-                                            <input 
+                                            <input
                                                 type="text"
-                                                name="projectName" 
-                                                value={formData.projectName} 
+                                                name="projectName"
+                                                value={formData.projectName}
                                                 onChange={handleInputChange}
                                                 onBlur={handleBlur}
                                                 className={`form-input ${getFieldClassName('projectName')}`}
-                                                placeholder="Enter project name" 
+                                                placeholder="Enter project name"
                                             />
                                             {renderError('projectName')}
                                         </div>
                                         <div className="full-width">
                                             <label className="form-label">Resigned Employee (Name + ID)<span className="required-star">*</span></label>
-                                            <input 
+                                            <input
                                                 type="text"
-                                                name="replacementDetail" 
-                                                value={formData.replacementDetail} 
+                                                name="replacementDetail"
+                                                value={formData.replacementDetail}
                                                 onChange={handleInputChange}
                                                 onBlur={handleBlur}
                                                 className={`form-input ${getFieldClassName('replacementDetail')}`}
-                                                placeholder="Required only for replacements" 
+                                                placeholder="Required only for replacements"
                                             />
                                             {renderError('replacementDetail')}
                                         </div>
@@ -707,27 +731,27 @@ const App_Form = () => {
                             <div className="section-grid">
                                 <div className="full-width">
                                     <label className="form-label">Job Description<span className="required-star">*</span></label>
-                                    <textarea 
-                                        name="jobDescription" 
-                                        value={formData.jobDescription} 
+                                    <textarea
+                                        name="jobDescription"
+                                        value={formData.jobDescription}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        rows="4" 
+                                        rows="4"
                                         className={`form-textarea ${getFieldClassName('jobDescription')}`}
-                                        placeholder="Enter detailed job description" 
+                                        placeholder="Enter detailed job description"
                                     />
                                     {renderError('jobDescription')}
                                 </div>
                                 <div className="full-width">
                                     <label className="form-label">Educational Qualification<span className="required-star">*</span></label>
-                                    <input 
+                                    <input
                                         type="text"
-                                        name="education" 
-                                        value={formData.education} 
+                                        name="education"
+                                        value={formData.education}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
                                         className={`form-input ${getFieldClassName('education')}`}
-                                        placeholder="e.g., B.Tech in Computer Science" 
+                                        placeholder="e.g., B.Tech in Computer Science"
                                     />
                                     {renderError('education')}
                                 </div>
@@ -740,39 +764,39 @@ const App_Form = () => {
                             <div className="section-grid multi-col">
                                 <div>
                                     <label className="form-label">Experience (Min - Max)<span className="required-star">*</span></label>
-                                    <input 
+                                    <input
                                         type="text"
-                                        name="experience" 
-                                        value={formData.experience} 
+                                        name="experience"
+                                        value={formData.experience}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
                                         className={`form-input ${getFieldClassName('experience')}`}
-                                        placeholder="e.g., 3-5 years" 
+                                        placeholder="e.g., 3-5 years"
                                     />
                                     {renderError('experience')}
                                 </div>
                                 <div>
                                     <label className="form-label">Approx. CTC Range<span className="required-star">*</span></label>
-                                    <input 
+                                    <input
                                         type="text"
-                                        name="ctcRange" 
-                                        value={formData.ctcRange} 
+                                        name="ctcRange"
+                                        value={formData.ctcRange}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
                                         className={`form-input ${getFieldClassName('ctcRange')}`}
-                                        placeholder="e.g., 8-12 LPA" 
+                                        placeholder="e.g., 8-12 LPA"
                                     />
                                     {renderError('ctcRange')}
                                 </div>
                                 <div className="full-width">
                                     <label className="form-label">Any Specific Information</label>
-                                    <textarea 
-                                        name="specificInfo" 
-                                        value={formData.specificInfo} 
+                                    <textarea
+                                        name="specificInfo"
+                                        value={formData.specificInfo}
                                         onChange={handleInputChange}
-                                        rows="2" 
+                                        rows="2"
                                         className="form-textarea"
-                                        placeholder="Enter any other specific requirements" 
+                                        placeholder="Enter any other specific requirements"
                                     />
                                 </div>
                             </div>
@@ -783,33 +807,33 @@ const App_Form = () => {
                             <h3 className="section-title"><FiClock /> Turnaround time in detail, please tick required hiring TAT for the request<span className="required-star">*</span></h3>
                             <div className={`checkbox-group ${getFieldClassName('hiringTAT')}`}>
                                 <label className="radio-label">
-                                    <input 
+                                    <input
                                         type="radio"
                                         name="hiringTAT"
                                         value="fastag"
-                                        checked={formData.hiringTAT === 'fastag'} 
+                                        checked={formData.hiringTAT === 'fastag'}
                                         onChange={handleInputChange}
                                     />
                                     <span className="custom-radio"></span>
                                     Fastag Hiring (60 Days)
                                 </label>
                                 <label className="radio-label">
-                                    <input 
+                                    <input
                                         type="radio"
                                         name="hiringTAT"
                                         value="normalCat1"
-                                        checked={formData.hiringTAT === 'normalCat1'} 
+                                        checked={formData.hiringTAT === 'normalCat1'}
                                         onChange={handleInputChange}
                                     />
                                     <span className="custom-radio"></span>
                                     Normal Hiring – Cat 1 (90 Days)
                                 </label>
                                 <label className="radio-label">
-                                    <input 
+                                    <input
                                         type="radio"
                                         name="hiringTAT"
                                         value="normalCat2"
-                                        checked={formData.hiringTAT === 'normalCat2'} 
+                                        checked={formData.hiringTAT === 'normalCat2'}
                                         onChange={handleInputChange}
                                     />
                                     <span className="custom-radio"></span>
@@ -824,7 +848,7 @@ const App_Form = () => {
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Approvals</h3>
                                 <div className="section-grid multi-col">
-                                    {(isSeniorManager || isHr) && (
+                                    {(isSeniorManager || isHr || isDirector) && (
                                         <div>
                                             <label className="form-label">Requestor Sign & Date<span className="required-star">*</span></label>
                                             <FileUploader
@@ -895,53 +919,53 @@ const App_Form = () => {
                                 <div className="section-grid multi-col">
                                     <div>
                                         <label className="form-label">MRF Number<span className="required-star">*</span></label>
-                                        <input 
+                                        <input
                                             type="text"
-                                            name="mrfNumber" 
-                                            value={formData.mrfNumber} 
+                                            name="mrfNumber"
+                                            value={formData.mrfNumber}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
                                             className={`form-input ${getFieldClassName('mrfNumber')}`}
-                                            placeholder="Enter MRF Number" 
+                                            placeholder="Enter MRF Number"
                                         />
                                         {renderError('mrfNumber')}
                                     </div>
                                     <div>
                                         <label className="form-label">TAT Agreed (in days)<span className="required-star">*</span></label>
-                                        <input 
+                                        <input
                                             type="text"
-                                            name="tatAgreed" 
-                                            value={formData.tatAgreed} 
+                                            name="tatAgreed"
+                                            value={formData.tatAgreed}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
                                             className={`form-input ${getFieldClassName('tatAgreed')}`}
-                                            placeholder="Enter agreed TAT in days" 
+                                            placeholder="Enter agreed TAT in days"
                                         />
                                         {renderError('tatAgreed')}
                                     </div>
                                     <div>
                                         <label className="form-label">Phase of Delivery for bulk hiring<span className="required-star">*</span></label>
-                                        <input 
+                                        <input
                                             type="text"
-                                            name="deliveryPhase" 
-                                            value={formData.deliveryPhase} 
+                                            name="deliveryPhase"
+                                            value={formData.deliveryPhase}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
                                             className={`form-input ${getFieldClassName('deliveryPhase')}`}
-                                            placeholder="e.g., Phase 1" 
+                                            placeholder="e.g., Phase 1"
                                         />
                                         {renderError('deliveryPhase')}
                                     </div>
                                     <div>
                                         <label className="form-label">HR - Head Review<span className="required-star">*</span></label>
-                                        <input 
+                                        <input
                                             type="text"
-                                            name="hrReview" 
-                                            value={formData.hrReview} 
+                                            name="hrReview"
+                                            value={formData.hrReview}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
                                             className={`form-input ${getFieldClassName('hrReview')}`}
-                                            placeholder="Enter review comments" 
+                                            placeholder="Enter review comments"
                                         />
                                         {renderError('hrReview')}
                                     </div>

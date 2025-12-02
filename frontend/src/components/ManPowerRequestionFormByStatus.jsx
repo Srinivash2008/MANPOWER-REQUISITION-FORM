@@ -82,6 +82,7 @@ const tickVariants = {
 const ManpowerRequisitionByStatus = () => {
     const dispatch = useDispatch();
     const { param_status } = useParams(); // Returns { status: 'value-from-url' }
+      const { user } = useSelector((state) => state.auth);
      // Map URL param values to display names
   const statusDisplayNames = {
     pending: 'Pending',
@@ -103,11 +104,11 @@ const ManpowerRequisitionByStatus = () => {
     useEffect(() => {
         if (param_status) {
             if (param_status === "Approved") {
-                dispatch(fetchManpowerRequisitionByStatus("Approve"));
+                dispatch(fetchManpowerRequisitionByStatus({status:"Approve",emp_id:user?.emp_id}));
             } else if (param_status === "Rejected") {
-                dispatch(fetchManpowerRequisitionByStatus("Reject"));
+                dispatch(fetchManpowerRequisitionByStatus({status:"Reject",emp_id:user?.emp_id}));
             } else {
-                dispatch(fetchManpowerRequisitionByStatus(param_status));
+                dispatch(fetchManpowerRequisitionByStatus({status:param_status,emp_id:user?.emp_id}));
             }
         }
     }, [param_status, dispatch]);
@@ -229,7 +230,7 @@ const ManpowerRequisitionByStatus = () => {
                                 <TableHead className="custom-header">
                                     <TableRow>
                                         <StyledTableCell>S.No</StyledTableCell>
-                                        <StyledTableCell>Emp Id/Name</StyledTableCell>
+                                        <StyledTableCell>Name</StyledTableCell>
                                         <StyledTableCell>Department</StyledTableCell>
                                         <StyledTableCell>Status of Employment</StyledTableCell>
                                         <StyledTableCell>Designation</StyledTableCell>
@@ -255,7 +256,7 @@ const ManpowerRequisitionByStatus = () => {
                                             <StyledTableCell component="th" scope="row">
                                                 {page * rowsPerPage + index + 1}
                                             </StyledTableCell>
-                                            <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.created_by}/${manpower.emp_name}`}</StyledTableCell>
+                                            <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
                                             <StyledTableCell>{manpower.department}</StyledTableCell>
                                             <StyledTableCell>{manpower.employment_status}</StyledTableCell>
                                             <StyledTableCell>{manpower.designation}</StyledTableCell>

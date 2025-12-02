@@ -834,6 +834,9 @@ const ManpowerRequisitionView = () => {
                                                 <MenuItem value="On Hold" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
                                                     On Hold
                                                 </MenuItem>
+                                                <MenuItem value="HR Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
+                                                    HR Approve
+                                                </MenuItem>
                                             </Select>
                                         </FormControl>
                                     </div>

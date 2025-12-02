@@ -354,7 +354,7 @@ const Dashboard = () => {
   // Convert string values to numbers and calculate dynamic values
   const counts = {
     pending: parseInt(mfrCounts?.pending_count) || 0,
-    approved: parseInt(mfrCounts?.approve_count) || 0,
+    approved: (parseInt(mfrCounts?.approve_count) || 0) + (parseInt(mfrCounts?.HR_Approve_count) || 0),
     rejected: parseInt(mfrCounts?.reject_count) || 0,
     raiseQuery: parseInt(mfrCounts?.raise_query_count) || 0,
     onHold: parseInt(mfrCounts?.on_hold_count) || 0,
@@ -467,10 +467,11 @@ const Dashboard = () => {
             <Card sx={{ flex: 1, p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
               <Typography variant="h6" fontWeight={700}>Requisition Funnel</Typography>
               <Typography variant="body2" color="text.secondary">
-                Breakdown of all {counts.total.toLocaleString()} requisitions
+                Breakdown of all {counts.total.toLocaleString()} requisitions.
               </Typography>
-              <Box sx={{ mt: 0, height: { xs: 200, sm: 220 } }}>
+              <Box sx={{ mt: 0, height: { xs: 200, sm: 220,lg:150,md:200 } }}>
                 <PieChart
+                  sx={{ '--Charts-legend-itemWidth': '100px' }}
                   series={[
                     {
                       data: [
@@ -498,7 +499,7 @@ const Dashboard = () => {
 
                 </PieChart>
               </Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1, fontStyle: 'italic' }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center',  fontStyle: 'italic' }}>
                 *Pending includes On Hold and Raise Query statuses.
               </Typography>
             </Card>
@@ -511,6 +512,7 @@ const Dashboard = () => {
               backdropFilter: 'blur(10px)',
               bgcolor: 'rgba(255, 255, 255, 0.7)',
               display: 'grid',
+              borderLeft: `4px solid ${theme.palette.secondary.main}`,
               gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr' },
               gap: { xs: 3, sm: 4, md: 5 },
               alignItems: 'center',
@@ -563,7 +565,9 @@ const Dashboard = () => {
 
           {/* --- Bottom Row for Key Metrics --- */}
           <Box sx={{ mt: 1 }}>
-            <LineChart data={comprehensiveData} />
+            <Card sx={{ borderLeft: `4px solid ${theme.palette.primary.main}` }}>
+              <LineChart data={comprehensiveData} />
+            </Card>
           </Box>
         </Box>
 

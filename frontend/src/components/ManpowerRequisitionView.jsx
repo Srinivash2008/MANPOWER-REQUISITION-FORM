@@ -3,31 +3,38 @@ import { styled, useTheme } from '@mui/material/styles';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiX } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField  } from "@mui/material";
+import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField } from "@mui/material";
 import { FileUploader } from "react-drag-drop-files";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus,optimisticUpdateManpowerStatus, revertManpowerStatus, addQueryForm, fetchDepartmentsManagerId } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus, optimisticUpdateManpowerStatus, revertManpowerStatus, addQueryForm, fetchDepartmentsManagerId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import swal from "sweetalert2";
 import { FaCommentDots } from 'react-icons/fa';
 
 const ManpowerRequisitionView = () => {
-    const dispatch  = useDispatch();
+    const dispatch = useDispatch();
     const theme = useTheme();
-    const { id } = useParams(); 
+    const { id } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const { user } = useSelector((state) => state.auth);
+    const { token, user } = useSelector((state) => state.auth);
     const isEditMode = location.pathname.includes('manpower_requisition_edit');
+    useEffect(() => {
+        if (token) {
+            dispatch(fetchManagerList());
+        }
+    }, [token]);
+    const { managerList } = useSelector((state) => state.manpowerRequisition);
 
     // --- Role-based visibility flags ---
-    const isHr = user?.emp_id === "12345";
-    const isDirector = user?.emp_dept === "Director" && !isHr;
-    const isSeniorManager = user?.emp_pos === "Senior Manager" && !isHr && !isDirector;
+    const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
+    const isDirector = user?.emp_id == "1400";
+    const isSeniorManager = managerList.some(manager => manager.employee_id == user?.emp_id);
 
     const [formData, setFormData] = useState({
         id: "",
         department: "",
+        depart_id: "",
         employmentStatus: "",
         designation: "",
         numResources: 1,
@@ -54,23 +61,40 @@ const ManpowerRequisitionView = () => {
 
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
-    
+
     const [notification, setNotification] = useState({
         open: false,
         message: "",
         severity: "success",
     });
-    const manpowerRequisitionList = useSelector((state)=> state.manpowerRequisition.data);
+    const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
     const status = useSelector((state) => state.manpowerRequisition.status);
     const [manpowerId, setManpowerId] = useState(null);
     const [manpowerStatus, setManpowerStatus] = useState(null);
     const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
+    const [queryText, setQueryText] = useState("");
+
 
     useEffect(() => {
         dispatch(fetchManpowerRequisitionById(id));
     }, [dispatch, id]);
 
+    useEffect(() => {
+        dispatch(fetchManpowerRequisition());
+    }, [dispatch]);
+
     const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
+    // console.log("Selected departments from Redux:", departments);
+
+    useEffect(() => {
+        if (selectedRequisition && selectedRequisition?.status) {
+            console.log(selectedRequisition, "selectedRequisition")
+            setManpowerStatus(selectedRequisition?.status);
+            setManpowerId(selectedRequisition?.id);
+            setQueryText(selectedRequisition?.query_name);
+
+        }
+    }, [dispatch, selectedRequisition]);
 
     useEffect(() => {
         if (user?.emp_id) {
@@ -80,15 +104,16 @@ const ManpowerRequisitionView = () => {
 
     useEffect(() => {
         if (selectedRequisition) {
-            console.log("Selected Requisition:", selectedRequisition);
             let tatValue = "";
             if (selectedRequisition.hiring_tat_fastag == 1) tatValue = "fastag";
             else if (selectedRequisition.hiring_tat_normal_cat1 == 1) tatValue = "normalCat1";
             else if (selectedRequisition.hiring_tat_normal_cat2 == 1) tatValue = "normalCat2";
+            // console.log("Selected Requisition:", selectedRequisition);
 
             setFormData({
                 id: selectedRequisition.id || "",
                 department: selectedRequisition.department || "",
+                depart_id: selectedRequisition.depart_id || "",
                 employmentStatus: selectedRequisition.employment_status || "",
                 designation: selectedRequisition.designation || "",
                 numResources: selectedRequisition.num_resources || 1,
@@ -114,7 +139,7 @@ const ManpowerRequisitionView = () => {
             });
         }
     }, [selectedRequisition, departments]);
-    
+
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
     // --- Validation Functions (adapted from Add_Form.jsx) ---
@@ -149,8 +174,8 @@ const ManpowerRequisitionView = () => {
             case 'projectName':
                 if (formData.requirementType && !value &&
                     (formData.requirementType === "Ramp up" ||
-                     formData.requirementType === "New Requirement" ||
-                     formData.requirementType === "Replacement")) {
+                        formData.requirementType === "New Requirement" ||
+                        formData.requirementType === "Replacement")) {
                     newErrors.projectName = 'Project Name is required for this requirement type.';
                 } else {
                     delete newErrors.projectName;
@@ -251,7 +276,7 @@ const ManpowerRequisitionView = () => {
                 tempErrors[name] = errors[name];
             }
         });
-        
+
         // A full re-validation pass to be sure
         const allTouched = {};
         const newErrors = {};
@@ -260,7 +285,7 @@ const ManpowerRequisitionView = () => {
             validateField(key, formData[key]);
             if (errors[key]) newErrors[key] = errors[key];
         });
-        
+
         // Manually re-running validateField to populate a fresh error object
         let freshErrors = {};
         for (const key in formData) {
@@ -274,9 +299,19 @@ const ManpowerRequisitionView = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value, type } = e.target;
         const newValue = type === 'number' ? parseInt(value, 10) : value;
-        setFormData(prev => ({ ...prev, [name]: newValue }));
+
+        if (name === 'depart_id') {
+            const selectedDept = departments.find(dept => dept.id.toString() === value);
+            setFormData(prev => ({
+                ...prev,
+                depart_id: value,
+                department: selectedDept ? selectedDept.depart : ''
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: newValue }));
+        }
         if (isEditMode) validateField(name, newValue);
     };
 
@@ -328,51 +363,147 @@ const ManpowerRequisitionView = () => {
         }
         setNotification({ ...notification, open: false });
     };
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
+    //     const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
 
-        // Mark all fields as touched to show errors on first submit attempt
-        const allTouched = {};
-        Object.keys(formData).forEach(key => {
-            allTouched[key] = true;
-        });
-        setTouched(allTouched);
+    //     swal.fire({
+    //         title: "Are you sure?",
+    //         text: "Do you want to update this Manpower Requisition?",
+    //         icon: '',
+    //         iconHtml: `<img src="/validation/warning.gif" 
+    //                 alt="Custom Icon" 
+    //                 style="width: 100px; height: 100px">`,
+    //         showCancelButton: true,
+    //         confirmButtonColor: theme.palette.primary.main,
+    //         cancelButtonColor: theme.palette.error.main,
+    //         confirmButtonText: "Yes, update it!",
+    //     }).then(async (result) => {
+    //         if (!result.isConfirmed) return;
 
-        // Re-run validation for all fields before submitting
-        Object.keys(formData).forEach(name => validateField(name, formData[name]));
+    //         /** -----------------------------
+    //          * 1. TOUCH ALL FIELDS + VALIDATE
+    //          * ----------------------------- */
+    //         const allTouched = {};
+    //         Object.keys(formData).forEach(key => {
+    //             allTouched[key] = true;
+    //         });
+    //         setTouched(allTouched);
 
-        // Check if there are any errors after validation
-        if (Object.keys(errors).some(key => errors[key])) {
-            return;
-        }
-        const data = new FormData();
+    //         // revalidate all fields
+    //         Object.keys(formData).forEach(name =>
+    //             validateField(name, formData[name])
+    //         );
 
-        // Append all form fields to the FormData object
-        for (const key in formData) {
-            if (key === 'hiringTAT' && formData.hiringTAT) {
-                data.append('hiring_tat_fastag', formData.hiringTAT === 'fastag');
-                data.append('hiring_tat_normal_cat1', formData.hiringTAT === 'normalCat1');
-                data.append('hiring_tat_normal_cat2', formData.hiringTAT === 'normalCat2');
-            } else if (key !== 'hiringTAT' && formData[key] !== null && formData[key] !== "") {
-                data.append(key, formData[key]);
-            }
-        }
+    //         // check errors
+    //         if (Object.keys(errors).some(key => errors[key])) {
+    //             return; // stop if validation fails
+    //         }
 
-        dispatch(updateManpowerRequisition({ id, data }))
-            .unwrap()
-            .then(() => {
-                setNotification({ open: true, message: 'MRF updated successfully!', severity: 'success' });
-                setTimeout(() => navigate('/mrf-list'), 2000);
-            })
-            .catch((error) => {
-                setNotification({
-                    open: true,
-                    message: `Update failed: ${error.message || "Please try again."}`,
-                    severity: 'error'
-                });
-            });
-    };
+    //         /** -----------------------------
+    //          * 2. BUILD FormData FOR API
+    //          * ----------------------------- */
+    //         const data = new FormData();
+
+    //         for (const key in formData) {
+    //             if (key === "hiringTAT" && formData.hiringTAT) {
+    //                 data.append("hiring_tat_fastag", formData.hiringTAT === "fastag");
+    //                 data.append("hiring_tat_normal_cat1", formData.hiringTAT === "normalCat1");
+    //                 data.append("hiring_tat_normal_cat2", formData.hiringTAT === "normalCat2");
+    //             } else if (key !== "hiringTAT" &&
+    //                 formData[key] !== null &&
+    //                 formData[key] !== "") {
+    //                 data.append(key, formData[key]);
+    //             }
+    //         }
+
+    //         console.log({ manpowerId, manpowerStatus }, "{ manpowerId, manpowerStatus }")
+    //         /** -----------------------------
+    //          * 3. START OPTIMISTIC UPDATE 
+    //          * ----------------------------- */
+    //         if (manpowerStatus) {
+    //             dispatch(optimisticUpdateManpowerStatus({ manpowerId, manpowerStatus }));
+    //         }
+
+    //         const { id, query_name } = formData;
+    //         if (query_name) {
+    //             const currentUserId = user?.emp_id || null;
+    //             const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
+    //             const formattedDate = new Date().toISOString().split('T')[0];
+    //             const queryAddData = {
+    //                 query_manpower_requisition_pid: id,
+    //                 query_name: query_name,
+    //                 query_created_by: currentUserId,
+    //                 query_created_date: formattedDate,
+    //                 query_created_time: created_at,
+    //                 query_is_delete: 'Active',
+    //             };
+    //             console.log(queryAddData,"queryAddData ");
+
+    //             await dispatch(addQueryForm(queryAddData)).unwrap();
+    //         }
+
+
+
+    //         try {
+    //             /** -----------------------------
+    //              * 4. API CALLS
+    //              * ----------------------------- */
+
+    //             // Update main MR
+    //             await dispatch(updateManpowerRequisition({ id, data })).unwrap();
+
+    //             // Update manpower status
+    //             if (manpowerStatus) {
+    //                 await dispatch(updateManpowerStatus({ manpowerId, newStatus: manpowerStatus })).unwrap();
+    //             }
+
+
+
+    //             /** -----------------------------
+    //              * 5. SUCCESS FEEDBACK
+    //              * ----------------------------- */
+    //             swal.fire({
+    //                 title: "Updated!",
+    //                 text: "Manpower status updated successfully.",
+    //                 icon: "",
+    //                 iconHtml: `<img src="/validation/success.gif" 
+    //                         alt="Custom Icon" 
+    //                         style="width: 100px; height: 100px">`,
+    //                 confirmButtonColor: theme.palette.primary.main,
+    //                 confirmButtonText: "OK",
+    //             }).then(() => {
+    //                 // window.location.reload();
+    //             });
+
+    //         } catch (error) {
+
+    //             /** -----------------------------
+    //              * 6. REVERT OPTIMISTIC UPDATE
+    //              * ----------------------------- */
+    //             dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
+
+    //             swal.fire({
+    //                 title: "Error!",
+    //                 text: error.message || "Failed to update Manpower.",
+    //                 icon: "",
+    //                 iconHtml: `<img src="/validation/error.gif" 
+    //                         alt="Custom Icon" 
+    //                         style="width: 100px; height: 100px">`,
+    //                 confirmButtonColor: theme.palette.error.main,
+    //                 confirmButtonText: "OK",
+    //             });
+
+    //             setNotification({
+    //                 open: true,
+    //                 message: `Update failed: ${error.message || "Please try again."}`,
+    //                 severity: "error",
+    //             });
+    //         }
+    //     });
+    // };
 
     const handleDownload = async (filePath) => {
         if (!filePath || typeof filePath !== 'string') {
@@ -380,7 +511,7 @@ const ManpowerRequisitionView = () => {
             setNotification({ open: true, message: 'File path is invalid.', severity: 'error' });
             return;
         }
- 
+
         try {
             const response = await fetch(`${API_URL}/${filePath}`);
             if (!response.ok) {
@@ -388,7 +519,7 @@ const ManpowerRequisitionView = () => {
             }
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
- 
+
             const a = document.createElement("a");
             a.href = url;
             a.download = filePath.split(/[\\/]/).pop(); // Extract file name
@@ -399,15 +530,149 @@ const ManpowerRequisitionView = () => {
         } catch (error) {
             console.error("Download failed:", error);
         }
-    };    
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const allTouched = {};
+        Object.keys(formData).forEach(key => {
+            allTouched[key] = true;
+        });
+        setTouched(allTouched);
+
+        const newErrors = {};
+        const validateFieldSync = (name, value) => {
+            // This is a synchronous version of your validation logic
+            // It returns an error message string or undefined
+            // Note: This duplicates logic from `validateField`. A refactor could unify them.
+            const isFileValid = (file) => {
+                if (!file) return false;
+                if (typeof file === 'string') return true;
+                if (file instanceof File && ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) return true;
+                return false;
+            };
+
+            // Simplified validation checks from `validateField`
+            if (name === 'department' && !value) return 'Department is required.';
+            if (name === 'employmentStatus' && !value) return 'Status of Employment is required.';
+            if (name === 'designation' && !value) return 'Proposed Designation is required.';
+            if (name === 'numResources' && (!value || value < 1)) return 'At least one resource is required.';
+            if (name === 'jobDescription' && !value) return 'Job Description is required.';
+            if (name === 'education' && !value) return 'Educational Qualification is required.';
+            if (name === 'experience' && !value) return 'Experience is required.';
+            if (name === 'ctcRange' && !value) return 'Approx. CTC Range is required.';
+            if (name === 'hiringTAT' && !value) return 'A Hiring TAT option must be selected.';
+
+            // Role-based and conditional checks
+            if ((isSeniorManager || isHr) && name === 'requestorSign' && !isFileValid(value)) return 'A valid Requestor Sign image (JPG, PNG) is required.';
+            if ((isDirector || isHr) && name === 'directorSign' && !isFileValid(value)) return 'A valid Director Sign image (JPG, PNG) is required.';
+            if (isHr && name === 'mrfNumber' && !value) return 'MRF Number is required for HR.';
+            if (isHr && name === 'tatAgreed' && !value) return 'TAT Agreed is required for HR.';
+            if (isHr && name === 'deliveryPhase' && !value) return 'Phase of Delivery is required for HR.';
+            if (isHr && name === 'hrReview' && !value) return 'HR Review is required for HR.';
+
+            return undefined;
+        };
+
+        Object.keys(formData).forEach(name => {
+            const error = validateFieldSync(name, formData[name]);
+            if (error) {
+                newErrors[name] = error;
+            }
+        });
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) {
+            setNotification({ open: true, message: 'Please fix the validation errors.', severity: 'error' });
+            return;
+        }
+
+        const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
+        const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
+
+
+        swal.fire({
+            title: "Are you sure?",
+            text: "Do you want to update this Manpower Requisition?",
+            icon: '',
+            iconHtml: `<img src="/validation/warning.gif" 
+                    alt="Custom Icon" 
+                    style="width: 100px; height: 100px">`,
+            showCancelButton: true,
+            confirmButtonColor: theme.palette.primary.main,
+            cancelButtonColor: theme.palette.error.main,
+            confirmButtonText: "Yes, update it!",
+        }).then(async (result) => {
+            if (!result.isConfirmed) return;
+
+
+
+            const data = new FormData();
+
+            for (const key in formData) {
+                if (key === "hiringTAT" && formData.hiringTAT) {
+                    data.append("hiring_tat_fastag", formData.hiringTAT === "fastag");
+                    data.append("hiring_tat_normal_cat1", formData.hiringTAT === "normalCat1");
+                    data.append("hiring_tat_normal_cat2", formData.hiringTAT === "normalCat2");
+                } else if (key !== "hiringTAT" && formData[key] !== null && formData[key] !== "") {
+                    data.append(key, formData[key]);
+                }
+            }
+
+            try {
+                await dispatch(updateManpowerRequisition({ id, data })).unwrap();
+
+                if (manpowerStatus) {
+                    await dispatch(updateManpowerStatus({ manpowerId, newStatus: manpowerStatus })).unwrap();
+                }
+
+
+                // const { id, query_name } = formData;
+                // console.log(formData.id, formData, manpowerStatus, "formData")
+                console.log(queryText,"datakadsfhbdsjgsj")
+                if (manpowerStatus == "Raise Query" && queryText) {
+                    const currentUserId = user?.emp_id || null;
+                    const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
+                    const formattedDate = new Date().toISOString().split('T')[0];
+                    const queryAddData = {
+                        query_manpower_requisition_pid: manpowerId,
+                        query_name: queryText,
+                        query_created_by: currentUserId,
+                        query_created_date: formattedDate,
+                        query_created_time: created_at,
+                        query_is_delete: 'Active',
+                    };
+                    console.log(queryAddData, "queryAddData ");
+
+                    await dispatch(addQueryForm(queryAddData)).unwrap();
+                }
+
+                setNotification({ open: true, message: 'MRF updated successfully!', severity: 'success' });
+                navigate('/mrf-list');
+
+            } catch (error) {
+                if (manpowerStatus) {
+                    dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
+                }
+                setNotification({ open: true, message: `Update failed: ${error.message || "Please try again."}`, severity: 'error' });
+            }
+        });
+    };
 
     const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
     const handleStatusChange = (event, manpowerId) => {
-        
         const newStatus = event.target.value;
+        setManpowerStatus(newStatus);
+        setManpowerId(manpowerId);
+        setFormData(prevFormData => ({
+            ...prevFormData,
+            status: newStatus,
+        }));
+
         const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
-        console.log("Status change triggered for Manpower ID:", newStatus);
+
         if (!originalManpower || newStatus === originalManpower.status) {
             return;
         }
@@ -419,87 +684,67 @@ const ManpowerRequisitionView = () => {
             return;
         }
 
-        swal.fire({
-            title: "Are you sure?",
-            text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
-            icon: '',
-            iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-            showCancelButton: true,      
-            confirmButtonColor: theme.palette.primary.main,
-            cancelButtonColor: theme.palette.error.main,
-            confirmButtonText: "Yes, update it!",
-        }).then(async (result) => {
-            if (!result.isConfirmed) {
-                return;
-            }
+        // swal.fire({
+        //     title: "Are you sure?",
+        //     text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
+        //     icon: '',
+        //     iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+        //     showCancelButton: true,
+        //     confirmButtonColor: theme.palette.primary.main,
+        //     cancelButtonColor: theme.palette.error.main,
+        //     confirmButtonText: "Yes, update it!",
+        // }).then(async (result) => {
+        //     if (!result.isConfirmed) {
+        //         return;
+        //     }
 
-            dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
-            try {
-                await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
-                swal.fire({
-                    title: 'Updated!',
-                    text: 'Manpower status updated successfully.',
-                    icon: '',
-                    iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-                    confirmButtonColor: theme.palette.error.main,
-                    confirmButtonText: 'OK'
-                }).then(async () => {
-                    window.location.reload();
-                });
-            } catch (err) {
-                dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
-                swal.fire({
-                    title: 'Error!',
-                    text: err.message || 'Failed to update Manpower.',
-                    icon: '',
-                    iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-                    confirmButtonColor: theme.palette.error.main,
-                    confirmButtonText: 'OK'
-                });
-            }
-        });
+        //     dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
+        //     try {
+        //         await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
+        //         swal.fire({
+        //             title: 'Updated!',
+        //             text: 'Manpower status updated successfully.',
+        //             icon: '',
+        //             iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+        //             confirmButtonColor: theme.palette.error.main,
+        //             confirmButtonText: 'OK'
+        //         }).then(async () => {
+        //             window.location.reload();
+        //         });
+        //     } catch (err) {
+        //         dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
+        //         swal.fire({
+        //             title: 'Error!',
+        //             text: err.message || 'Failed to update Manpower.',
+        //             icon: '',
+        //             iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+        //             confirmButtonColor: theme.palette.error.main,
+        //             confirmButtonText: 'OK'
+        //         });
+        //     }
+        // });
     }
 
     const handleQueryTextChange = (e) => {
         const newQueryText = e.target.value;
+        setQueryText(newQueryText);
         setFormData(prevFormData => ({
             ...prevFormData,
             query_name: newQueryText, // Update the queryText field
         }));
     };
 
-    const currentUserId = user?.emp_id || null;
-    const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
-    const formattedDate = new Date().toISOString().split('T')[0]; 
-
-    const handleQuerySubmit = async (e) => {
-        e.preventDefault();
-        const { id, query_name } = formData;
-        const queryAddData = {
-            query_manpower_requisition_pid: id,
-            query_name: query_name,
-            query_created_by: currentUserId,
-            query_created_date: formattedDate,
-            query_created_time: created_at,
-            query_is_delete: 'Active',
-        };
-
-        await dispatch(addQueryForm(queryAddData)).unwrap();
-        await dispatch(updateManpowerStatus({ manpowerId, newStatus: manpowerStatus })).unwrap();
-        window.location.reload();
-    }
-
     return (
         <div className="page-wrapper">
             <div className="form-panel">
                 <div className="form-header">
-                    <h1 
-                        className="info-title" 
+                    <h1
+                        className="info-title"
                     >
                         View Manpower Requisition
                     </h1>
-                    <p 
-                        className="info-subtitle" 
+                    <p
+                        className="info-subtitle"
                     >
                         Please fill out the details below to initiate a new hiring request.
                         Ensure all fields are accurate to streamline the approval process.
@@ -513,10 +758,9 @@ const ManpowerRequisitionView = () => {
                             <div className="section-grid multi-col">
                                 <div>
                                     <label className="form-label">Department</label>
-                                    <select
-                                        name="department"
+                                    <select name="depart_id"
                                         className={`form-select ${getFieldClassName('department')}`}
-                                        value={formData.department}
+                                        value={formData.depart_id}
                                         disabled={!isEditMode}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
@@ -549,12 +793,12 @@ const ManpowerRequisitionView = () => {
                                 </div>
                                 <div>
                                     <label className="form-label">Proposed Designation</label>
-                                    <input name="designation" className={`form-input ${getFieldClassName('designation')}`} value={formData.designation} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                    <input name="designation" className={`form-input ${getFieldClassName('designation')}`} value={formData.designation} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                     {renderError('designation')}
                                 </div>
                                 <div>
                                     <label className="form-label">No. of Resources</label>
-                                    <input name="numResources" className={`form-input ${getFieldClassName('numResources')}`} type="number" value={formData.numResources} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                    <input name="numResources" className={`form-input ${getFieldClassName('numResources')}`} type="number" value={formData.numResources} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                     {renderError('numResources')}
                                 </div>
                                 <div className="full-width">
@@ -578,7 +822,7 @@ const ManpowerRequisitionView = () => {
                                     <>
                                         <div className="full-width">
                                             <label className="form-label">Project Name<span className="required-star">*</span></label>
-                                            <input name="projectName" className={`form-input ${getFieldClassName('projectName')}`} value={formData.projectName} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                            <input name="projectName" className={`form-input ${getFieldClassName('projectName')}`} value={formData.projectName} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                             {renderError('projectName')}
                                         </div>
                                         <div className="full-width">
@@ -602,7 +846,7 @@ const ManpowerRequisitionView = () => {
                                                     </FileUploader>
                                                     {formData.rampUpFile && (
                                                         <div className="file-display-card">
-                                                            <FiFile className="file-icon" />                                                            
+                                                            <FiFile className="file-icon" />
                                                             {typeof formData.rampUpFile === 'string' ? (
                                                                 <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.rampUpFile); }} className="file-name">{formData.rampUpFile.split(/[\\/]/).pop()}</a>
                                                             ) : (
@@ -628,12 +872,12 @@ const ManpowerRequisitionView = () => {
                                     <>
                                         <div className="full-width">
                                             <label className="form-label">Project Name<span className="required-star">*</span></label>
-                                            <input name="projectName" className={`form-input ${getFieldClassName('projectName')}`} value={formData.projectName} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                            <input name="projectName" className={`form-input ${getFieldClassName('projectName')}`} value={formData.projectName} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                             {renderError('projectName')}
                                         </div>
                                         <div className="full-width">
                                             <label className="form-label">Reason for Additional Resources<span className="required-star">*</span></label>
-                                            <input name="rampUpReason" className={`form-input ${getFieldClassName('rampUpReason')}`} value={formData.rampUpReason} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                            <input name="rampUpReason" className={`form-input ${getFieldClassName('rampUpReason')}`} value={formData.rampUpReason} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                             {renderError('rampUpReason')}
                                         </div>
                                     </>
@@ -643,12 +887,12 @@ const ManpowerRequisitionView = () => {
                                     <>
                                         <div className="full-width">
                                             <label className="form-label">Project Name<span className="required-star">*</span></label>
-                                            <input name="projectName" className={`form-input ${getFieldClassName('projectName')}`} value={formData.projectName} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                            <input name="projectName" className={`form-input ${getFieldClassName('projectName')}`} value={formData.projectName} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                             {renderError('projectName')}
                                         </div>
                                         <div className="full-width">
                                             <label className="form-label">Resigned Employee (Name + ID)<span className="required-star">*</span></label>
-                                            <input name="replacementDetail" className={`form-input ${getFieldClassName('replacementDetail')}`} value={formData.replacementDetail} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur}/>
+                                            <input name="replacementDetail" className={`form-input ${getFieldClassName('replacementDetail')}`} value={formData.replacementDetail} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                             {renderError('replacementDetail')}
                                         </div>
                                     </>
@@ -734,7 +978,7 @@ const ManpowerRequisitionView = () => {
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Approvals</h3>
                                 <div className="section-grid multi-col">
-                                    {(isSeniorManager || isHr) && (
+                                    {(isSeniorManager || isDirector || isHr) && (
                                         <div>
                                             <label className="form-label">Requestor Sign & Date<span className="required-star">*</span></label>
                                             {isEditMode ? (
@@ -751,7 +995,7 @@ const ManpowerRequisitionView = () => {
                                                     </FileUploader>
                                                     {formData.requestorSign && (
                                                         <div className="file-display-card">
-                                                            <FiFile className="file-icon" />                                                            
+                                                            <FiFile className="file-icon" />
                                                             {typeof formData.requestorSign === 'string' ? (
                                                                 <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.requestorSign); }} className="file-name">{formData.requestorSign.split(/[\\/]/).pop()}</a>
                                                             ) : (
@@ -785,9 +1029,9 @@ const ManpowerRequisitionView = () => {
                                                     >
                                                         <div className="upload-area"><div className="upload-instruction"><span>Drag & Drop or Click to Upload</span><span className="file-types">(Accepted: JPEG, PNG, JPG)</span></div></div>
                                                     </FileUploader>
-                                                    {formData.directorSign && (                                                        
+                                                    {formData.directorSign && (
                                                         <div className="file-display-card">
-                                                            <FiFile className="file-icon" />                                                            
+                                                            <FiFile className="file-icon" />
                                                             {typeof formData.directorSign === 'string' ? (
                                                                 <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.directorSign); }} className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a>
                                                             ) : (<span className="file-name">{formData.directorSign.name}</span>)}
@@ -836,7 +1080,7 @@ const ManpowerRequisitionView = () => {
                                 </div>
                             </div>
                         )}
-                         {(isSeniorManager || isDirector || isHr) && (
+                        {isEditMode && (isSeniorManager || isDirector || isHr) && (
                             <>
                                 <div className="form-section">
                                     <h3 className="section-title"><FaUserCheck /> Status Updation</h3>
@@ -863,6 +1107,9 @@ const ManpowerRequisitionView = () => {
                                                 <MenuItem value="Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
                                                     Approve
                                                 </MenuItem>
+                                                <MenuItem value="HR Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
+                                                    HR Approve
+                                                </MenuItem>
                                                 <MenuItem value="Reject" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
                                                     Reject
                                                 </MenuItem>
@@ -875,38 +1122,38 @@ const ManpowerRequisitionView = () => {
                                             </Select>
                                         </FormControl>
                                     </div>
-                                
 
-                                {(isRaiseQueryOpen || formData.status === "Raise Query") && (
-                                    <div style = {{ marginTop: '1rem' }}>
-                                      
-                                        <input type="hidden" name="query_manpower_requisition_pid" value={manpowerId} />
-                                        <input type="hidden" name="status" value={manpowerStatus} />
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            rows={3}
-                                            label="Enter your query here"
-                                            value={formData.query_name || ''}
-                                            onChange={(e) => handleQueryTextChange(e)}
-                                            variant="outlined"
-                                            size="small"
-                                            sx={{ fontSize: "0.85rem" }}
-                                        />
-                                        {formData.status !== "Raise Query" && (
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                                                <Button type="submit" variant="contained" color="primary" onClick={handleQuerySubmit}>
-                                                    Update
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+
+                                    {(isRaiseQueryOpen || formData.status === "Raise Query") && (
+                                        <div style={{ marginTop: '1rem' }}>
+
+                                            <input type="hidden" name="query_manpower_requisition_pid" value={manpowerId} />
+                                            <input type="hidden" name="status" value={manpowerStatus} />
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                rows={3}
+                                                label="Enter your query here"
+                                                value={formData.query_name || ''}
+                                                onChange={(e) => handleQueryTextChange(e)}
+                                                variant="outlined"
+                                                size="small"
+                                                sx={{ fontSize: "0.85rem" }}
+                                            />
+                                            {/* {formData.status !== "Raise Query" && (
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                                                <Button type="submit" variant="contained" color="primary">
+                                                        Update Status
+                                                    </Button>
+                                                </div>
+                                            )} */}
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}
                     </div>
-                    
+
                     {isEditMode && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
                             <Button type="submit" variant="contained" color="primary">

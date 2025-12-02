@@ -4,7 +4,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip   } from "@mui/material";
 import Modal from "@mui/material/Modal";
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus } from '../redux/cases/manpowerrequisitionSlice';  
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId } from '../redux/cases/manpowerrequisitionSlice';  
 import swal from "sweetalert2"; 
 import ModeEditOutlineIcon from '@mui/icons-material/ModeEditOutline';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -90,6 +90,7 @@ const ManpowerRequisition = () => {
   const dispatch  = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state)=> state.manpowerRequisition.data);
+  console.log("Manpower Requisition List from Redux:", manpowerRequisitionList);          
   const status = useSelector((state) => state.manpowerRequisition.status);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
@@ -114,17 +115,21 @@ const ManpowerRequisition = () => {
 
   useEffect(() => {
       if(status === 'idle' && user){
-         dispatch(fetchManpowerRequisition());
+        //  dispatch(fetchManpowerRequisition());
+         dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
       }
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const socket = io(API_URL);
       socket.on('manpowerrequisition-refresh', () => {
-          dispatch(fetchManpowerRequisition());
+          // dispatch(fetchManpowerRequisition());
+             dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+          
       });
   },[status, user, dispatch]);
 
   useEffect(() => {
-     dispatch(fetchManpowerRequisition());
+    //  dispatch(fetchManpowerRequisition());
+      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
   }, [dispatch]);
 
   const currentUserId = user?.emp_id || null;
@@ -364,7 +369,7 @@ const ManpowerRequisition = () => {
                   <TableHead className="custom-header">
                     <TableRow>
                       <StyledTableCell>S.No</StyledTableCell>
-                      <StyledTableCell>Emp Id/Name</StyledTableCell>
+                      <StyledTableCell>Name</StyledTableCell>
                       <StyledTableCell>Department</StyledTableCell>
                       <StyledTableCell>Status of Employment</StyledTableCell>
                       <StyledTableCell>Designation</StyledTableCell>
@@ -372,7 +377,7 @@ const ManpowerRequisition = () => {
                       <StyledTableCell>Requirement Type</StyledTableCell>
                       {/* <StyledTableCell>Resigned Employee</StyledTableCell> */}
                       {/* <StyledTableCell>Reason for Additional Resources</StyledTableCell> */}
-                      <StyledTableCell>Job Description</StyledTableCell>
+                      <StyledTableCell>TAT Request</StyledTableCell>
                       {/* <StyledTableCell>Education</StyledTableCell>
                       <StyledTableCell>Experience</StyledTableCell>
                       <StyledTableCell>CTC Range</StyledTableCell>
@@ -390,15 +395,15 @@ const ManpowerRequisition = () => {
                         <StyledTableCell component="th" scope="row">
                           {page * rowsPerPage + index + 1}
                         </StyledTableCell>
-                        <StyledTableCell>{manpower.created_by === 0 ? "-"  : `${manpower.created_by}/${manpower.emp_name}`}</StyledTableCell>
-                        <StyledTableCell>{manpower.department}</StyledTableCell>
+                        <StyledTableCell>{manpower.created_by === 0 ? "-"  : `${manpower.emp_name}`}</StyledTableCell>
+                        <StyledTableCell>{manpower.department_name}</StyledTableCell>
                         <StyledTableCell>{manpower.employment_status}</StyledTableCell>
                         <StyledTableCell>{manpower.designation}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
                         <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
                         <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
-                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.job_description}</StyledTableCell>
+                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.education}</StyledTableCell>
                         <StyledTableCell>{manpower.experience}</StyledTableCell>
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
@@ -446,7 +451,7 @@ const ManpowerRequisition = () => {
                           </FormControl>
                         </StyledTableCell> */}
                         <StyledTableCell>
-                          {manpower.status === "Pending" && (
+                          {(
                             <>
                             <Tooltip title="Edit Manpower" arrow placement="top">
                             <IconButton

@@ -8,10 +8,58 @@ const { emitManpowerRequisitionRefresh } = require('../socketManager');
 const { transporter } = require('../utils/transporter');
 const { compareSync } = require('bcrypt');
 require('dotenv').config();
+// const path = require('path');
+// const { fileURLToPath } = require('url');
 
 const COMPREHENSIVE_VIEW_ROLES = ['Senior Manager', 'Senior Client Support Executive'];
 const ALL_DASHBOARD_ACCESS_ROLES = ['Senior Manager', 'Senior Client Support Executive', 'Client Support Executive'];
 
+
+
+router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        let query = "SELECT mr.*, ep.*, ed.depart AS department_name FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE mr.isdelete = 'Active'";
+        let params = [];
+
+        if (!['12345', '1400', '1722'].includes(userId)) {
+            query += ' AND mr.created_by = ?';
+            params.push(userId);
+        }
+        query += ' ORDER BY mr.id DESC';
+        const [rows] = await pool.execute(query, params);
+
+        const fetchManpowerRequisitionByUser = rows.map((row, index) => ({
+            id: row.id,
+            s_no: index + 1,
+            department: row.department,
+            department_name: row.department_name,
+            hiring_tat: row.hiring_tat_fastag == 1 ? "Fastag Hiring (60 Days)" : (row.hiring_tat_normal_cat1 == 1 ? "Normal Hiring – Cat 1 (90 Days)" : (row.hiring_tat_normal_cat2 == 1 ? "Normal Hiring – Cat 2 (120 Days)" : "")),
+            employment_status: row.employment_status,
+            designation: row.designation,
+            num_resources: row.num_resources,
+            requirement_type: row.requirement_type,
+            replacement_detail: row.replacement_detail,
+            ramp_up_reason: row.ramp_up_reason,
+            job_description: row.job_description,
+            education: row.education,
+            experience: row.experience,
+            ctc_range: row.ctc_range,
+            specific_info: row.specific_info,
+            mrf_number: row.mrf_number,
+            status: row.status,
+            created_by: row.created_by,
+            created_at: row.created_at,
+            isdelete: row.isdelete,
+            emp_name: row.emp_name,
+        }));
+        res.json(fetchManpowerRequisitionByUser);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
 
 router.get('/getmanpowerrequisition', authMiddleware, async (req, res) => {
 
@@ -36,6 +84,7 @@ router.get('/getmanpowerrequisition', authMiddleware, async (req, res) => {
             mrf_number: row.mrf_number,
             status: row.status,
             created_by: row.created_by,
+            created_at: row.created_at,
             isdelete: row.isdelete,
             emp_name: row.emp_name,
         }));
@@ -218,7 +267,7 @@ router.get('/departments-by-manager/:managerId', authMiddleware, async (req, res
         let params = [];
 
         // If managerId is 1400 or 12345, fetch all departments
-        if (managerId === '1400' || managerId === '12345') {
+        if (managerId === '1400' || managerId === '12345' || managerId === '1722') {
             query = `SELECT * FROM employee_depart`;
         } else {
             // Otherwise, fetch only the departments for employees reporting to this manager
@@ -244,17 +293,18 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     try {
         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT mr.id AS mr_id, depart, employment_status, designation, num_resources, requirement_type, project_name, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, mrq.query_name, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id] );
+        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, mrq.query_name, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Manpower requisition not found.' });
         }
 
         const row = rows[0];
-
+        console.log("Fetched MRF Row:", row);
         const fetchManpowerRequisitionById = {
             id: row.mr_id,
             department: row.depart,
+            depart_id: row.depart_id,
             employment_status: row.employment_status,
             designation: row.designation,
             num_resources: row.num_resources,
@@ -292,10 +342,10 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     }
 });
 
-router.get('/getmanpowerrequisitionFH', authMiddleware , async (req, res) => {
-    
+router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
+
     try {
-        const [rows] = await pool.execute('SELECT ep.employee_id, ep.emp_name, ep.emp_resign, ep.ReportingManager, mgr.emp_name AS ReportingManager_Name FROM employee_personal AS ep LEFT JOIN employee_personal AS mgr ON ep.ReportingManager = mgr.employee_id WHERE ep.emp_resign = "12/31/2030" AND ep.ReportingManager != 0 Group By ep.ReportingManager '); 
+        const [rows] = await pool.execute('SELECT ep.employee_id, ep.emp_name, ep.emp_resign, ep.ReportingManager, mgr.emp_name AS ReportingManager_Name FROM employee_personal AS ep LEFT JOIN employee_personal AS mgr ON ep.ReportingManager = mgr.employee_id WHERE ep.emp_resign = "12/31/2030" AND ep.ReportingManager != 0 Group By ep.ReportingManager ');
 
         const fetchManpowerRequisition = rows.map((row, index) => ({
             id: row.id,
@@ -447,10 +497,10 @@ router.put('/delete-manpower/:id', authMiddleware, async (req, res) => {
 //     }
 // });
 
-router.get('/getmanpowerrequisitionFH', authMiddleware , async (req, res) => {
-    
+router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
+
     try {
-        const [rows] = await pool.execute('SELECT ep.employee_id, ep.emp_name, ep.emp_resign, ep.ReportingManager, mgr.emp_name AS ReportingManager_Name FROM employee_personal AS ep LEFT JOIN employee_personal AS mgr ON ep.ReportingManager = mgr.employee_id WHERE ep.emp_resign = "12/31/2030" AND ep.ReportingManager != 0 Group By ep.ReportingManager '); 
+        const [rows] = await pool.execute('SELECT ep.employee_id, ep.emp_name, ep.emp_resign, ep.ReportingManager, mgr.emp_name AS ReportingManager_Name FROM employee_personal AS ep LEFT JOIN employee_personal AS mgr ON ep.ReportingManager = mgr.employee_id WHERE ep.emp_resign = "12/31/2030" AND ep.ReportingManager != 0 Group By ep.ReportingManager ');
 
         const fetchManpowerRequisition = rows.map((row, index) => ({
             id: row.id,
@@ -467,10 +517,29 @@ router.get('/getmanpowerrequisitionFH', authMiddleware , async (req, res) => {
 
 });
 
-router.get('/getmanpowerrequisitionbystatus/:status', authMiddleware, async (req, res) => {
+router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, async (req, res) => {
     try {
-        const { status } = req.params;
-        const [rows] = await pool.execute('SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE mr.status = ? AND mr.isdelete = "Active" ORDER BY mr.id DESC', [status]);
+        const { status, emp_id } = req.params;
+        console.log(status, emp_id,"status, emp_id")
+        let query = 'SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE ';
+        const params = [];
+
+        if (status === 'Approve') {
+            query += 'mr.status IN (?, ?) AND mr.isdelete = "Active"';
+            params.push('Approve', 'HR Approve');
+        } else {
+            query += 'mr.status = ? AND mr.isdelete = "Active"';
+            params.push(status);
+        }
+        const specialAccessIds = ['12345', '1400', '1722'];
+
+        if (!specialAccessIds.includes(emp_id)) {
+            query += ' AND mr.created_by = ?';
+            params.push(emp_id);
+        }
+
+        query += ' ORDER BY mr.id DESC';
+        const [rows] = await pool.execute(query, params);
         const fetchManpowerRequisitionByStatus = rows.map((row, index) => ({
             id: row.id,
             s_no: index + 1,
@@ -501,7 +570,7 @@ router.get('/getmanpowerrequisitionbystatus/:status', authMiddleware, async (req
 router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const specialManagers = [12345, 1400];
+        const specialManagers = [12345, 1400, 1722];
 
         let query = `
             SELECT
@@ -511,9 +580,10 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
                 COALESCE(SUM(status = 'Raise Query'), 0) AS raise_query_count,
                 COALESCE(SUM(status = 'On Hold'), 0) AS on_hold_count,
                 COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
+                COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
                 COALESCE(COUNT(*), 0) AS total_count
             FROM manpower_requisition
-            WHERE isdelete = 0
+            WHERE isdelete = 'Active'
         `;
 
         let params = [];
@@ -534,6 +604,22 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
     }
 });
 
+router.get('/manager-list', authMiddleware, async (req, res) => {
+    try {
+        const query = `
+            SELECT * FROM employee_personal 
+            WHERE level >= '4' 
+            AND emp_pos IN ('Senior Manager','HR Manager','Manager - Account Management','Senior Manager- Operational Excellence','Manager - Software Development','Manager','Manager - Accounts &Finance','Accounts') 
+            AND emp_name != 'HR Portal' AND emp_resign = '12/31/2030'`;
+        const [rows] = await pool.execute(query);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error fetching manager list.' });
+    }
+});
+
+
 
 router.put(
     '/update-manpower-requisition/:id',
@@ -546,8 +632,9 @@ router.put(
     async (req, res) => {
         try {
             const { id } = req.params;
+            console.log(req.body, "req.body")
             const {
-                department, employmentStatus, designation, numResources, requirementType, projectName, replacementDetail,
+                department, depart_id, employmentStatus, designation, numResources, requirementType, projectName, replacementDetail,
                 rampUpReason, jobDescription, education, experience, ctcRange, specificInfo, mrfNumber,
                 tatAgreed, hrReview, deliveryPhase,
                 hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2
@@ -559,7 +646,7 @@ router.put(
             const rampUpFilePath = req.files?.rampUpFile?.[0]?.path;
 
             const fieldsToUpdate = {
-                department, employment_status: employmentStatus, designation, num_resources: numResources, requirement_type: requirementType,
+                department: depart_id, employment_status: employmentStatus, designation, num_resources: numResources, requirement_type: requirementType,
                 project_name: projectName, replacement_detail: replacementDetail, ramp_up_reason: rampUpReason, job_description: jobDescription,
                 education, experience, ctc_range: ctcRange, specific_info: specificInfo, mrf_number: mrfNumber,
                 tat_agreed: tatAgreed, hr_review: hrReview, delivery_phase: deliveryPhase,
@@ -588,5 +675,15 @@ router.put(
         }
     }
 );
+
+
+// router.get('/uploadFiles/submittedArticlesFile/:filename', (req, res) => {
+//     const filename = req.params.filename;
+//     // const __filename = fileURLToPath(import.meta.url);
+//     // const __dirname = path.dirname(__filename);
+//     // const imagePath = path.join(__dirname, '..', '..', 'uploadFiles', 'submittedArticlesFile', filename);
+//     // res.sendFile(imagePath);
+// })
+
 
 module.exports = router;

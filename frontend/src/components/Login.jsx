@@ -3,12 +3,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../redux/auth/authSlice';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import {
+  TextField,
+  InputAdornment,
+  IconButton,
+} from '@mui/material';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import Lock from '@mui/icons-material/Lock';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Login_image from '../assets/images/login.png';
 
 const Login = () => {
   const [empId, setEmpId] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { status, error, token } = useSelector((state) => state.auth);
 
@@ -21,6 +31,12 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(login({ emp_id: empId, emp_pass: password }));
+  };
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
   };
 
   // --- INLINE STYLE OBJECTS (Using Mastery Hub Colors) ---
@@ -229,36 +245,62 @@ const Login = () => {
           <form onSubmit={handleSubmit} style={styles.form}>
             <div style={styles.inputGroup}>
               {/* <label htmlFor="empId" style={styles.inputLabel}>Employee ID</label> */}
-              <input
-                type="text"
+              <TextField
                 id="empId"
-                style={styles.inputField}
-                placeholder="Username or email"
+                placeholder="Username"
                 value={empId}
                 onChange={(e) => setEmpId(e.target.value)}
                 required
+                variant="standard"
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AccountCircle sx={{ color: 'action.active' }} />
+                    </InputAdornment>
+                  ),
+                }}
               />
             </div>
 
             <div style={styles.inputGroup}>
               {/* <label htmlFor="password" style={styles.inputLabel}>Password</label> */}
-              <input
-                type="password"
+              <TextField
                 id="password"
-                style={styles.inputField}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                variant="standard"
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock sx={{ color: 'action.active' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
             </div>
             
             {/* Forgot Password Link Positioned Above Button */}
-            <div style={styles.cardFooter}>
+            {/* <div style={styles.cardFooter}>
               <Link to="/forgot-password" style={styles.forgotLink}>
                 Forgot password?
               </Link>
-            </div>
+            </div> */}
 
             <button 
               type="submit" 

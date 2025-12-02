@@ -3,7 +3,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Box, Typography, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Tooltip   } from "@mui/material";
-import { fetchManpowerRequisition, fetchManpowerRequisitionFH  } from '../redux/cases/manpowerrequisitionSlice';  
+import { fetchManpowerRequisition, fetchManpowerRequisitionByuserId, fetchManpowerRequisitionFH  } from '../redux/cases/manpowerrequisitionSlice';  
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import "react-quill-new/dist/quill.snow.css";
 import { useDispatch, useSelector } from 'react-redux';
@@ -56,6 +56,7 @@ const ManpowerRequisitionReport = () => {
   const dispatch  = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state)=> state.manpowerRequisition.data);
+  const manpowerRequisitionFHList = useSelector((state)=> state.manpowerRequisition.selectedRequisitionFH);
   const status = useSelector((state) => state.manpowerRequisition.status);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,17 +70,20 @@ const ManpowerRequisitionReport = () => {
 
   useEffect(() => {
       if(status === 'idle' && user){
-         dispatch(fetchManpowerRequisition());
+        //  dispatch(fetchManpowerRequisition());
+         dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
       }
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const socket = io(API_URL);
       socket.on('manpowerrequisition-refresh', () => {
-          dispatch(fetchManpowerRequisition());
+          // dispatch(fetchManpowerRequisition());
+           dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
       });
   },[status, user, dispatch]);
 
     useEffect(() => {
-        dispatch(fetchManpowerRequisition());
+        // dispatch(fetchManpowerRequisition());
+         dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
     }, [dispatch]);
 
 
@@ -87,7 +91,7 @@ const ManpowerRequisitionReport = () => {
         dispatch(fetchManpowerRequisitionFH());
     }, [dispatch]);
 
-    const manpowerRequisitionFHList = useSelector((state)=> state.manpowerRequisition.selectedRequisitionFH);
+    
 
   const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
@@ -203,7 +207,7 @@ const matchesFunctionalHead = functionalheadfilter === "" ||
             "S.No": index + 1,
             "Employee Name": manpower?.emp_name,
             "Employee Id": manpower?.created_by,
-            "Department": manpower?.department,
+            "Department": manpower?.department_name,
             "Employment Status": manpower?.employment_status,
             "Proposed Designation": manpower?.designation,
             "No. of Resources": manpower?.num_resources,
@@ -353,7 +357,7 @@ const matchesFunctionalHead = functionalheadfilter === "" ||
                     variant="contained"
                     color="success"
                     onClick={handleExport}
-                    sx={{ width: '300px', color: 'white'}}
+                    sx={{ width: '150px', color: 'white'}}
                     style={{marginRight: '15px', fontWeight: 'bold', fontSize: '16px', padding: '7px' }}
                 >
                     Export to Excel
@@ -383,7 +387,7 @@ const matchesFunctionalHead = functionalheadfilter === "" ||
                   <TableHead className="custom-header">
                     <TableRow>
                       <StyledTableCell>S.No</StyledTableCell>
-                      <StyledTableCell>Emp Id/Name</StyledTableCell>
+                      <StyledTableCell>Name</StyledTableCell>
                       <StyledTableCell>Department</StyledTableCell>
                       <StyledTableCell>Status of Employment</StyledTableCell>
                       <StyledTableCell>Designation</StyledTableCell>
@@ -391,7 +395,7 @@ const matchesFunctionalHead = functionalheadfilter === "" ||
                       <StyledTableCell>Requirement Type</StyledTableCell>
                       {/* <StyledTableCell>Resigned Employee</StyledTableCell> */}
                       {/* <StyledTableCell>Reason for Additional Resources</StyledTableCell> */}
-                      <StyledTableCell>Job Description</StyledTableCell>
+                      <StyledTableCell>TAT Request</StyledTableCell>
                       {/* <StyledTableCell>Education</StyledTableCell>
                       <StyledTableCell>Experience</StyledTableCell>
                       <StyledTableCell>CTC Range</StyledTableCell>
@@ -409,15 +413,15 @@ const matchesFunctionalHead = functionalheadfilter === "" ||
                         <StyledTableCell component="th" scope="row">
                           {page * rowsPerPage + index + 1}
                         </StyledTableCell>
-                        <StyledTableCell>{manpower.created_by === 0 ? "-"  : `${manpower.created_by}/${manpower.emp_name}`}</StyledTableCell>
-                        <StyledTableCell>{manpower.department}</StyledTableCell>
+                        <StyledTableCell>{manpower.created_by === 0 ? "-"  : `${manpower.emp_name}`}</StyledTableCell>
+                        <StyledTableCell>{manpower.department_name}</StyledTableCell>
                         <StyledTableCell>{manpower.employment_status}</StyledTableCell>
                         <StyledTableCell>{manpower.designation}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
                         <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
                         <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
-                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.job_description}</StyledTableCell>
+                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.education}</StyledTableCell>
                         <StyledTableCell>{manpower.experience}</StyledTableCell>
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
