@@ -19,6 +19,7 @@ const ManpowerRequisitionView = () => {
     const navigate = useNavigate();
     const { token, user } = useSelector((state) => state.auth);
     const isEditMode = location.pathname.includes('manpower_requisition_edit');
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     useEffect(() => {
         if (token) {
             dispatch(fetchManagerList());
@@ -73,6 +74,11 @@ const ManpowerRequisitionView = () => {
     const [manpowerStatus, setManpowerStatus] = useState(null);
     const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
     const [queryText, setQueryText] = useState("");
+    const [requestorSignurl, setRequestorSignurl] = useState("");
+    const [directorSignurl, setDirectorSignurl] = useState("");
+
+
+    console.log(requestorSignurl, "requestorSignurlrequestorSignurlrequestorSignurl")
 
 
     useEffect(() => {
@@ -86,15 +92,27 @@ const ManpowerRequisitionView = () => {
     const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
     // console.log("Selected departments from Redux:", departments);
 
-    useEffect(() => {
-        if (selectedRequisition && selectedRequisition?.status) {
-            console.log(selectedRequisition, "selectedRequisition")
-            setManpowerStatus(selectedRequisition?.status);
-            setManpowerId(selectedRequisition?.id);
-            setQueryText(selectedRequisition?.query_name);
+    // useEffect(() => {
+    //     if (selectedRequisition && selectedRequisition?.status) {
+    //         console.log(selectedRequisition, "selectedRequisition")
+    //         setManpowerStatus(selectedRequisition?.status);
+    //         setManpowerId(selectedRequisition?.id);
+    //         setQueryText(selectedRequisition?.query_name);
 
-        }
-    }, [dispatch, selectedRequisition]);
+    //     }
+
+    //     if(selectedRequisition?.requestor_sign){
+    //         const url = `${API_URL}/${String(selectedRequisition.requestor_sign).replace(/\\/g, '/')}`;
+    //         console.log(url,"url")
+    //         setRequestorSignurl(url);
+
+    //     }
+
+    //     if(selectedRequisition?.director_sign){
+    //          const url = `${API_URL}/${String(selectedRequisition.director_sign).replace(/\\/g, '/')}`;
+    //         setDirectorSignurl(url);
+    //     }
+    // }, [dispatch, selectedRequisition]);
 
     useEffect(() => {
         if (user?.emp_id) {
@@ -102,13 +120,24 @@ const ManpowerRequisitionView = () => {
         }
     }, [dispatch, user?.emp_id]);
 
+    // Move API_URL to the top, before any useEffects that use it
+
+
+    // Consolidate all selectedRequisition-related logic into ONE useEffect
     useEffect(() => {
         if (selectedRequisition) {
+            // Set manpower status, ID, and query text
+            if (selectedRequisition?.status) {
+                setManpowerStatus(selectedRequisition?.status);
+                setManpowerId(selectedRequisition?.id);
+                setQueryText(selectedRequisition?.query_name);
+            }
+
+            // Set form data
             let tatValue = "";
             if (selectedRequisition.hiring_tat_fastag == 1) tatValue = "fastag";
             else if (selectedRequisition.hiring_tat_normal_cat1 == 1) tatValue = "normalCat1";
             else if (selectedRequisition.hiring_tat_normal_cat2 == 1) tatValue = "normalCat2";
-            // console.log("Selected Requisition:", selectedRequisition);
 
             setFormData({
                 id: selectedRequisition.id || "",
@@ -137,10 +166,23 @@ const ManpowerRequisitionView = () => {
                 status: selectedRequisition.status || "",
                 query_name: selectedRequisition.query_name || "",
             });
-        }
-    }, [selectedRequisition, departments]);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            // Set URLs for signatures
+            if (selectedRequisition?.requestor_sign) {
+                const url = `${API_URL}/${String(selectedRequisition.requestor_sign).replace(/\\/g, '/')}`;
+                setRequestorSignurl(url);
+                console.log("Setting requestorSignurl:", url); // Debug log
+            }
+
+            if (selectedRequisition?.director_sign) {
+                const url = `${API_URL}/${String(selectedRequisition.director_sign).replace(/\\/g, '/')}`;
+                setDirectorSignurl(url);
+                console.log("Setting directorSignurl:", url); // Debug log
+            }
+        }
+    }, [selectedRequisition, departments, API_URL]); // Add API_URL to dependencies
+
+
 
     // --- Validation Functions (adapted from Add_Form.jsx) ---
     const validateField = (name, value) => {
@@ -630,7 +672,7 @@ const ManpowerRequisitionView = () => {
 
                 // const { id, query_name } = formData;
                 // console.log(formData.id, formData, manpowerStatus, "formData")
-                console.log(queryText,"datakadsfhbdsjgsj")
+                console.log(queryText, "datakadsfhbdsjgsj")
                 if (manpowerStatus == "Raise Query" && queryText) {
                     const currentUserId = user?.emp_id || null;
                     const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -1006,12 +1048,16 @@ const ManpowerRequisitionView = () => {
                                                     )}
                                                     {renderError('requestorSign')}
                                                 </>
-                                            ) : formData.requestorSign ? (
-                                                <div className="file-display-card">
-                                                    <FiFile className="file-icon" />
-                                                    <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.requestorSign); }} className="file-name">{formData.requestorSign.split(/[\\/]/).pop()}</a>
-                                                </div>
-                                            ) : (<p>Not provided.</p>)}
+                                            ) : formData.requestorSign && requestorSignurl ? (
+
+                                                <img
+                                                    src={requestorSignurl}
+                                                    alt="Requestor Sign"
+                                                    style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }}
+                                                />
+                                            ) : (
+                                                <p>Not provided.</p>
+                                            )}
                                         </div>
                                     )}
                                     {(isDirector || isHr) && (
@@ -1041,11 +1087,10 @@ const ManpowerRequisitionView = () => {
                                                     {renderError('directorSign')}
                                                 </>
                                             ) : formData.directorSign ? (
-                                                <div className="file-display-card">
-                                                    <FiFile className="file-icon" />
-                                                    <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.directorSign); }} className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a>
-                                                </div>
-                                            ) : (<p>Not provided.</p>)}
+                                                <img src={`${API_URL}/${String(formData.directorSign).replace(/\\/g, '/')}`} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                            ) : (
+                                                <p>Not provided.</p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -1154,7 +1199,7 @@ const ManpowerRequisitionView = () => {
                         )}
                     </div>
 
-                    {isEditMode  &&(
+                    {isEditMode && (
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
                             <Button type="submit" variant="contained" color="primary">
                                 Update

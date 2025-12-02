@@ -300,7 +300,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
         }
 
         const row = rows[0];
-        console.log("Fetched MRF Row:", row);
+        // console.log("Fetched MRF Row:", row);
         const fetchManpowerRequisitionById = {
             id: row.mr_id,
             department: row.depart,

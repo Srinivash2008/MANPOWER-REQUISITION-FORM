@@ -1,7 +1,7 @@
 const express = require('express');
 const http = require('http');
 const mysql = require('mysql2/promise');
-const helmet = require('helmet');
+// const helmet = require('helmet');
 // const redis = require('redis');
 const cors = require('cors');
 require('dotenv').config(); // Load environment variables from .env file
@@ -39,15 +39,24 @@ const io = initializeSocketIO(server);
 // Parse incoming JSON payloads
 app.use(express.json());
 // Secure your app by setting various HTTP headers
-app.use(helmet());
+// app.use(helmet());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Add this line to serve static files from the 'system_updates_files' directory
 
 
-// Enable CORS for all HTTP requests to allow frontend communication
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
-}));
+// app.use((req, res, next) => {
+//   res.setHeader(
+//     'Content-Security-Policy',
+//     "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+//   );
+//   next();
+// });
+
+
+app.use(cors());
+
+
 
 // // === Redis Client Setup ===
 // let redisClient;
@@ -98,26 +107,23 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-
 
 app.get('/api/dashboard-data', authMiddleware, async (req, res) => {
-    try {
-        // req.user.emp_id comes from JWT payload. We map it to database's 'employee_id' column.
-        const [rows] = await pool.execute('SELECT emp_name, emp_dept FROM employee_personal WHERE employee_id = ?', [req.user.emp_id]); // <<< CORRECTED COLUMN NAME
-        if (rows.length > 0) {
-            res.json({
-                message: `Welcome, ${rows[0].emp_name} from ${rows[0].emp_dept}!`,
-                userData: { ...rows[0], emp_pos: req.user.emp_pos }
-            });
-        } else {
-            res.status(404).json({ message: 'User data not found.' });
-        }
-    } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        res.status(500).json({ message: 'Server error.' });
+  try {
+    // req.user.emp_id comes from JWT payload. We map it to database's 'employee_id' column.
+    const [rows] = await pool.execute('SELECT emp_name, emp_dept FROM employee_personal WHERE employee_id = ?', [req.user.emp_id]); // <<< CORRECTED COLUMN NAME
+    if (rows.length > 0) {
+      res.json({
+        message: `Welcome, ${rows[0].emp_name} from ${rows[0].emp_dept}!`,
+        userData: { ...rows[0], emp_pos: req.user.emp_pos }
+      });
+    } else {
+      res.status(404).json({ message: 'User data not found.' });
     }
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
 });
 
 
@@ -212,53 +218,53 @@ cron.schedule(
 
 // ===== Test route =====
 app.get('/', (req, res) => {
-    res.send('PDMR ACS HD Backend is running! Daily ticket automation enabled.');
+  res.send('PDMR ACS HD Backend is running! Daily ticket automation enabled.');
 });
 
 // === Socket.IO Connection Handling ===
 io.on('connection', (socket) => {
-    console.log('A user connected via Socket.IO:', socket.id);
+  console.log('A user connected via Socket.IO:', socket.id);
 
-    // Event listener for authenticating the socket connection using a JWT
-    socket.on('authenticate', (token) => {
-        try {
-            // Verify the JWT received from the client
-            const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
-            // Attach decoded user information to the socket object
-            socket.user = decoded;
-            console.log(`User ${decoded.emp_id} authenticated via socket.`);
-            // Join a Socket.IO room based on the user's employee position for targeted messaging
-            socket.join(decoded.emp_pos);
-            // Emit a welcome message back to the newly authenticated user
-            socket.emit('welcome', `Hello ${decoded.emp_id}! You are connected.`);
-        } catch (error) {
-            console.error('Socket authentication failed:', error.message);
-            // Emit an authentication error and disconnect the socket if token is invalid
-            socket.emit('auth_error', 'Authentication failed');
-            socket.disconnect(true);
-        }
+  // Event listener for authenticating the socket connection using a JWT
+  socket.on('authenticate', (token) => {
+    try {
+      // Verify the JWT received from the client
+      const decoded = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
+      // Attach decoded user information to the socket object
+      socket.user = decoded;
+      console.log(`User ${decoded.emp_id} authenticated via socket.`);
+      // Join a Socket.IO room based on the user's employee position for targeted messaging
+      socket.join(decoded.emp_pos);
+      // Emit a welcome message back to the newly authenticated user
+      socket.emit('welcome', `Hello ${decoded.emp_id}! You are connected.`);
+    } catch (error) {
+      console.error('Socket authentication failed:', error.message);
+      // Emit an authentication error and disconnect the socket if token is invalid
+      socket.emit('auth_error', 'Authentication failed');
+      socket.disconnect(true);
+    }
+  });
+
+  // Event listener for receiving notifications from clients
+  socket.on('send-notification', (message) => {
+    console.log('Received notification from client:', message);
+    // Broadcast the message to all connected clients
+    io.emit('receive-notification', {
+      from: socket.user ? socket.user.emp_id : 'anonymous', // Identify sender
+      message: message,
+      time: new Date()
     });
 
-    // Event listener for receiving notifications from clients
-    socket.on('send-notification', (message) => {
-        console.log('Received notification from client:', message);
-        // Broadcast the message to all connected clients
-        io.emit('receive-notification', {
-            from: socket.user ? socket.user.emp_id : 'anonymous', // Identify sender
-            message: message,
-            time: new Date()
-        });
+    // Example: To send a notification only to 'admin' users
+    // io.to('admin').emit('admin-notification', `Admin alert: ${message}`);
+  });
 
-        // Example: To send a notification only to 'admin' users
-        // io.to('admin').emit('admin-notification', `Admin alert: ${message}`);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected from Socket.IO:', socket.id);
-        if (socket.user) {
-            console.log(`Authenticated user ${socket.user.emp_id} disconnected.`);
-        }
-    });
+  socket.on('disconnect', () => {
+    console.log('User disconnected from Socket.IO:', socket.id);
+    if (socket.user) {
+      console.log(`Authenticated user ${socket.user.emp_id} disconnected.`);
+    }
+  });
 });
 
 // === Server Start ===
