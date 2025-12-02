@@ -1210,16 +1210,45 @@ console.log(formData.director_comments ,"formData.director_comments")
                                     </div>
                                     {(formData.directorstatus === "Raise Query") && (
                                         <div style={{ marginTop: '1rem' }}>
-                                            <label className="form-label">Director Query<span className="required-star">*</span></label>
+                                            <label className="form-label">Director Comments<span className="required-star">*</span></label>
                                             <input
                                                 type="text"
-                                                name="query_name_director"
-                                                className={`form-input ${getFieldClassName('query_name_director')}`}
-                                                value={formData.query_name_director || ''}
+                                                name="director_comments"
+                                                className={`form-input ${getFieldClassName('director_comments')}`}
+                                                value={formData.director_comments || ''}
                                                 onChange={(e) => handleInputChange(e)}
                                                 readOnly={!isEditMode}
                                             />
-                                            {renderError('query_name_director')}
+                                            {renderError('director_comments')}
+                                        </div>
+                                    )}
+                                </div>
+
+                            </>
+                        )}
+                        {!isEditMode && (isSeniorManager || isDirector || isHr) && (
+                            <>
+                                <div className="form-section">
+                                    <h3 className="section-title"><FaUserCheck /> HR Status</h3>
+                                    <div className="section-grid multi-col">
+                                        <div>
+                                            <label className="form-label">Status Name<span className="required-star">*</span></label>
+                                            <input name="hrstatus" className={`form-input ${getFieldClassName('hrstatus')}`} value={formData.hrstatus} readOnly={!isEditMode} />
+                                            {renderError('hrstatus')}
+                                        </div>
+                                    </div>
+                                    {(formData.hrstatus === "Raise Query") && (
+                                        <div style={{ marginTop: '1rem' }}>
+                                            <label className="form-label">HR Comments<span className="required-star">*</span></label>
+                                            <input
+                                                type="text"
+                                                name="hr_comments"
+                                                className={`form-input ${getFieldClassName('hr_comments')}`}
+                                                value={formData.hr_comments || ''}
+                                                onChange={(e) => handleInputChange(e)}
+                                                readOnly={!isEditMode}
+                                            />
+                                            {renderError('hr_comments')}
                                         </div>
                                     )}
                                 </div>
@@ -1227,7 +1256,7 @@ console.log(formData.director_comments ,"formData.director_comments")
                             </>
                         )}
 
-                        {((!isEditMode && (isDirector || isHr)) || (isEditMode && isHr)) && !isSeniorManager && (
+                        {((isEditMode && isHr)) && !isSeniorManager && (
                             <>
                                 <div className="form-section">
                                     <h3 className="section-title"><FaUserCheck /> HR Status</h3>
@@ -1252,20 +1281,7 @@ console.log(formData.director_comments ,"formData.director_comments")
                                             {renderError('hr_comments')}
                                         </div>
                                     )}
-                                    {(formData.hrstatus === "Raise Query") && (
-                                        <div style={{ marginTop: '1rem' }}>
-                                            <label className="form-label">HR Query<span className="required-star">*</span></label>
-                                            <input
-                                                type="text"
-                                                name="query_name_hr"
-                                                className={`form-input ${getFieldClassName('query_name_hr')}`}
-                                                value={formData.query_name_hr || ''}
-                                                onChange={(e) => handleInputChange(e)}
-                                                readOnly={!isEditMode}
-                                            />
-                                            {renderError('query_name_hr')}
-                                        </div>
-                                    )}
+                                    
                                     {isDirector && (
                                         <div style={{ marginTop: '1rem' }}>
                                             <label className="form-label">Director Comments<span className="required-star">*</span></label>
