@@ -156,7 +156,7 @@ export const fetchManpowerRequisitionById = createAsyncThunk(
           },
         }
       );
-console.log("Fetched MRF by ID Response:", response.data);
+      console.log("Fetched MRF by ID Response:", response.data);
       return response.data;
     } catch (error) {
       const errorMessage =
@@ -234,19 +234,21 @@ export const addQueryForm = createAsyncThunk(
 
 export const updateManpowerStatus = createAsyncThunk(
   'manpowerRequisition/updateManpowerStatus',
-  async ({ manpowerId, newStatus }, { rejectWithValue, getState }) => {
-    console.log('updateManpowerStatus called with:', { manpowerId ,newStatus});
+  async ({ manpowerId, newStatus, hr_comments, director_comments }, { rejectWithValue, getState }) => {
+    console.log('updateManpowerStatus called with:', { manpowerId, newStatus });
     try {
       const { auth } = getState();
       const token = auth.token;
-
       if (!token) {
         return rejectWithValue('Authentication token is missing.');
       }
 
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const updateBody = {
-        status: newStatus
+        status: newStatus,
+        user: auth.user,
+        hr_comments,
+        director_comments
       };
 
       const response = await axios.put(
@@ -317,7 +319,7 @@ export const fetchDepartmentsManagerId = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch departments.';
@@ -485,7 +487,7 @@ const manpowerrequisitionSlice = createSlice({
         state.error = null;
       })
       .addCase(getMFRCounts.fulfilled, (state, action) => {
-        state.status = 'succeeded'; 
+        state.status = 'succeeded';
         state.mfrCounts = action.payload;
       }
       )
@@ -497,7 +499,7 @@ const manpowerrequisitionSlice = createSlice({
       .addCase(fetchManagerList.pending, (state) => {
         state.status = 'loading';
         state.error = null;
-      } )
+      })
       .addCase(fetchManagerList.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.managerList = action.payload;

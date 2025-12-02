@@ -3,10 +3,10 @@ import { styled, useTheme } from '@mui/material/styles';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiX } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField } from "@mui/material";
+import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { FileUploader } from "react-drag-drop-files";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus, optimisticUpdateManpowerStatus, revertManpowerStatus, addQueryForm, fetchDepartmentsManagerId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus, addQueryForm, fetchDepartmentsManagerId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import swal from "sweetalert2";
 import { FaCommentDots } from 'react-icons/fa';
@@ -60,6 +60,8 @@ const ManpowerRequisitionView = () => {
         directorstatus: "",
         query_name_hr: "",
         query_name_director: "",
+        hr_comments: "",
+        director_comments: "",
     });
 
     const [errors, setErrors] = useState({});
@@ -76,8 +78,9 @@ const ManpowerRequisitionView = () => {
     const [manpowerStatus, setManpowerStatus] = useState(null);
     const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
     const [queryText, setQueryText] = useState("");
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [requestorSignurl, setRequestorSignurl] = useState("");
-    const [directorSignurl, setDirectorSignurl] = useState("");
+    const [directorSignurl, setDirectorSignurl] = useState("http://localhost:5000/uploads/mrf/director_signs/directorSign-1764656272056-75150252.png");
 
 
     console.log(requestorSignurl, "requestorSignurlrequestorSignurlrequestorSignurl")
@@ -169,6 +172,8 @@ const ManpowerRequisitionView = () => {
                 directorstatus: selectedRequisition.director_status || "",
                 query_name_hr: selectedRequisition.query_name_hr || "",
                 query_name_director: selectedRequisition.query_name_director || "",
+                hr_comments: selectedRequisition.hr_comments || "",
+                director_comments: selectedRequisition.director_comments || "",
             });
 
             // Set URLs for signatures
@@ -578,134 +583,6 @@ const ManpowerRequisitionView = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const allTouched = {};
-        Object.keys(formData).forEach(key => {
-            allTouched[key] = true;
-        });
-        setTouched(allTouched);
-
-        const newErrors = {};
-        const validateFieldSync = (name, value) => {
-            // This is a synchronous version of your validation logic
-            // It returns an error message string or undefined
-            // Note: This duplicates logic from `validateField`. A refactor could unify them.
-            const isFileValid = (file) => {
-                if (!file) return false;
-                if (typeof file === 'string') return true;
-                if (file instanceof File && ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) return true;
-                return false;
-            };
-
-            // Simplified validation checks from `validateField`
-            if (name === 'department' && !value) return 'Department is required.';
-            if (name === 'employmentStatus' && !value) return 'Status of Employment is required.';
-            if (name === 'designation' && !value) return 'Proposed Designation is required.';
-            if (name === 'numResources' && (!value || value < 1)) return 'At least one resource is required.';
-            if (name === 'jobDescription' && !value) return 'Job Description is required.';
-            if (name === 'education' && !value) return 'Educational Qualification is required.';
-            if (name === 'experience' && !value) return 'Experience is required.';
-            if (name === 'ctcRange' && !value) return 'Approx. CTC Range is required.';
-            if (name === 'hiringTAT' && !value) return 'A Hiring TAT option must be selected.';
-
-            // Role-based and conditional checks
-            if ((isSeniorManager || isHr) && name === 'requestorSign' && !isFileValid(value)) return 'A valid Requestor Sign image (JPG, PNG) is required.';
-            if ((isDirector || isHr) && name === 'directorSign' && !isFileValid(value)) return 'A valid Director Sign image (JPG, PNG) is required.';
-            if (isHr && name === 'mrfNumber' && !value) return 'MRF Number is required for HR.';
-            if (isHr && name === 'tatAgreed' && !value) return 'TAT Agreed is required for HR.';
-            if (isHr && name === 'deliveryPhase' && !value) return 'Phase of Delivery is required for HR.';
-            if (isHr && name === 'hrReview' && !value) return 'HR Review is required for HR.';
-
-            return undefined;
-        };
-
-        Object.keys(formData).forEach(name => {
-            const error = validateFieldSync(name, formData[name]);
-            if (error) {
-                newErrors[name] = error;
-            }
-        });
-
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length > 0) {
-            setNotification({ open: true, message: 'Please fix the validation errors.', severity: 'error' });
-            return;
-        }
-
-        const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
-        const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
-
-
-        swal.fire({
-            title: "Are you sure?",
-            text: "Do you want to update this Manpower Requisition?",
-            icon: '',
-            iconHtml: `<img src="/validation/warning.gif" 
-                    alt="Custom Icon" 
-                    style="width: 100px; height: 100px">`,
-            showCancelButton: true,
-            confirmButtonColor: theme.palette.primary.main,
-            cancelButtonColor: theme.palette.error.main,
-            confirmButtonText: "Yes, update it!",
-        }).then(async (result) => {
-            if (!result.isConfirmed) return;
-
-
-
-            const data = new FormData();
-
-            for (const key in formData) {
-                if (key === "hiringTAT" && formData.hiringTAT) {
-                    data.append("hiring_tat_fastag", formData.hiringTAT === "fastag");
-                    data.append("hiring_tat_normal_cat1", formData.hiringTAT === "normalCat1");
-                    data.append("hiring_tat_normal_cat2", formData.hiringTAT === "normalCat2");
-                } else if (key !== "hiringTAT" && formData[key] !== null && formData[key] !== "") {
-                    data.append(key, formData[key]);
-                }
-            }
-
-            try {
-                await dispatch(updateManpowerRequisition({ id, data })).unwrap();
-
-                if (manpowerStatus) {
-                    await dispatch(updateManpowerStatus({ manpowerId, newStatus: manpowerStatus })).unwrap();
-                }
-
-
-                // const { id, query_name } = formData;
-                // console.log(formData.id, formData, manpowerStatus, "formData")
-                console.log(queryText, "datakadsfhbdsjgsj")
-                if (manpowerStatus == "Raise Query" && queryText) {
-                    const currentUserId = user?.emp_id || null;
-                    const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
-                    const formattedDate = new Date().toISOString().split('T')[0];
-                    const queryAddData = {
-                        query_manpower_requisition_pid: manpowerId,
-                        query_name: queryText,
-                        query_created_by: currentUserId,
-                        query_created_date: formattedDate,
-                        query_created_time: created_at,
-                        query_is_delete: 'Active',
-                    };
-                    console.log(queryAddData, "queryAddData ");
-
-                    await dispatch(addQueryForm(queryAddData)).unwrap();
-                }
-
-                setNotification({ open: true, message: 'MRF updated successfully!', severity: 'success' });
-                navigate('/mrf-list');
-
-            } catch (error) {
-                if (manpowerStatus) {
-                    dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
-                }
-                setNotification({ open: true, message: `Update failed: ${error.message || "Please try again."}`, severity: 'error' });
-            }
-        });
-    };
-
     const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
     const handleStatusChange = (event, manpowerId) => {
@@ -723,6 +600,12 @@ const ManpowerRequisitionView = () => {
             return;
         }
 
+        // Validation: Ensure status is not empty when updating
+        if (!newStatus) {
+            setNotification({ open: true, message: 'Status cannot be empty.', severity: 'error' });
+            return;
+        }
+
         if (newStatus === "Raise Query") {
             setManpowerId(manpowerId);
             setManpowerStatus(newStatus);
@@ -730,46 +613,123 @@ const ManpowerRequisitionView = () => {
             return;
         }
 
-        // swal.fire({
-        //     title: "Are you sure?",
-        //     text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
-        //     icon: '',
-        //     iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-        //     showCancelButton: true,
-        //     confirmButtonColor: theme.palette.primary.main,
-        //     cancelButtonColor: theme.palette.error.main,
-        //     confirmButtonText: "Yes, update it!",
-        // }).then(async (result) => {
-        //     if (!result.isConfirmed) {
-        //         return;
-        //     }
+        // Role-based status and comment updates
+        if (isHr) {
+            setFormData(prev => ({ ...prev, hr_status: newStatus }));
+        }
+        if (isDirector) {
+            setFormData(prev => ({ ...prev, director_status: newStatus }));
+        }
 
-        //     dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
-        //     try {
-        //         await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
-        //         swal.fire({
-        //             title: 'Updated!',
-        //             text: 'Manpower status updated successfully.',
-        //             icon: '',
-        //             iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-        //             confirmButtonColor: theme.palette.error.main,
-        //             confirmButtonText: 'OK'
-        //         }).then(async () => {
-        //             window.location.reload();
-        //         });
-        //     } catch (err) {
-        //         dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
-        //         swal.fire({
-        //             title: 'Error!',
-        //             text: err.message || 'Failed to update Manpower.',
-        //             icon: '',
-        //             iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-        //             confirmButtonColor: theme.palette.error.main,
-        //             confirmButtonText: 'OK'
-        //         });
-        //     }
-        // });
+        // Always update the main status field
+        setFormData(prev => ({ ...prev, status: newStatus }));
+
+
     }
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const allTouched = {};
+        Object.keys(formData).forEach(key => {
+            allTouched[key] = true;
+        });
+        setTouched(allTouched);
+
+        // Validation: Ensure status is not empty when updating
+        if (isEditMode && !formData.status) {
+            setNotification({ open: true, message: 'Status cannot be empty. Please select a status before updating.', severity: 'error' });
+            return;
+        }
+
+        // Re-run all validations
+        const tempErrors = {};
+        Object.keys(formData).forEach(name => {
+            validateField(name, formData[name]);
+            if (errors[name]) {
+                tempErrors[name] = errors[name];
+            }
+        });
+
+        // Check if there are any errors after validation
+        if (Object.keys(errors).some(key => errors[key])) {
+            setNotification({ open: true, message: 'Please fix the validation errors before submitting.', severity: 'error' });
+            return;
+        }
+
+        setIsConfirmOpen(true);
+    };
+
+    const handleConfirmUpdate = async () => {
+        setIsConfirmOpen(false);
+
+        const data = new FormData();
+        for (const key in formData) {
+            if (key === "hiringTAT" && formData.hiringTAT) {
+                data.append("hiring_tat_fastag", formData.hiringTAT === "fastag");
+                data.append("hiring_tat_normal_cat1", formData.hiringTAT === "normalCat1");
+                data.append("hiring_tat_normal_cat2", formData.hiringTAT === "normalCat2");
+            } else if (key !== "hiringTAT" && formData[key] !== null && formData[key] !== "") {
+                data.append(key, formData[key]);
+            }
+        }
+
+        try {
+            await dispatch(updateManpowerRequisition({ id, data })).unwrap();
+console.log(formData.hr_comments,"formData.hr_comments")
+console.log(formData.director_comments ,"formData.director_comments")
+            if (manpowerStatus) {
+                await dispatch(updateManpowerStatus({ 
+                    manpowerId, 
+                    newStatus: manpowerStatus, 
+                    hr_comments: formData.hr_comments, 
+                    director_comments: formData.director_comments 
+                })).unwrap();
+            }
+
+            if (manpowerStatus === "Raise Query" && queryText) {
+                const currentUserId = user?.emp_id || null;
+                const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
+                const formattedDate = new Date().toISOString().split('T')[0];
+                const queryAddData = {
+                    query_manpower_requisition_pid: manpowerId,
+                    query_name: queryText,
+                    query_created_by: currentUserId,
+                    query_created_date: formattedDate,
+                    query_created_time: created_at,
+                    query_is_delete: 'Active',
+                };
+                await dispatch(addQueryForm(queryAddData)).unwrap();
+            }
+
+            swal.fire({
+                title: 'Updated!',
+                text: 'Manpower Requisition updated successfully.',
+                icon: 'success',
+                confirmButtonColor: theme.palette.primary.main,
+                confirmButtonText: 'OK'
+            }).then(() => {
+                navigate('/mrf-list');
+            });
+
+        } catch (error) {
+            swal.fire({
+                title: 'Error!',
+                text: error.message || 'Failed to update Manpower Requisition.',
+                icon: 'error',
+                confirmButtonColor: theme.palette.error.main,
+                confirmButtonText: 'OK'
+            });
+            setNotification({
+                open: true,
+                message: `Update failed: ${error.message || "Please try again."}`,
+                severity: "error",
+            });
+        }
+    };
+
+    const handleCloseConfirm = () => {
+        setIsConfirmOpen(false);
+    };
 
     const handleQueryTextChange = (e) => {
         const newQueryText = e.target.value;
@@ -1064,7 +1024,7 @@ const ManpowerRequisitionView = () => {
                                             )}
                                         </div>
                                     )}
-                                    {!isEditMode && (isSeniorManager || isDirector || isHr) && (
+                                    {(isDirector || isHr) && (
                                         <div>
                                             <label className="form-label">Director Sign<span className="required-star">*</span></label>
                                             {isEditMode ? (
@@ -1080,6 +1040,7 @@ const ManpowerRequisitionView = () => {
                                                         <div className="upload-area"><div className="upload-instruction"><span>Drag & Drop or Click to Upload</span><span className="file-types">(Accepted: JPEG, PNG, JPG)</span></div></div>
                                                     </FileUploader>
                                                     {formData.directorSign && (
+                                                      <>
                                                         <div className="file-display-card">
                                                             <FiFile className="file-icon" />
                                                             {typeof formData.directorSign === 'string' ? (
@@ -1087,11 +1048,15 @@ const ManpowerRequisitionView = () => {
                                                             ) : (<span className="file-name">{formData.directorSign.name}</span>)}
                                                             <button type="button" onClick={() => removeFile("directorSign")} className="remove-file-btn"><FiX /></button>
                                                         </div>
+                                                      </>
                                                     )}
                                                     {renderError('directorSign')}
                                                 </>
                                             ) : formData.directorSign ? (
-                                                <img src={`${API_URL}/${String(formData.directorSign).replace(/\\/g, '/')}`} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                                <img src={directorSignurl}
+                                                    alt="Director Sign"
+                                                    style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }}
+                                                />
                                             ) : (
                                                 <p>Not provided.</p>
                                             )}
@@ -1136,7 +1101,7 @@ const ManpowerRequisitionView = () => {
                                     <div className="section-grid multi-col">
                                         <FormControl fullWidth size="small">
                                             <Select
-                                                value={formData.status}
+                                                value={formData?.status}
                                                 onChange={(e) => handleStatusChange(e, formData.id)}
                                                 size="small"
                                                 sx={{ fontSize: "0.85rem", height: 36, borderRadius: '6px' }}
@@ -1150,30 +1115,26 @@ const ManpowerRequisitionView = () => {
                                                     },
                                                 }}
                                             >
-                                                <MenuItem value="Pending" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                                    Pending
-                                                </MenuItem>
-                                                <MenuItem value="Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                                    Approve
-                                                </MenuItem>
-                                                <MenuItem value="HR Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                                    HR Approve
-                                                </MenuItem>
-                                                <MenuItem value="Reject" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                                    Reject
-                                                </MenuItem>
-                                                <MenuItem value="Raise Query" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                                    Raise Query
-                                                </MenuItem>
-                                                <MenuItem value="On Hold" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                                    On Hold
-                                                </MenuItem>
+                                                {isDirector && !isHr && [
+                                                    <MenuItem key="Approve" value="Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Approve</MenuItem>,
+                                                    <MenuItem key="Reject" value="Reject" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Reject</MenuItem>,
+                                                    <MenuItem key="Raise Query" value="Raise Query" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Raise Query</MenuItem>,
+                                                    <MenuItem key="On Hold" value="On Hold" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>On Hold</MenuItem>
+                                                ]}
+                                                {isHr && [
+                                                    <MenuItem key="Pending" value="Pending" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Pending</MenuItem>,
+                                                    <MenuItem key="Approve" value="Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Approve</MenuItem>,
+                                                    <MenuItem key="HR Approve" value="HR Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>HR Approve</MenuItem>,
+                                                    <MenuItem key="Reject" value="Reject" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Reject</MenuItem>,
+                                                    <MenuItem key="Raise Query" value="Raise Query" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Raise Query</MenuItem>,
+                                                    <MenuItem key="On Hold" value="On Hold" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>On Hold</MenuItem>
+                                                ]}
                                             </Select>
                                         </FormControl>
                                     </div>
 
 
-                                    {(isRaiseQueryOpen || formData.status === "Raise Query") && (
+                                    {(formData.status === "Raise Query") && (
                                         <div style={{ marginTop: '1rem' }}>
 
                                             <input type="hidden" name="query_manpower_requisition_pid" value={manpowerId} />
@@ -1198,6 +1159,40 @@ const ManpowerRequisitionView = () => {
                                             )} */}
                                         </div>
                                     )}
+                                    {formData.status && formData.status !== "Raise Query" && (
+                                        <>
+                                            {isDirector && (
+                                                <div style={{ marginTop: '1rem' }}>
+                                                    <label className="form-label">Director Comments</label>
+                                                    <TextField
+                                                        fullWidth
+                                                        multiline
+                                                        rows={3}
+                                                        label="Enter your comments here"
+                                                        name="director_comments"
+                                                        value={formData.director_comments || ''}
+                                                        onChange={handleInputChange}
+                                                        variant="outlined"
+                                                        size="small" />
+                                                </div>
+                                            )}
+                                            {isHr && (
+                                                <div style={{ marginTop: '1rem' }}>
+                                                    <label className="form-label">HR Comments</label>
+                                                    <TextField
+                                                        fullWidth
+                                                        multiline
+                                                        rows={3}
+                                                        label="Enter your comments here"
+                                                        name="hr_comments"
+                                                        value={formData.hr_comments || ''}
+                                                        onChange={handleInputChange}
+                                                        variant="outlined"
+                                                        size="small" />
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             </>
                         )}
@@ -1209,7 +1204,7 @@ const ManpowerRequisitionView = () => {
                                     <div className="section-grid multi-col">
                                         <div>
                                             <label className="form-label">Status Name<span className="required-star">*</span></label>
-                                            <input name="directorstatus" className={`form-input ${getFieldClassName('directorstatus')}`} value={formData.directorstatus} readOnly={!isEditMode}  />
+                                            <input name="directorstatus" className={`form-input ${getFieldClassName('directorstatus')}`} value={formData.directorstatus} readOnly={!isEditMode} />
                                             {renderError('directorstatus')}
                                         </div>
                                     </div>
@@ -1228,21 +1223,35 @@ const ManpowerRequisitionView = () => {
                                         </div>
                                     )}
                                 </div>
-                                
+
                             </>
                         )}
 
-                        {!isEditMode && (isSeniorManager || isDirector || isHr) && (
+                        {((!isEditMode && (isDirector || isHr)) || (isEditMode && isHr)) && !isSeniorManager && (
                             <>
                                 <div className="form-section">
                                     <h3 className="section-title"><FaUserCheck /> HR Status</h3>
                                     <div className="section-grid multi-col">
                                         <div>
                                             <label className="form-label">Status Name<span className="required-star">*</span></label>
-                                            <input name="hrstatus" className={`form-input ${getFieldClassName('hrstatus')}`} value={formData.hrstatus} readOnly={!isEditMode}  />
+                                            <input name="hrstatus" className={`form-input ${getFieldClassName('hrstatus')}`} value={formData.hrstatus} readOnly={!isEditMode} />
                                             {renderError('hrstatus')}
                                         </div>
                                     </div>
+                                    {(formData.hrstatus) && (
+                                        <div style={{ marginTop: '1rem' }}>
+                                            <label className="form-label">HR Comments<span className="required-star">*</span></label>
+                                            <input
+                                                type="text"
+                                                name="hr_comments"
+                                                className={`form-input ${getFieldClassName('hr_comments')}`}
+                                                value={formData.hr_comments || ''}
+                                                onChange={(e) => handleInputChange(e)}
+                                                readOnly={!isEditMode || !isHr}
+                                            />
+                                            {renderError('hr_comments')}
+                                        </div>
+                                    )}
                                     {(formData.hrstatus === "Raise Query") && (
                                         <div style={{ marginTop: '1rem' }}>
                                             <label className="form-label">HR Query<span className="required-star">*</span></label>
@@ -1257,10 +1266,28 @@ const ManpowerRequisitionView = () => {
                                             {renderError('query_name_hr')}
                                         </div>
                                     )}
+                                    {isDirector && (
+                                        <div style={{ marginTop: '1rem' }}>
+                                            <label className="form-label">Director Comments<span className="required-star">*</span></label>
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                rows={3}
+                                                name="director_comments"
+                                                value={formData.director_comments || ''}
+                                                onChange={handleInputChange}
+                                                variant="outlined"
+                                                size="small"
+                                                readOnly={!isEditMode}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                
+
                             </>
                         )}
+
+                       
                     </div>
 
                     {isEditMode && (
@@ -1272,6 +1299,25 @@ const ManpowerRequisitionView = () => {
                     )}
                 </form>
             </div>
+            <Dialog
+                open={isConfirmOpen}
+                onClose={handleCloseConfirm}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">{"Confirm Update"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to update this Manpower Requisition?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseConfirm}>Cancel</Button>
+                    <Button onClick={handleConfirmUpdate} color="primary" autoFocus>
+                        Update
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
                 <MuiAlert
                     onClose={handleCloseNotification}
@@ -1285,4 +1331,4 @@ const ManpowerRequisitionView = () => {
     );
 };
 
-export default ManpowerRequisitionView;
+export default ManpowerRequisitionView;         
