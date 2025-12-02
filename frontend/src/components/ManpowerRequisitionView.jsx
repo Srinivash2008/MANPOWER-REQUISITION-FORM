@@ -1080,7 +1080,7 @@ const ManpowerRequisitionView = () => {
                                 </div>
                             </div>
                         )}
-                        {isEditMode && (isSeniorManager || isDirector || isHr) && (
+                        {isEditMode && (isDirector || isHr) && (
                             <>
                                 <div className="form-section">
                                     <h3 className="section-title"><FaUserCheck /> Status Updation</h3>
@@ -1154,7 +1154,7 @@ const ManpowerRequisitionView = () => {
                         )}
                     </div>
 
-                    {isEditMode && (
+                    {isEditMode  &&(
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
                             <Button type="submit" variant="contained" color="primary">
                                 Update

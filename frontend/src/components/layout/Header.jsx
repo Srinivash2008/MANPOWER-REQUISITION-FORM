@@ -218,6 +218,7 @@ const Header = () => {
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false); // 👈 State for mobile drawer
 
+  const isDirector = user?.emp_id == "1400";
   useEffect(() => {
     if (!token) {
       navigate('/login');
@@ -282,7 +283,7 @@ const Header = () => {
     {
       label: "MRF",
       submenu: [
-        { label: "Add MRF", link: "/add-mrf" },
+        !isDirector && { label: "Add MRF", link: "/add-mrf" },
         { label: "View MRF", link: "/mrf-list" },
 
       ],
