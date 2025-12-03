@@ -367,35 +367,48 @@ router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
 
 router.post('/add-query-form', authMiddleware, async (req, res) => {
     // Use a single `query_name` from the request and get the user from authMiddleware
-    const { query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete } = req.body;
+    const { query_manpower_requisition_pid, query_name, query_created_by, query_is_delete } = req.body;
     const { user } = req; // User details are available from authMiddleware
 
-    if (!query_name) {
+    if (!query_name || !query_manpower_requisition_pid) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
-    try {
-        let insertQuery;
-        let insertParams;
 
-        // Check user role to decide which column to insert into
-        if (user?.emp_pos === 'HR') { // Assuming 'HR' is the role for HR users
-            insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name_hr, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
-            insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
-        } else { // Assumes any other user (like a Director) uses the director column
-            insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name_director, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
-            insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
+    try {
+        // Check if an entry already exists for this requisition PID
+        const [existing] = await pool.execute(
+            'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+            [query_manpower_requisition_pid]
+        );
+
+        const isHrUpdate = user?.emp_id === '1722';
+
+        if (existing.length > 0) {
+            // Entry exists, so UPDATE it
+            const query_pid = existing[0].query_pid;
+            const fieldToUpdate = isHrUpdate ? 'query_name_hr' : 'query_name_director';
+            
+            const updateQuery = `UPDATE manpower_requisition_query SET ${fieldToUpdate} = ? WHERE query_pid = ?`;
+            await pool.execute(updateQuery, [query_name, query_pid]);
+
+            res.status(200).json({ message: 'Query updated successfully.' });
+        } else {
+            // No entry exists, so INSERT a new one
+            const query_created_date = new Date().toISOString().split('T')[0];
+            const query_created_time = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+            const fieldToInsert = isHrUpdate ? 'query_name_hr' : 'query_name_director';
+            const insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, ${fieldToInsert}, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
+            const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete || 'Active'];
+            
+            const [result] = await pool.execute(insertQuery, insertParams);
+            res.status(201).json({ message: 'New Query created successfully.', manpowerId: result.insertId });
         }
 
-        const [result] = await pool.execute(insertQuery, insertParams);
-
         emitManpowerRequisitionRefresh();
-
-        res.status(201).json({
-            message: 'New Query List created successfully.',
-            manpowerId: result.insertId,
-        });
     } catch (error) {
-        res.status(500).json({ message: error });
+        console.error('Error in /add-query-form:', error);
+        res.status(500).json({ message: 'Server error processing query form.' });
     }
 });
 
