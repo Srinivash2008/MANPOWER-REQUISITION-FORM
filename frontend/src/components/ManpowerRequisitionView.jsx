@@ -675,14 +675,14 @@ const ManpowerRequisitionView = () => {
 
         try {
             await dispatch(updateManpowerRequisition({ id, data })).unwrap();
-console.log(formData.hr_comments,"formData.hr_comments")
-console.log(formData.director_comments ,"formData.director_comments")
+            console.log(formData.hr_comments, "formData.hr_comments")
+            console.log(formData.director_comments, "formData.director_comments")
             if (manpowerStatus) {
-                await dispatch(updateManpowerStatus({ 
-                    manpowerId, 
-                    newStatus: manpowerStatus, 
-                    hr_comments: formData.hr_comments, 
-                    director_comments: formData.director_comments 
+                await dispatch(updateManpowerStatus({
+                    manpowerId,
+                    newStatus: manpowerStatus,
+                    hr_comments: formData.hr_comments,
+                    director_comments: formData.director_comments
                 })).unwrap();
             }
 
@@ -1040,15 +1040,15 @@ console.log(formData.director_comments ,"formData.director_comments")
                                                         <div className="upload-area"><div className="upload-instruction"><span>Drag & Drop or Click to Upload</span><span className="file-types">(Accepted: JPEG, PNG, JPG)</span></div></div>
                                                     </FileUploader>
                                                     {formData.directorSign && (
-                                                      <>
-                                                        <div className="file-display-card">
-                                                            <FiFile className="file-icon" />
-                                                            {typeof formData.directorSign === 'string' ? (
-                                                                <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.directorSign); }} className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a>
-                                                            ) : (<span className="file-name">{formData.directorSign.name}</span>)}
-                                                            <button type="button" onClick={() => removeFile("directorSign")} className="remove-file-btn"><FiX /></button>
-                                                        </div>
-                                                      </>
+                                                        <>
+                                                            <div className="file-display-card">
+                                                                <FiFile className="file-icon" />
+                                                                {typeof formData.directorSign === 'string' ? (
+                                                                    <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.directorSign); }} className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a>
+                                                                ) : (<span className="file-name">{formData.directorSign.name}</span>)}
+                                                                <button type="button" onClick={() => removeFile("directorSign")} className="remove-file-btn"><FiX /></button>
+                                                            </div>
+                                                        </>
                                                     )}
                                                     {renderError('directorSign')}
                                                 </>
@@ -1122,8 +1122,8 @@ console.log(formData.director_comments ,"formData.director_comments")
                                                     <MenuItem key="On Hold" value="On Hold" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>On Hold</MenuItem>
                                                 ]}
                                                 {isHr && [
-                                                    <MenuItem key="Pending" value="Pending" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Pending</MenuItem>,
-                                                    <MenuItem key="Approve" value="Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Approve</MenuItem>,
+                                                    // <MenuItem key="Pending" value="Pending" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Pending</MenuItem>,
+                                                    // <MenuItem key="Approve" value="Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Approve</MenuItem>,
                                                     <MenuItem key="HR Approve" value="HR Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>HR Approve</MenuItem>,
                                                     <MenuItem key="Reject" value="Reject" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Reject</MenuItem>,
                                                     <MenuItem key="Raise Query" value="Raise Query" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>Raise Query</MenuItem>,
@@ -1287,7 +1287,7 @@ console.log(formData.director_comments ,"formData.director_comments")
                             </>
                         )}
 
-                       
+
                     </div>
 
                     {isEditMode && (
