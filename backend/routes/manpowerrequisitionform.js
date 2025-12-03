@@ -114,7 +114,7 @@ router.post(
 
             // Get file paths from multer
             const requestorSignPath = req.files?.requestorSign?.[0]?.path || null;
-            const directorSignPath = req.files?.directorSign?.[0]?.path || null;
+            const directorSignPath = req.files?.directorSign?.[0]?.path || "uploads\mrf\requestor_signs\directorSign.png";
             const rampUpFilePath = req.files?.rampUpFile?.[0]?.path || null;
 
             const sql = `
