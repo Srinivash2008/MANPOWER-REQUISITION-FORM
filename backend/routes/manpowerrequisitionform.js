@@ -169,8 +169,6 @@ router.post(
                             border: 1px solid #ddd;
                             padding: 20px;
                         ">
-                            <h2 style="color: #333;">Manpower Requisition Form Submitted Successfully!</h2>
-
                             <p>Hello Rajesh,</p>
 
                             <p>
