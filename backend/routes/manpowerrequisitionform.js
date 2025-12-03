@@ -402,10 +402,10 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status, user, hr_comments, director_comments } = req.body;
-    console.log( status, user, hr_comments, director_comments, " status, user, hr_comments, director_comments")
-    if (!manpowerId || !status) {
-        return res.status(400).json({ message: 'Missing required fields' });
+    const { status, user, hr_comments, director_comments } = req.body; // Changed from newStatus to status
+console.log( status, user, hr_comments, director_comments,"kdsjfhsjkgfgmsdbfsdjks")
+    if (!manpowerId || !status || !user) {
+        return res.status(400).json({ message: 'Missing required fields: id, status, and user are required.' });
     }
     try {
         const connection = await pool.getConnection();

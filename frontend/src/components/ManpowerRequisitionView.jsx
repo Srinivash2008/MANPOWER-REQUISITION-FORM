@@ -6,6 +6,7 @@ import { Snackbar, Alert as MuiAlert } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import DirectorImage from "../assets/images/directorSign.png"
 
 const ManpowerRequisitionView = () => {
     const dispatch = useDispatch();
@@ -70,7 +71,7 @@ const ManpowerRequisitionView = () => {
     }, [dispatch, id]);
 
     const { selectedRequisition } = useSelector((state) => state.manpowerRequisition);
-console.log(selectedRequisition,"status")
+console.log(selectedRequisition,"selectedRequisition")
     useEffect(() => {
         if (selectedRequisition) {
             let tatValue = "";
@@ -312,7 +313,7 @@ console.log(selectedRequisition,"status")
                                 {formData.directorSign ? (
                                     <div>
                                         <label className="form-label">Director Sign</label>
-                                        <img src={`${API_URL}/${formData.directorSign}`} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                        <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
                                     </div>
                                 )
 
@@ -337,19 +338,31 @@ console.log(selectedRequisition,"status")
                             <div className="section-grid multi-col">
                                 <DisplayField label="Director Status Name" value={formData.directorstatus} />
                             </div>
-                            <div style={{ marginTop: '1rem' }}>
-                                <DisplayTextarea label="Director Comments" value={formData.director_comments} />
-                            </div>
+                            {formData.directorstatus === 'Raise Query' ? (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="Director Query" value={formData.query_name_director} />
+                                </div>
+                            ) : (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="Director Comments" value={formData.director_comments} />
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-section">
                             <h3 className="section-title"><FaUserCheck /> HR Status</h3>
                             <div className="section-grid multi-col">
-                                <DisplayField label="Status Name" value={formData.status} />
+                                <DisplayField label="Status Name" value={formData.hrstatus} />
                             </div>
-                            <div style={{ marginTop: '1rem' }}>
-                                <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
-                            </div>
+                            {formData.hrstatus === 'Raise Query' ? (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="HR Query" value={formData.query_name_hr} />
+                                </div>
+                            ) : (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
+                                </div>
+                            )}
                         </div>
                         
                     </div>

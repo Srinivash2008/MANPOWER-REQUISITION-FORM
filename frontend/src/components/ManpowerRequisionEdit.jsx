@@ -685,7 +685,7 @@ const ManpowerRequisitionEdit = () => {
                                             {renderError('requestorSign')}
                                         </div>
                                     )}
-                                    {(isDirector || isHr) && (
+                                    {/* {(isDirector || isHr) && (
                                         <div>
                                             <label className="form-label">Director Sign<span className="required-star">*</span></label>
                                             <FileUploader
@@ -709,7 +709,7 @@ const ManpowerRequisitionEdit = () => {
                                             )}
                                             {renderError('directorSign')}
                                         </div>
-                                    )}
+                                    )} */}
                                 </div>
                             </div>
                         )}
