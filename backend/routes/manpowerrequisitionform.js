@@ -114,7 +114,7 @@ router.post(
 
             // Get file paths from multer
             const requestorSignPath = req.files?.requestorSign?.[0]?.path || null;
-            const directorSignPath = req.files?.directorSign?.[0]?.path || "uploads\mrf\director_signs\directorSign.png";
+            const directorSignPath = req.files?.directorSign?.[0]?.path || null;
             const rampUpFilePath = req.files?.rampUpFile?.[0]?.path || null;
 
             const sql = `
@@ -141,6 +141,12 @@ router.post(
             ];
 
             const [result] = await pool.execute(sql, params);
+
+            const [rows] = await pool.execute(
+                'SELECT * FROM employee_personal WHERE emp_name = ?',
+                [emp_name]
+            );
+
             if (buttonClicked === 'submit') {
                 // 1. Email to the Requestor/FH (Confirmation) 📧
                 // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
@@ -149,86 +155,79 @@ router.post(
                     from: process.env.EMAIL_USER,
                     // The 'to' email should be the submitter's email address (emp_email)
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
-                    to: "srinivasan@pdmrindia.com",
+                    to: "nikita@pdmrindia.com",
+                    // to: "je.rajesh@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: "gomathi@pdmrindia.com",
-                    subject: `Manpower Requisition Form (MRF) Submitted - Confirmation`,
+                    cc: "gomathi@pdmrindia.com,",
+                    // cc: `selvi@pdmrindia.com, ${rows?.mail_id}`
+                    subject: `A New Manpower requisition Form submitted for your approval`,
                     html: `
-            <div style="
-                font-family: Arial, sans-serif;
-                max-width: 600px;
-                margin: auto;
-                border: 1px solid #ddd;
-                padding: 20px;
-            ">
-                <h2 style="color: #333;">Manpower Requisition Form Submitted Successfully!</h2>
+                        <div style="
+                            font-family: Arial, sans-serif;
+                            max-width: 600px;
+                            margin: auto;
+                            border: 1px solid #ddd;
+                            padding: 20px;
+                        ">
+                            <h2 style="color: #333;">Manpower Requisition Form Submitted Successfully!</h2>
 
-                <p>Hello ${emp_name},</p>
+                            <p>Hello Rajesh,</p>
 
-                <p>
-                    Your <strong>Manpower Requisition Form</strong> has been successfully submitted. 
-                    Your request will now be reviewed by the HR/Recruitment team.
-                </p>
+                            <p>
+                                Please review it using the link below:
+                                <a href="http://localhost:5173/">View Manpower Requisition</a>
+                            </p>
 
-                <h3 style="color: #007bff; margin-top: 25px;">Submission Details</h3>
-                <p><strong>Submitted By:</strong> ${emp_name}</p>
-                <p><strong>Submission Date:</strong> ${new Date().toLocaleString()}</p>
-
-                <p style="margin-top: 20px;">
-                    Please feel free to reach out to the HR team if you need further assistance.
-                </p>
-
-                <p style="margin-top: 30px; color: #555;">
-                    Regards,<br>
-                    HR Team
-                </p>
-            </div>
-        `
+                            <p style="margin-top: 30px; color: #555;">
+                                Thanks & regards,<br>
+                                Automated MRF System
+                            </p>
+                        </div>`
                 };
 
                 // 2. Email to the HR Team (Action/Notification) 🔔
-                const hrMailOptions = {
-                    from: process.env.EMAIL_USER,
-                    // The 'to' email is the HR team's primary recipient
-                    to: "srinivasan@pdmrindia.com",
-                    // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: "gomathi@pdmrindia.com",
-                    subject: `ACTION REQUIRED: New MRF Submitted by ${emp_name}`,
-                    html: `
-            <div style="
-                font-family: Arial, sans-serif;
-                max-width: 600px;
-                margin: auto;
-                border: 1px solid #ddd;
-                padding: 20px;
-            ">
-                <h2 style="color: #d9534f;">New Manpower Requisition Form Awaiting Review</h2>
+        //         const hrMailOptions = {
+        //             from: process.env.EMAIL_USER,
+        //             // The 'to' email is the HR team's primary recipient
+        //             to: "srinivasan@pdmrindia.com",
+        //             // You might want to CC HR/Recruitment on the FH/Requestor email as well
+        //             cc: "gomathi@pdmrindia.com",
+        //             subject: `ACTION REQUIRED: New MRF Submitted by ${emp_name}`,
+        //             html: `
+        //     <div style="
+        //         font-family: Arial, sans-serif;
+        //         max-width: 600px;
+        //         margin: auto;
+        //         border: 1px solid #ddd;
+        //         padding: 20px;
+        //     ">
+        //         <h2 style="color: #d9534f;">New Manpower Requisition Form Awaiting Review</h2>
 
-                <p>Dear HR Team,</p>
+        //         <p>Dear HR Team,</p>
 
-                <p>
-                    A new **Manpower Requisition Form (MRF)** has been submitted and is ready for your review and processing.
-                </p>
+        //         <p>
+        //             A new **Manpower Requisition Form (MRF)** has been submitted and is ready for your review and processing.
+        //         </p>
 
-                <h3 style="color: #007bff; margin-top: 25px;">Requisition Summary</h3>
-                <p><strong>Submitted By:</strong> ${emp_name}</p>
-                <p><strong>Submission Date:</strong> ${new Date().toLocaleString()}</p>
-                <p><strong>Action:</strong> Please log in to the portal to review the complete details and begin the hiring process.</p>
+        //         <h3 style="color: #007bff; margin-top: 25px;">Requisition Summary</h3>
+        //         <p><strong>Submitted By:</strong> ${emp_name}</p>
+        //         <p><strong>Submission Date:</strong> ${new Date().toLocaleString()}</p>
+        //         <p><strong>Action:</strong> Please log in to the portal to review the complete details and begin the hiring process.</p>
 
-                <p style="margin-top: 30px; color: #555;">
-                    System Notification
-                </p>
-            </div>
-        `
-                };
+        //         <p style="margin-top: 30px; color: #555;">
+        //             System Notification
+        //         </p>
+        //     </div>
+        // `
+        //         };
 
                 // Send the two emails sequentially
                 try {
                     await transporter.sendMail(requestorMailOptions);
-                    console.log('Confirmation email sent to requestor/FH.');
+                    // console.log('Confirmation email sent to requestor/FH.');
 
-                    await transporter.sendMail(hrMailOptions);
-                    console.log('Notification email sent to HR.');
+                    // await transporter.sendMail(hrMailOptions);
+                    // console.log('Notification email sent to HR.');
 
                     // Update the response message to reflect the successful submission
                     res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
@@ -239,9 +238,6 @@ router.post(
                     res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
                 }
             }
-
-
-
 
             res.status(201).json({
                 message: 'Manpower requisition form submitted successfully!',

@@ -126,6 +126,7 @@ const App_Form = () => {
                 break;
             case 'numResources':
                 if (!value || value < 1) newErrors.numResources = 'At least one resource is required.';
+                else if(value > 25) newErrors.numResources = 'Number of resources seems too high.';
                 else delete newErrors.numResources;
                 break;
             case 'projectName':
@@ -141,8 +142,8 @@ const App_Form = () => {
             case 'rampUpFile':
                 if (formData.requirementType === "Ramp up" && !value) {
                     newErrors.rampUpFile = 'File upload is required for Ramp up.';
-                } else if (value && !['image/jpeg', 'image/png', 'image/jpg'].includes(value.type)) {
-                    newErrors.rampUpFile = 'Only image files are accepted';
+                } else if (value && !['application/msword', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(value.type)) {
+                    newErrors.rampUpFile = 'Only Word, PDF, Excel files are accepted';
                 } else {
                     delete newErrors.rampUpFile;
                 }
@@ -171,10 +172,14 @@ const App_Form = () => {
                 break;
             case 'experience':
                 if (!value) newErrors.experience = 'Experience is required.';
+                else if(value < 1) newErrors.experience = 'Experience must be at least 1 year.';
+                else if(value > 10) newErrors.experience = 'Experience must be at most 10 years.';
                 else delete newErrors.experience;
                 break;
             case 'ctcRange':
                 if (!value) newErrors.ctcRange = 'Approx. CTC Range is required.';
+                else if (value < 1) newErrors.ctcRange = 'Approx. CTC Range must be at least 1 Lakh.';
+                else if (value > 50) newErrors.ctcRange = 'Approx. CTC Range must be at most 50 Lakh.';
                 else delete newErrors.ctcRange;
                 break;
             case 'hiringTAT':
@@ -313,6 +318,7 @@ const App_Form = () => {
     });
 
     const fileTypes = ["JPEG", "PNG", "JPG"];
+    const fileAcceptTypes = ["Word", "PDF", "Excel"];
 
     useEffect(() => {
         if (user?.emp_id) {
@@ -633,12 +639,12 @@ const App_Form = () => {
                                                 onSizeError={onSizeError}
                                                 handleChange={(file) => handleFileChange("rampUpFile", file)}
                                                 name="rampUpFile"
-                                                types={fileTypes}
+                                                types={fileAcceptTypes}
                                             >
                                                 <div className={`upload-area ${getFieldClassName('rampUpFile')}`}>
                                                     <div className="upload-instruction">
                                                         <span>Drag & Drop or Click to Upload</span>
-                                                        <span className="file-types">(Accepted: JPEG, PNG, JPG)</span>
+                                                        <span className="file-types">(Accepted: Word, PDF, Excel)</span>
                                                     </div>
                                                 </div>
                                             </FileUploader>
