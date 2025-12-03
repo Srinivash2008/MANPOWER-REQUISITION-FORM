@@ -82,20 +82,20 @@ const tickVariants = {
 const ManpowerRequisitionByStatus = () => {
     const dispatch = useDispatch();
     const { param_status } = useParams(); // Returns { status: 'value-from-url' }
-      const { user } = useSelector((state) => state.auth);
-     // Map URL param values to display names
-  const statusDisplayNames = {
-    pending: 'Pending',
-    approved: 'Approved',
-    on_hold: 'On Hold',
-    raise_query: 'Raise Query',
-    rejected: 'Rejected',
-  };
+    const { user } = useSelector((state) => state.auth);
+    // Map URL param values to display names
+    const statusDisplayNames = {
+        pending: 'Pending',
+        approved: 'Approved',
+        on_hold: 'On Hold',
+        raise_query: 'Raise Query',
+        rejected: 'Rejected',
+    };
 
-  // Get display name or fallback to the param if not found
-  const displayStatus = statusDisplayNames[param_status] || param_status;
+    // Get display name or fallback to the param if not found
+    const displayStatus = statusDisplayNames[param_status] || param_status;
     const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
-    console.log(manpowerRequisitionList,"manpowerRequisitionList")
+    console.log(manpowerRequisitionList, "manpowerRequisitionList")
     const theme = useTheme();
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
@@ -105,11 +105,11 @@ const ManpowerRequisitionByStatus = () => {
     useEffect(() => {
         if (param_status) {
             if (param_status === "Approved") {
-                dispatch(fetchManpowerRequisitionByStatus({status:"Approve",emp_id:user?.emp_id}));
+                dispatch(fetchManpowerRequisitionByStatus({ status: "Approve", emp_id: user?.emp_id }));
             } else if (param_status === "Rejected") {
-                dispatch(fetchManpowerRequisitionByStatus({status:"Reject",emp_id:user?.emp_id}));
+                dispatch(fetchManpowerRequisitionByStatus({ status: "Reject", emp_id: user?.emp_id }));
             } else {
-                dispatch(fetchManpowerRequisitionByStatus({status:param_status,emp_id:user?.emp_id}));
+                dispatch(fetchManpowerRequisitionByStatus({ status: param_status, emp_id: user?.emp_id }));
             }
         }
     }, [param_status, dispatch]);
@@ -202,7 +202,7 @@ const ManpowerRequisitionByStatus = () => {
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                             <Typography
                                 variant="h6"
-                               
+
                             >
                                 {displayStatus} Manpower Requisition List
                             </Typography>

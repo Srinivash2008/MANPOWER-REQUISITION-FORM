@@ -391,6 +391,12 @@ const ManpowerRequisitionEdit = () => {
     const handleConfirmUpdate = async () => {
         setIsConfirmOpen(false);
 
+        // If the form is a draft, manually set the status to "Pending" upon submission.
+        if (isDraft) {
+            formData.status = 'Pending';
+            setManpowerStatus('Pending');
+        }
+
         const data = new FormData();
         for (const key in formData) {
             if (key === "hiringTAT" && formData.hiringTAT) {
@@ -408,7 +414,7 @@ const ManpowerRequisitionEdit = () => {
             if (manpowerStatus) {
                 await dispatch(updateManpowerStatus({
                     manpowerId,
-                    newStatus: manpowerStatus,
+                    newStatus: manpowerStatus == "Draft"? "Pending": manpowerStatus,
                     hr_comments: formData.hr_comments,
                     director_comments: formData.director_comments
                 })).unwrap();
@@ -767,7 +773,7 @@ const ManpowerRequisitionEdit = () => {
                         )}
 
                         {/* Status Updation Section */}
-                        {(isDirector || isHr || (isSeniorManager && isDraft)) && (
+                        {(isDirector || isHr) && !isDraft && (
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Status Updation</h3>
                                 <div className="section-grid multi-col">
@@ -778,9 +784,6 @@ const ManpowerRequisitionEdit = () => {
                                             size="small"
                                             sx={{ fontSize: "0.85rem", height: 36, borderRadius: '6px' }}
                                         >
-                                            {isSeniorManager && isDraft && (
-                                                <MenuItem key="Pending" value="Pending">Pending</MenuItem>
-                                            )}
                                             {isDirector && !isHr && [
                                                 <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
@@ -832,8 +835,8 @@ const ManpowerRequisitionEdit = () => {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-                        <Button type="submit" variant="contained" color="primary">
-                            Update
+                        <Button type="submit" variant="contained" color="primary" disabled={isSeniorManager && !isDraft && formData.status === 'Draft'}>
+                            {isSeniorManager && isDraft ? 'Submit' : 'Update'}
                         </Button>
                     </div>
                 </form>
