@@ -283,7 +283,7 @@ console.log(selectedRequisition,"status")
                         <div className="form-section">
                             <h3 className="section-title"><FaUserCheck /> HR Status</h3>
                             <div className="section-grid multi-col">
-                                <DisplayField label="Status Name" value={formData.hrstatus} />
+                                <DisplayField label="Status Name" value={formData.status} />
                             </div>
                             <div style={{ marginTop: '1rem' }}>
                                 <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
