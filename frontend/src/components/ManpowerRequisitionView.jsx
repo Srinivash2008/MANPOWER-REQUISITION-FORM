@@ -92,20 +92,20 @@ console.log(selectedRequisition,"status")
                 education: selectedRequisition.education || "",
                 experience: selectedRequisition.experience || "",
                 ctcRange: selectedRequisition.ctc_range || "",
-                specificInfo: selectedRequisition.specific_info || "",
+                specificInfo: selectedRequisition.specific_info || "-",
                 hiringTAT: tatValue,
                 requestorSign: selectedRequisition.requestor_sign || null,
                 directorSign: selectedRequisition.director_sign || null,
-                mrfNumber: selectedRequisition.mrf_number || "",
-                tatAgreed: selectedRequisition.tat_agreed || "",
-                hrReview: selectedRequisition.hr_review || "",
-                deliveryPhase: selectedRequisition.delivery_phase || "",
+                mrfNumber: selectedRequisition.mrf_number || "-",
+                tatAgreed: selectedRequisition.tat_agreed || "-",
+                hrReview: selectedRequisition.hr_review || "-",
+                deliveryPhase: selectedRequisition.delivery_phase || "-",
                 hrstatus: selectedRequisition.hr_status || "",
                 directorstatus: selectedRequisition.director_status || "",
                 query_name_hr: selectedRequisition.query_name_hr || "",
                 query_name_director: selectedRequisition.query_name_director || "",
-                hr_comments: selectedRequisition.hr_comments || "",
-                director_comments: selectedRequisition.director_comments || "",
+                hr_comments: selectedRequisition.hr_comments || "-",
+                director_comments: selectedRequisition.director_comments || "-",
                 status: selectedRequisition.status || ""
             });
         }
@@ -275,11 +275,11 @@ console.log(selectedRequisition,"status")
                             <div className="section-grid multi-col">
                                 <DisplayField label="Director Status Name" value={formData.directorstatus} />
                             </div>
-
-                            <div style={{ marginTop: '1rem' }}>
-                                <DisplayTextarea label="Director Comments" value={formData.director_comments} />
-                            </div>
-
+                            {formData.directorstatus === "Raise Query" && (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="Director Comments" value={formData.director_comments} />
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-section">
@@ -287,11 +287,11 @@ console.log(selectedRequisition,"status")
                             <div className="section-grid multi-col">
                                 <DisplayField label="Status Name" value={formData.hrstatus} />
                             </div>
-
-                            <div style={{ marginTop: '1rem' }}>
-                                <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
-                            </div>
-
+                            {formData.hrstatus === "Raise Query" && (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
+                                </div>
+                            )}
                         </div>
                         
                     </div>
