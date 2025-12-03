@@ -368,16 +368,25 @@ router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
 });
 
 router.post('/add-query-form', authMiddleware, async (req, res) => {
+    // Use a single `query_name` from the request and get the user from authMiddleware
     const { query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete } = req.body;
+    const { user } = req; // User details are available from authMiddleware
 
     if (!query_name) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
     try {
+        let insertQuery;
+        let insertParams;
 
-        const insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
-
-        const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
+        // Check user role to decide which column to insert into
+        if (user?.emp_pos === 'HR') { // Assuming 'HR' is the role for HR users
+            insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name_hr, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
+            insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
+        } else { // Assumes any other user (like a Director) uses the director column
+            insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, query_name_director, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
+            insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete];
+        }
 
         const [result] = await pool.execute(insertQuery, insertParams);
 
@@ -388,7 +397,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
             manpowerId: result.insertId,
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error.' });
+        res.status(500).json({ message: error });
     }
 });
 
@@ -401,22 +410,59 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
         return res.status(400).json({ message: 'Missing required fields' });
     }
     try {
-        let query = 'UPDATE manpower_requisition SET status = ?';
-        const params = [status];
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-        if (user?.emp_id === '1400') { // Director
-            query += ', director_status = ?, director_comments = ?';
-            params.push(status, director_comments);
-        } else if (user?.emp_id === '1722') { // HR
-            query += ', hr_status = ?, hr_comments = ?';
-            params.push(status, hr_comments);
+        try {
+            let mrfNumber = null;
+            if (status === 'HR Approve') {
+                // Check if MRF number already exists for this requisition
+                const [existingMrf] = await connection.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [manpowerId]);
+
+                if (!existingMrf[0] || !existingMrf[0].mrf_number) {
+                    // Find the last MRF number
+                    const [lastMrf] = await connection.execute(
+                        "SELECT mrf_number FROM manpower_requisition WHERE mrf_number IS NOT NULL AND mrf_number != '' ORDER BY CAST(SUBSTRING_INDEX(mrf_number, '- ', -1) AS UNSIGNED) DESC, id DESC LIMIT 1"
+                    );
+
+                    let nextMrfNum = 1;
+                    if (lastMrf.length > 0 && lastMrf[0].mrf_number) {
+                        const lastNum = parseInt(lastMrf[0].mrf_number.split('- ')[1], 10);
+                        if (!isNaN(lastNum)) {
+                            nextMrfNum = lastNum + 1;
+                        }
+                    }
+                    mrfNumber = `MRF- ${String(nextMrfNum).padStart(2, '0')}`;
+                }
+            }
+
+            let query = 'UPDATE manpower_requisition SET status = ?';
+            const params = [status];
+
+            if (user?.emp_id === '1400') { // Director
+                query += ', director_status = ?, director_comments = ?';
+                params.push(status, director_comments);
+            } else if (user?.emp_id === '1722') { // HR
+                query += ', hr_status = ?, hr_comments = ?';
+                params.push(status, hr_comments);
+            }
+
+            if (mrfNumber) {
+                query += ', mrf_number = ?';
+                params.push(mrfNumber);
+            }
+
+            query += ' WHERE id = ?';
+            params.push(manpowerId);
+
+            await connection.execute(query, params);
+            await connection.commit();
+            connection.release();
+        } catch (err) {
+            await connection.rollback();
+            connection.release();
+            throw err; // Rethrow to be caught by outer catch block
         }
-
-        query += ' WHERE id = ?';
-        params.push(manpowerId);
-
-        const [result] = await pool.execute(query, params);
-
         emitManpowerRequisitionRefresh();
 
         res.status(200).json({

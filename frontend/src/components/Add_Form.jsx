@@ -202,10 +202,6 @@ const App_Form = () => {
                     delete newErrors.directorSign;
                 }
                 break;
-            case 'mrfNumber':
-                if (isHr && !value) newErrors.mrfNumber = 'MRF Number is required for HR.';
-                else delete newErrors.mrfNumber;
-                break;
             case 'tatAgreed':
                 if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
                 else delete newErrors.tatAgreed;
@@ -268,7 +264,6 @@ const App_Form = () => {
         }
 
         if (isHr) {
-            if (!formData.mrfNumber) newErrors.mrfNumber = 'MRF Number is required for HR.';
             if (!formData.tatAgreed) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
             if (!formData.deliveryPhase) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
             if (!formData.hrReview) newErrors.hrReview = 'HR Review is required for HR.';
@@ -918,17 +913,18 @@ const App_Form = () => {
                                 <h3 className="section-title"><FiEdit3 /> HR Use Only</h3>
                                 <div className="section-grid multi-col">
                                     <div>
-                                        <label className="form-label">MRF Number<span className="required-star">*</span></label>
+                                        <label className="form-label">MRF Number</label>
                                         <input
                                             type="text"
                                             name="mrfNumber"
                                             value={formData.mrfNumber}
                                             onChange={handleInputChange}
                                             onBlur={handleBlur}
-                                            className={`form-input ${getFieldClassName('mrfNumber')}`}
-                                            placeholder="Enter MRF Number"
+                                            className={`form-input`}
+                                            placeholder="Will be auto-generated"
+                                            disabled
                                         />
-                                        {renderError('mrfNumber')}
+                                        <small style={{ color: '#555', marginTop: '4px' }}>This field is auto-generated upon submission.</small>
                                     </div>
                                     <div>
                                         <label className="form-label">TAT Agreed (in days)<span className="required-star">*</span></label>

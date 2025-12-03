@@ -213,11 +213,7 @@ const ManpowerRequisitionEdit = () => {
                     newErrors.directorSign = 'A valid Director Sign image (JPG, PNG) is required.';
                 } else {
                     delete newErrors.directorSign;
-                }
-                break;
-            case 'mrfNumber':
-                if (isHr && !value) newErrors.mrfNumber = 'MRF Number is required for HR.';
-                else delete newErrors.mrfNumber;
+                }                
                 break;
             case 'tatAgreed':
                 if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
@@ -700,9 +696,10 @@ const ManpowerRequisitionEdit = () => {
                                 <h3 className="section-title"><FiEdit3 /> HR Use Only</h3>
                                 <div className="section-grid multi-col">
                                     <div>
-                                        <label className="form-label">MRF Number<span className="required-star">*</span></label>
-                                        <input name="mrfNumber" className={`form-input ${getFieldClassName('mrfNumber')}`} value={formData.mrfNumber} onChange={handleInputChange} onBlur={handleBlur} />
-                                        {renderError('mrfNumber')}
+                                        <label className="form-label">MRF Number</label>
+                                        <input name="mrfNumber" className={`form-input`} value={formData.mrfNumber} readOnly disabled />
+                                        <small style={{ color: '#555', marginTop: '4px' }}>This field is auto-generated.</small>
+
                                     </div>
                                     <div>
                                         <label className="form-label">TAT Agreed (in days)<span className="required-star">*</span></label>
