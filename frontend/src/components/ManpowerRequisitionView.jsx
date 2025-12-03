@@ -275,11 +275,9 @@ console.log(selectedRequisition,"status")
                             <div className="section-grid multi-col">
                                 <DisplayField label="Director Status Name" value={formData.directorstatus} />
                             </div>
-                            {formData.directorstatus === "Raise Query" && (
-                                <div style={{ marginTop: '1rem' }}>
-                                    <DisplayTextarea label="Director Comments" value={formData.director_comments} />
-                                </div>
-                            )}
+                            <div style={{ marginTop: '1rem' }}>
+                                <DisplayTextarea label="Director Comments" value={formData.director_comments} />
+                            </div>
                         </div>
 
                         <div className="form-section">
@@ -287,11 +285,9 @@ console.log(selectedRequisition,"status")
                             <div className="section-grid multi-col">
                                 <DisplayField label="Status Name" value={formData.hrstatus} />
                             </div>
-                            {formData.hrstatus === "Raise Query" && (
-                                <div style={{ marginTop: '1rem' }}>
-                                    <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
-                                </div>
-                            )}
+                            <div style={{ marginTop: '1rem' }}>
+                                <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
+                            </div>
                         </div>
                         
                     </div>
