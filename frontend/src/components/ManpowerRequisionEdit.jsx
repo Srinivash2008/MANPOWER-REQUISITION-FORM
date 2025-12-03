@@ -344,12 +344,34 @@ const ManpowerRequisitionEdit = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const allTouched = {};
+        console.log(formData,"formData");
         Object.keys(formData).forEach(key => { allTouched[key] = true; });
         setTouched(allTouched);
 
         if (!formData.status) {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
+        }
+
+        if (isHr && formData.status === 'HR Approve') {
+            const hrFieldsToValidate = {
+                tatAgreed: 'TAT Agreed is required for HR Approval.',
+                deliveryPhase: 'Phase of Delivery is required for HR Approval.',
+                hrReview: 'HR - Head Review is required for HR Approval.'
+            };
+            let hasHrErrors = false;
+            Object.entries(hrFieldsToValidate).forEach(([field, message]) => {
+                if (!formData[field]) {
+                    errors[field] = message;
+                    hasHrErrors = true;
+                }
+            });
+
+            if (hasHrErrors) {
+                setErrors({ ...errors });
+                setNotification({ open: true, message: 'Please fill all required HR fields for approval.', severity: 'error' });
+                return;
+            }
         }
 
         const tempErrors = {};
