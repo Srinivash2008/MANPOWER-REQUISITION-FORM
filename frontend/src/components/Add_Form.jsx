@@ -244,8 +244,8 @@ const App_Form = () => {
         if (formData.requirementType === "Ramp up") {
             if (!formData.projectName) newErrors.projectName = 'Project Name is required for Ramp up.';
             if (!formData.rampUpFile) newErrors.rampUpFile = 'File upload is required for Ramp up.';
-            else if (!['image/jpeg', 'image/png', 'image/jpg'].includes(formData.rampUpFile.type)) {
-                newErrors.rampUpFile = 'Only image files are accepted';
+            else if (!['application/msword', 'application/pdf', 'application/vnd.ms-excel'].includes(formData.rampUpFile.type)) {
+                newErrors.rampUpFile = 'Only Word, PDF, Excel files are accepted';
             }
         }
 
