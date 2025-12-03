@@ -106,7 +106,7 @@ router.post(
     async (req, res) => {
         try {
             const {
-                department, employmentStatus, designation, numResources, requirementType, projectName, replacementDetail,
+                department, employmentStatus, designation, numResources, requirementType, projectName, projectionPlan, replacementDetail,
                 rampUpReason, jobDescription, education, experience, ctcRange, specificInfo, mrfNumber,
                 receivedBy, tatAgreed, hrReview, deliveryPhase,
                 hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, created_by, status, buttonClicked, emp_name
@@ -119,17 +119,17 @@ router.post(
 
             const sql = `
                 INSERT INTO manpower_requisition (
-                    department, employment_status, designation, num_resources, requirement_type, project_name,
+                    department, employment_status, designation, num_resources, requirement_type, project_name, projection_plan,
                     replacement_detail, ramp_up_reason, job_description, education,
                     experience, ctc_range, specific_info, requestor_sign, director_sign, ramp_up_file,
                     hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2,
                     mrf_number, received_by, tat_agreed, hr_review, delivery_phase , created_by,status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
             `;
 
             const params = [
                 department || null, employmentStatus || null, designation || null, numResources || 1, requirementType || null,
-                projectName || null,
+                projectName || null, projectionPlan || null,
                 replacementDetail || null, rampUpReason || null, jobDescription || null, education || null,
                 experience || null, ctcRange || null, specificInfo || null, requestorSignPath, directorSignPath, rampUpFilePath,
                 hiring_tat_fastag === 'true',
@@ -287,14 +287,13 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     try {
         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, hr_status, director_status, hr_comments,  director_comments, mrq.query_name_hr, mrq.query_name_director, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
+        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, projection_plan, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, hr_status, director_status, hr_comments,  director_comments, mrq.query_name_hr, mrq.query_name_director, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Manpower requisition not found.' });
         }
 
         const row = rows[0];
-        console.log("Fetched MRF Row:", row);
         const fetchManpowerRequisitionById = {
             id: row.mr_id,
             department: row.depart,
@@ -304,6 +303,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
             num_resources: row.num_resources,
             requirement_type: row.requirement_type,
             project_name: row.project_name,
+            projection_plan: row.projection_plan,
             ramp_up_file: row.ramp_up_file,
             replacement_detail: row.replacement_detail,
             ramp_up_reason: row.ramp_up_reason,
@@ -689,7 +689,7 @@ router.put(
             const { id } = req.params;
             console.log(req.body, "req.body")
             const {
-                department, depart_id, employmentStatus, designation, numResources, requirementType, projectName, replacementDetail,
+                department, depart_id, employmentStatus, designation, numResources, requirementType, projectName, projectionPlan, replacementDetail,
                 rampUpReason, jobDescription, education, experience, ctcRange, specificInfo, mrfNumber,
                 tatAgreed, hrReview, deliveryPhase,
                 hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2
@@ -702,7 +702,7 @@ router.put(
 
             const fieldsToUpdate = {
                 department: depart_id, employment_status: employmentStatus, designation, num_resources: numResources, requirement_type: requirementType,
-                project_name: projectName, replacement_detail: replacementDetail, ramp_up_reason: rampUpReason, job_description: jobDescription,
+                project_name: projectName, projection_plan: projectionPlan, replacement_detail: replacementDetail, ramp_up_reason: rampUpReason, job_description: jobDescription,
                 education, experience, ctc_range: ctcRange, specific_info: specificInfo, mrf_number: mrfNumber,
                 tat_agreed: tatAgreed, hr_review: hrReview, delivery_phase: deliveryPhase,
                 hiring_tat_fastag: hiring_tat_fastag === 'true',

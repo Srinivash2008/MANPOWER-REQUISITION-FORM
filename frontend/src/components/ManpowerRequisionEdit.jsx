@@ -40,6 +40,7 @@ const ManpowerRequisitionEdit = () => {
         numResources: 1,
         requirementType: "",
         projectName: "",
+        projectionPlan: "",
         replacementDetail: "",
         rampUpFile: null,
         rampUpReason: "",
@@ -104,6 +105,7 @@ const ManpowerRequisitionEdit = () => {
                 numResources: selectedRequisition.num_resources || 1,
                 requirementType: selectedRequisition.requirement_type || "",
                 projectName: selectedRequisition.project_name || "",
+                projectionPlan: selectedRequisition.projection_plan || "",
                 replacementDetail: selectedRequisition.replacement_detail || "",
                 rampUpFile: selectedRequisition.ramp_up_file || null,
                 rampUpReason: selectedRequisition.ramp_up_reason || "",
@@ -160,6 +162,13 @@ const ManpowerRequisitionEdit = () => {
                     newErrors.projectName = 'Project Name is required for this requirement type.';
                 } else {
                     delete newErrors.projectName;
+                }
+                break;
+            case 'projectionPlan':
+                if (formData.requirementType === "Ramp up" && !value) {
+                    newErrors.projectionPlan = 'Projection Plan is required for Ramp up.';
+                } else {
+                    delete newErrors.projectionPlan;
                 }
                 break;
             case 'rampUpFile':
@@ -504,6 +513,19 @@ const ManpowerRequisitionEdit = () => {
                                             <label className="form-label">Project Name<span className="required-star">*</span></label>
                                             <input name="projectName" className={`form-input ${getFieldClassName('projectName')}`} value={formData.projectName} onChange={handleInputChange} onBlur={handleBlur} />
                                             {renderError('projectName')}
+                                        </div>
+                                        <div className="full-width">
+                                            <label className="form-label">Projection Plan<span className="required-star">*</span></label>
+                                            <input
+                                                type="text"
+                                                name="projectionPlan"
+                                                value={formData.projectionPlan}
+                                                onChange={handleInputChange}
+                                                onBlur={handleBlur}
+                                                className={`form-input ${getFieldClassName('projectionPlan')}`}
+                                                placeholder="Enter projection plan"
+                                            />
+                                            {renderError('projectionPlan')}
                                         </div>
                                         <div className="full-width">
                                             <label className="form-label">Upload File</label>

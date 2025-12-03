@@ -45,6 +45,7 @@ const App_Form = () => {
         numResources: 1,
         requirementType: "Ramp up",
         projectName: "",
+        projectionPlan: "",
         replacementDetail: "",
         rampUpFile: null,
         rampUpReason: "",
@@ -75,6 +76,7 @@ const App_Form = () => {
             numResources: 1,
             requirementType: "Ramp up",
             projectName: "",
+            projectionPlan: "",
             replacementDetail: "",
             rampUpFile: null,
             rampUpReason: "",
@@ -137,6 +139,13 @@ const App_Form = () => {
                     newErrors.projectName = 'Project Name is required for this requirement type.';
                 } else {
                     delete newErrors.projectName;
+                }
+                break;
+            case 'projectionPlan':
+                if (formData.requirementType === "Ramp up" && !value) {
+                    newErrors.projectionPlan = 'Projection Plan is required for Ramp up.';
+                } else {
+                    delete newErrors.projectionPlan;
                 }
                 break;
             case 'rampUpFile':
@@ -243,6 +252,7 @@ const App_Form = () => {
         // Requirement type specific validations
         if (formData.requirementType === "Ramp up") {
             if (!formData.projectName) newErrors.projectName = 'Project Name is required for Ramp up.';
+            if (!formData.projectionPlan) newErrors.projectionPlan = 'Projection Plan is required for Ramp up.';
             if (!formData.rampUpFile) newErrors.rampUpFile = 'File upload is required for Ramp up.';
             else if (!['application/msword', 'application/pdf', 'application/vnd.ms-excel'].includes(formData.rampUpFile.type)) {
                 newErrors.rampUpFile = 'Only Word, PDF, Excel files are accepted';
@@ -401,6 +411,7 @@ const App_Form = () => {
                     numResources: 1,
                     requirementType: "Ramp up",
                     projectName: "",
+                    projectionPlan: "",
                     replacementDetail: "",
                     rampUpFile: null,
                     rampUpReason: "",
@@ -481,7 +492,7 @@ const App_Form = () => {
                 // Reset form
                 setFormData({
                     department: "", employmentStatus: "", designation: "", numResources: 1,
-                    requirementType: "Ramp up", projectName: "", replacementDetail: "",
+                    requirementType: "Ramp up", projectName: "", projectionPlan: "", replacementDetail: "",
                     rampUpFile: null, rampUpReason: "", jobDescription: "", education: "",
                     experience: "", ctcRange: "", specificInfo: "", hiringTAT: "",
                     created_by: user?.emp_id || "", requestorSign: null, directorSign: null,
@@ -630,6 +641,19 @@ const App_Form = () => {
                                                 placeholder="Enter project name"
                                             />
                                             {renderError('projectName')}
+                                        </div>
+                                        <div className="full-width">
+                                            <label className="form-label">Projection Plan<span className="required-star">*</span></label>
+                                            <input
+                                                type="text"
+                                                name="projectionPlan"
+                                                value={formData.projectionPlan}
+                                                onChange={handleInputChange}
+                                                onBlur={handleBlur}
+                                                className={`form-input ${getFieldClassName('projectionPlan')}`}
+                                                placeholder="Enter projection plan"
+                                            />
+                                            {renderError('projectionPlan')}
                                         </div>
                                         <div className="full-width">
                                             <label className="form-label">Upload File<span className="required-star">*</span></label>
