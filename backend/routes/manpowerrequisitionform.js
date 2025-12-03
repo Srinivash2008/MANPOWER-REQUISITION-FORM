@@ -172,6 +172,10 @@ router.post(
                             <p>Hello Rajesh,</p>
 
                             <p>
+                                A new MRF (Manpower Requisition Form) has been submitted by ${emp_name} and is now awaiting your review.
+                            </p>
+
+                            <p>
                                 Please review it using the link below:
                                 <a href="http://localhost:5173/">View Manpower Requisition</a>
                             </p>

@@ -34,6 +34,7 @@ const ManpowerRequisitionView = () => {
         numResources: 1,
         requirementType: "",
         projectName: "",
+        projectionPlan: "",
         replacementDetail: "",
         rampUpFile: null,
         rampUpReason: "",
@@ -85,6 +86,7 @@ console.log(selectedRequisition,"status")
                 numResources: selectedRequisition.num_resources || 1,
                 requirementType: selectedRequisition.requirement_type || "",
                 projectName: selectedRequisition.project_name || "",
+                projectionPlan: selectedRequisition.projection_plan || "",
                 replacementDetail: selectedRequisition.replacement_detail || "",
                 rampUpFile: selectedRequisition.ramp_up_file || null,
                 rampUpReason: selectedRequisition.ramp_up_reason || "",
@@ -118,30 +120,89 @@ console.log(selectedRequisition,"status")
         setNotification({ ...notification, open: false });
     };
 
+    // const handleDownload = async (filePath) => {
+    //     if (!filePath || typeof filePath !== 'string') {
+    //         setNotification({ open: true, message: 'File path is invalid.', severity: 'error' });
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await fetch(`${API_URL}/${filePath}`);
+    //         if (!response.ok) throw new Error(`File not found. Status: ${response.status}`);
+    //         const blob = await response.blob();
+    //         const url = window.URL.createObjectURL(blob);
+
+    //         const a = document.createElement("a");
+    //         a.href = url;
+    //         a.download = filePath.split(/[\\/]/).pop(); // Extract file name
+    //         document.body.appendChild(a);
+    //         a.click();
+    //         a.remove();
+    //         window.URL.revokeObjectURL(url);
+    //     } catch (error) {
+    //         console.error("Download failed:", error);
+    //         setNotification({ open: true, message: 'Download failed.', severity: 'error' });
+    //     }
+    // };
+
     const handleDownload = async (filePath) => {
-        if (!filePath || typeof filePath !== 'string') {
-            setNotification({ open: true, message: 'File path is invalid.', severity: 'error' });
-            return;
+    if (!filePath || typeof filePath !== 'string') {
+        setNotification({
+            open: true,
+            message: 'File path is invalid.',
+            severity: 'error'
+        });
+        return;
+    }
+    console.log(`${API_URL}/${filePath}`,"url")
+
+    try {
+        const response = await fetch(`${API_URL}/${filePath}`, {
+            method: "GET"
+        });
+
+        if (!response.ok) {
+            throw new Error(`File not found. Status: ${response.status}`);
         }
 
-        try {
-            const response = await fetch(`${API_URL}/${filePath}`);
-            if (!response.ok) throw new Error(`File not found. Status: ${response.status}`);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
 
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = filePath.split(/[\\/]/).pop(); // Extract file name
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error("Download failed:", error);
-            setNotification({ open: true, message: 'Download failed.', severity: 'error' });
+        // Extract filename
+        let fileName = filePath.split(/[\\/]/).pop();
+
+        // If filename has no extension, detect based on MIME
+        if (!fileName.includes(".")) {
+            const mime = blob.type;
+
+            if (mime.includes("pdf")) fileName += ".pdf";
+            else if (mime.includes("word")) fileName += ".docx";
+            else if (mime.includes("spreadsheet") || mime.includes("excel"))
+                fileName += ".xlsx";
+            else fileName += ".file";
         }
-    };
+
+        // Create a temporary link for download
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        // Release memory
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error("Download failed:", error);
+        setNotification({
+            open: true,
+            message: 'Download failed.',
+            severity: 'error'
+        });
+    }
+};
+
 
     const DisplayField = ({ label, value }) => (
         <div>
@@ -184,6 +245,7 @@ console.log(selectedRequisition,"status")
                                 {formData.requirementType === "Ramp up" && (
                                     <>
                                         <DisplayField label="Project Name" value={formData.projectName} />
+                                        <DisplayField label="Projection Plan" value={formData.projectionPlan} />
                                         <div className="full-width">
                                             <label className="form-label">Uploaded File</label>
                                             {formData.rampUpFile ? (
