@@ -128,7 +128,7 @@ const App_Form = () => {
                 break;
             case 'numResources':
                 if (!value || value < 1) newErrors.numResources = 'At least one resource is required.';
-                else if(value > 25) newErrors.numResources = 'Number of resources seems too high.';
+                else if(value > 25) newErrors.numResources = 'Number of resources should be 25 or less.';
                 else delete newErrors.numResources;
                 break;
             case 'projectName':
@@ -795,8 +795,9 @@ const App_Form = () => {
                                         value={formData.experience}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
+                                        onKeyPress={(e) => {if (!/[0-9\-]/.test(e.key)) { e.preventDefault(); }}}
                                         className={`form-input ${getFieldClassName('experience')}`}
-                                        placeholder="e.g., 3-5 years"
+                                        placeholder="e.g., 1-10 years"
                                     />
                                     {renderError('experience')}
                                 </div>
@@ -808,6 +809,7 @@ const App_Form = () => {
                                         value={formData.ctcRange}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
+                                        onKeyPress={(e) => {if (!/[0-9\-]/.test(e.key)) { e.preventDefault(); }}}
                                         className={`form-input ${getFieldClassName('ctcRange')}`}
                                         placeholder="e.g., 8-12 LPA"
                                     />

@@ -11,6 +11,7 @@ import io from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import ExcelJS from "exceljs";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -192,61 +193,142 @@ const matchesFunctionalHead = functionalheadfilter === "" ||
         }
     };
 
+    // const handleExport = () => {
+    //     if (!filteredManpower || filteredManpower.length === 0) {
+    //         swal.fire({
+    //         title: 'No Data',
+    //         text: 'No manpower requisition data available to export.',
+    //         icon: 'warning',
+    //         confirmButtonColor: theme.palette.error.main,
+    //         confirmButtonText: 'OK'
+    //         });
+    //         return;
+    //     }
+
+    //     const dataToExport = filteredManpower.map((manpower, index) => ({
+    //         "S.No": index + 1,
+    //         "Employee Name": manpower?.emp_name,
+    //         "Employee Id": manpower?.created_by,
+    //         "Department": manpower?.department_name,
+    //         "Employment Status": manpower?.employment_status,
+    //         "Proposed Designation": manpower?.designation,
+    //         "No. of Resources": manpower?.num_resources,
+    //         "Requirement Type": manpower?.requirement_type,
+    //         "Project Name": manpower?.project_name,
+    //         "Projection Plan": manpower?.projection_plan,
+    //         "Replacement Detail": manpower?.replacement_detail,
+    //         "Job Description": manpower?.job_description,
+    //         "Education": manpower?.education,
+    //         "Experience": manpower?.experience,
+    //         "CTC Range": manpower?.ctc_range,
+    //         "Specific Info": manpower?.specific_info,
+    //         "Hiring TAT Fastag": manpower?.hiring_tat_fastag,
+    //         "Hiring TAT Normal Cat1": manpower?.hiring_tat_normal_cat1,
+    //         "Hiring TAT Normal Cat2": manpower?.hiring_tat_normal_cat2,
+    //         "MRF Number": manpower?.mrf_number,
+    //         "Status": manpower?.status,
+    //         "Created At": manpower?.created_at ? manpower.created_at.split('T')[0] : '',
+    //     }));
+
+    //     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    //     const workbook = XLSX.utils.book_new();
+    //     XLSX.utils.book_append_sheet(workbook, worksheet, "Manpower Requisition List");
+
+    //     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    //     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+
+    //     const fileName = `Manpower_Requisition_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    //     saveAs(data, fileName);
+
+    //     swal.fire({
+    //         title: 'Export Successful!',
+    //         text: 'Manpower requisition data has been exported to Excel.',
+    //         icon: '',
+    //         iconHtml: `<img src="/validation/success.gif" alt="Success" style="width: 100px; height: 100px;">`,
+    //         confirmButtonColor: theme.palette.success.main,
+    //         confirmButtonText: 'OK'
+    //     });
+    // };
+
     const handleExport = () => {
-        if (!filteredManpower || filteredManpower.length === 0) {
-            swal.fire({
+      if (!filteredManpower || filteredManpower.length === 0) {
+        swal.fire({
             title: 'No Data',
             text: 'No manpower requisition data available to export.',
             icon: 'warning',
             confirmButtonColor: theme.palette.error.main,
             confirmButtonText: 'OK'
-            });
-            return;
-        }
-
-        const dataToExport = filteredManpower.map((manpower, index) => ({
-            "S.No": index + 1,
-            "Employee Name": manpower?.emp_name,
-            "Employee Id": manpower?.created_by,
-            "Department": manpower?.department_name,
-            "Employment Status": manpower?.employment_status,
-            "Proposed Designation": manpower?.designation,
-            "No. of Resources": manpower?.num_resources,
-            "Requirement Type": manpower?.requirement_type,
-            "Project Name": manpower?.project_name,
-            "Replacement Detail": manpower?.replacement_detail,
-            "Job Description": manpower?.job_description,
-            "Education": manpower?.education,
-            "Experience": manpower?.experience,
-            "CTC Range": manpower?.ctc_range,
-            "Specific Info": manpower?.specific_info,
-            "Hiring TAT Fastag": manpower?.hiring_tat_fastag,
-            "Hiring TAT Normal Cat1": manpower?.hiring_tat_normal_cat1,
-            "Hiring TAT Normal Cat2": manpower?.hiring_tat_normal_cat2,
-            "MRF Number": manpower?.mrf_number,
-            "Status": manpower?.status,
-            "Created At": manpower?.created_at ? manpower.created_at.split('T')[0] : '',
-        }));
-
-        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Manpower Requisition List");
-
-        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-        const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-
-        const fileName = `Manpower_Requisition_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        saveAs(data, fileName);
-
-        swal.fire({
-            title: 'Export Successful!',
-            text: 'Manpower requisition data has been exported to Excel.',
-            icon: '',
-            iconHtml: `<img src="/validation/success.gif" alt="Success" style="width: 100px; height: 100px;">`,
-            confirmButtonColor: theme.palette.success.main,
-            confirmButtonText: 'OK'
         });
-    };
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Manpower Requisition List");
+
+      // Title in G1
+      sheet.getCell("H1").value = "Manpower Requisition";
+      sheet.getCell("H1").font = { bold: true, size: 14 };
+      sheet.getCell("H1").alignment = { horizontal: "center" };
+
+      const headerRow = sheet.addRow([
+        "S.No", "Employee Name", "Employee Id", "Department",
+        "Employment Status", "Proposed Designation", "No. of Resources",
+        "Requirement Type", "Project Name", "Projection Plan", "Replacement Detail",
+        "Job Description", "Education", "Experience", "CTC Range",
+        "Specific Info", "Hiring TAT Fastag", "Hiring TAT Normal Cat1",
+        "Hiring TAT Normal Cat2", "MRF Number", "Status", "HR Status", "HR Comments", "Director Status", "Director Comments", "Created At"
+      ]);
+
+    // Make header row bold
+    headerRow.eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: 'center' }; // optional: center text
+    });
+
+
+    filteredManpower.forEach((m, i) => {
+        sheet.addRow([
+            i + 1,
+            m.emp_name,
+            m.created_by,
+            m.department_name,
+            m.employment_status,
+            m.designation,
+            m.num_resources,
+            m.requirement_type,
+            m.project_name,
+            m.projection_plan,
+            m.replacement_detail,
+            m.job_description,
+            m.education,
+            m.experience,
+            m.ctc_range,
+            m.specific_info,
+            m.hiring_tat_fastag,
+            m.hiring_tat_normal_cat1,
+            m.hiring_tat_normal_cat2,
+            m.mrf_number,
+            m.status,
+            m.hr_status,
+            m.hr_comments,
+            m.director_status,
+            m.director_comments,
+            m.created_at?.split("T")[0] ?? ""
+        ]);
+    });
+
+    workbook.xlsx.writeBuffer().then(buffer => {
+        saveAs(new Blob([buffer]), `Manpower_Requisition_${Date.now()}.xlsx`);
+    });
+
+    swal.fire({
+        title: 'Export Successful!',
+        text: 'Manpower requisition data has been exported.',
+        iconHtml: `<img src="/validation/success.gif" style="width:100px;height:100px;">`,
+        confirmButtonColor: theme.palette.success.main
+    });
+};
+
 
 
     return (
