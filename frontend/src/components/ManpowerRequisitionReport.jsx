@@ -177,7 +177,7 @@ const matchesFunctionalHead = functionalheadfilter === "" ||
     navigate(`/manpower_requisition_view/${id}`);
   } 
 
-    const statuses = ["Pending", "Approve", "Reject", "Raise Query", "On Hold"];
+    const statuses = ["Pending", "Approve", "Reject", "Raise Query", "On Hold","HR Approve"];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
