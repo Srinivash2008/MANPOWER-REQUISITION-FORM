@@ -293,14 +293,14 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     try {
         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, hr_status, director_status, mrq.query_name_hr, mrq.query_name_director, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
+        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, hr_status, director_status, hr_comments,  director_comments, mrq.query_name_hr, mrq.query_name_director, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Manpower requisition not found.' });
         }
 
         const row = rows[0];
-        // console.log("Fetched MRF Row:", row);
+        console.log("Fetched MRF Row:", row);
         const fetchManpowerRequisitionById = {
             id: row.mr_id,
             department: row.depart,
@@ -329,6 +329,8 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
             hr_review: row.hr_review,
             hr_status: row.hr_status,
             director_status: row.director_status,
+            hr_comments:row.hr_comments,
+            director_comments:row.director_comments,
             created_by: row.created_by,
             isdelete: row.isdelete,
             emp_name: row.emp_name,
@@ -385,31 +387,22 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
             manpowerId: result.insertId,
         });
     } catch (error) {
-        res.status(500).json({ message: error });
+        res.status(500).json({ message: 'Server error.' });
     }
 });
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status, user, hr_comments, director_comments } = req.body;
-    console.log( status, user, hr_comments, director_comments, " status, user, hr_comments, director_comments")
+    const { status } = req.body;
+
     if (!manpowerId || !status) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
     try {
-        let query = 'UPDATE manpower_requisition SET status = ?';
-        const params = [status];
 
-        if (user?.emp_id === '1400') { // Director
-            query += ', director_status = ?, director_comments = ?';
-            params.push(status, director_comments);
-        } else if (user?.emp_id === '1722') { // HR
-            query += ', hr_status = ?, hr_comments = ?';
-            params.push(status, hr_comments);
-        }
+        const query = `UPDATE manpower_requisition SET status = ? WHERE id = ?`;
 
-        query += ' WHERE id = ?';
-        params.push(manpowerId);
+        const params = [status, manpowerId];
 
         const [result] = await pool.execute(query, params);
 
@@ -531,7 +524,7 @@ router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
 router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, async (req, res) => {
     try {
         const { status, emp_id } = req.params;
-        console.log(status, emp_id, "status, emp_id")
+        console.log(status, emp_id,"status, emp_id")
         let query = 'SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE ';
         const params = [];
 

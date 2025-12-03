@@ -19,6 +19,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.11.0",
     "colorts": "^0.1.63",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "formik": "^2.4.9",
     "framer-motion": "^12.23.12",
@@ -39,6 +40,7 @@
     "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.22.5",
     "xlsx": "^0.18.5",
+    "xlsx-style": "^0.8.13",
     "yup": "^1.7.1"
   },
   "devDependencies": {
