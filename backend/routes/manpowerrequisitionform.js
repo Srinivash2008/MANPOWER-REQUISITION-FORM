@@ -592,8 +592,8 @@ router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
 router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, async (req, res) => {
     try {
         const { status, emp_id } = req.params;
-        console.log(status, emp_id,"status, emp_id")
-        let query = 'SELECT * FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by WHERE ';
+        console.log(status, emp_id, "status, emp_id")
+        let query = 'SELECT mr.*, ep.emp_name, ed.depart AS department_name FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE ';
         const params = [];
 
         if (status === 'Approve') {
@@ -616,6 +616,8 @@ router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, as
             id: row.id,
             s_no: index + 1,
             department: row.department,
+            department_name: row.department_name,
+            hiring_tat: row.hiring_tat_fastag == 1 ? "Fastag Hiring (60 Days)" : (row.hiring_tat_normal_cat1 == 1 ? "Normal Hiring – Cat 1 (90 Days)" : (row.hiring_tat_normal_cat2 == 1 ? "Normal Hiring – Cat 2 (120 Days)" : "")),
             employment_status: row.employment_status,
             designation: row.designation,
             num_resources: row.num_resources,

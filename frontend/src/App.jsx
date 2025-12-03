@@ -26,6 +26,7 @@ import ManpowerRequisitionView from "./components/ManpowerRequisitionView";
 import ManpowerRequisitionByStatus from "./components/ManPowerRequestionFormByStatus.jsx";
 import ManpowerRequisitionReport from "./components/ManpowerRequisitionReport.jsx";
 import ManpowerRequisitionEdit from "./components/ManpowerRequisionEdit.jsx";
+import Profile from "./components/Profile.jsx";
 
 
 
@@ -83,6 +84,8 @@ function App() {
             <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionEdit/>} />
             
             <Route path="/reports" element={<ManpowerRequisitionReport/>} />
+            <Route path="/profile" element={<Profile/>} />
+
 
 
           </Routes>

@@ -95,6 +95,7 @@ const ManpowerRequisitionByStatus = () => {
   // Get display name or fallback to the param if not found
   const displayStatus = statusDisplayNames[param_status] || param_status;
     const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
+    console.log(manpowerRequisitionList,"manpowerRequisitionList")
     const theme = useTheme();
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
@@ -238,7 +239,7 @@ const ManpowerRequisitionByStatus = () => {
                                         <StyledTableCell>Requirement Type</StyledTableCell>
                                         {/* <StyledTableCell>Resigned Employee</StyledTableCell> */}
                                         {/* <StyledTableCell>Reason for Additional Resources</StyledTableCell> */}
-                                        <StyledTableCell>Job Description</StyledTableCell>
+                                        <StyledTableCell>TAT Request</StyledTableCell>
                                         {/* <StyledTableCell>Education</StyledTableCell>
                       <StyledTableCell>Experience</StyledTableCell>
                       <StyledTableCell>CTC Range</StyledTableCell>
@@ -257,14 +258,14 @@ const ManpowerRequisitionByStatus = () => {
                                                 {page * rowsPerPage + index + 1}
                                             </StyledTableCell>
                                             <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
-                                            <StyledTableCell>{manpower.department}</StyledTableCell>
+                                            <StyledTableCell>{manpower.department_name}</StyledTableCell>
                                             <StyledTableCell>{manpower.employment_status}</StyledTableCell>
                                             <StyledTableCell>{manpower.designation}</StyledTableCell>
                                             {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
                                             <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                                             {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
                         <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
-                                            <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.job_description}</StyledTableCell>
+                                            <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                                             {/* <StyledTableCell>{manpower.education}</StyledTableCell>
                         <StyledTableCell>{manpower.experience}</StyledTableCell>
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
