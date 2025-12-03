@@ -391,18 +391,28 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
     }
 });
 
+
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status } = req.body;
-
+    const { status, user, hr_comments, director_comments } = req.body;
+    console.log( status, user, hr_comments, director_comments, " status, user, hr_comments, director_comments")
     if (!manpowerId || !status) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
     try {
+        let query = 'UPDATE manpower_requisition SET status = ?';
+        const params = [status];
 
-        const query = `UPDATE manpower_requisition SET status = ? WHERE id = ?`;
+        if (user?.emp_id === '1400') { // Director
+            query += ', director_status = ?, director_comments = ?';
+            params.push(status, director_comments);
+        } else if (user?.emp_id === '1722') { // HR
+            query += ', hr_status = ?, hr_comments = ?';
+            params.push(status, hr_comments);
+        }
 
-        const params = [status, manpowerId];
+        query += ' WHERE id = ?';
+        params.push(manpowerId);
 
         const [result] = await pool.execute(query, params);
 

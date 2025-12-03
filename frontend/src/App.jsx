@@ -25,6 +25,7 @@ import ManpowerRequisition from "./components/ManpowerRequisitionForm.jsx";
 import ManpowerRequisitionView from "./components/ManpowerRequisitionView";
 import ManpowerRequisitionByStatus from "./components/ManPowerRequestionFormByStatus.jsx";
 import ManpowerRequisitionReport from "./components/ManpowerRequisitionReport.jsx";
+import ManpowerRequisitionEdit from "./components/ManpowerRequisionEdit.jsx";
 
 
 
@@ -78,7 +79,9 @@ function App() {
            <Route path="/mrf-list/:param_status" element={<ManpowerRequisitionByStatus />} />
 
            <Route path="/manpower_requisition_view/:id" element={<ManpowerRequisitionView/>} />
-           <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionView/>} />
+           {/* <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionView/>} /> */}
+            <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionEdit/>} />
+            
             <Route path="/reports" element={<ManpowerRequisitionReport/>} />
 
 
