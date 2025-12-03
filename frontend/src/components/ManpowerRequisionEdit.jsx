@@ -9,6 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus, addQueryForm, fetchDepartmentsManagerId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import swal from "sweetalert2";
+import DirectorImage from "../assets/images/directorSign.png";
 
 const ManpowerRequisitionEdit = () => {
     const dispatch = useDispatch();
@@ -224,7 +225,7 @@ const ManpowerRequisitionEdit = () => {
                     newErrors.directorSign = 'A valid Director Sign image (JPG, PNG) is required.';
                 } else {
                     delete newErrors.directorSign;
-                }                
+                }
                 break;
             case 'tatAgreed':
                 if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
@@ -344,7 +345,7 @@ const ManpowerRequisitionEdit = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const allTouched = {};
-        console.log(formData,"formData");
+        console.log(formData, "formData");
         Object.keys(formData).forEach(key => { allTouched[key] = true; });
         setTouched(allTouched);
 
@@ -414,7 +415,7 @@ const ManpowerRequisitionEdit = () => {
             if (manpowerStatus) {
                 await dispatch(updateManpowerStatus({
                     manpowerId,
-                    newStatus: manpowerStatus == "Draft"? "Pending": manpowerStatus,
+                    newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
                     hr_comments: formData.hr_comments,
                     director_comments: formData.director_comments
                 })).unwrap();
@@ -455,6 +456,12 @@ const ManpowerRequisitionEdit = () => {
     };
 
     const handleCloseConfirm = () => setIsConfirmOpen(false);
+     const DisplayField = ({ label, value }) => (
+        <div>
+            <label className="form-label">{label}</label>
+            <p className="form-display-text">{value || 'N/A'}</p>
+        </div>
+    );
 
     const handleQueryTextChange = (e) => {
         const newQueryText = e.target.value;
@@ -686,7 +693,7 @@ const ManpowerRequisitionEdit = () => {
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Approvals</h3>
                                 <div className="section-grid multi-col">
-                                    {(isSeniorManager || isDirector || isHr) && (
+                                    {isSeniorManager && user.emp_id != "1722"  && (
                                         <div>
                                             <label className="form-label">Requestor Sign & Date<span className="required-star">*</span></label>
                                             <FileUploader
@@ -713,31 +720,32 @@ const ManpowerRequisitionEdit = () => {
                                             {renderError('requestorSign')}
                                         </div>
                                     )}
-                                    {/* {(isDirector || isHr) && (
+
+                                    
+                                    {(isDirector || isHr) && (
+                                        <>
                                         <div>
-                                            <label className="form-label">Director Sign<span className="required-star">*</span></label>
-                                            <FileUploader
-                                                classes={`file-uploader-custom ${getFieldClassName('directorSign')}`}
-                                                maxSize={2}
-                                                onSizeError={onSizeError}
-                                                handleChange={(file) => handleFileChange("directorSign", file)}
-                                                name="directorSign"
-                                                types={fileTypes}
-                                            >
-                                                <div className="upload-area"><div className="upload-instruction"><span>Drag & Drop or Click to Upload</span><span className="file-types">(Accepted: JPEG, PNG, JPG)</span></div></div>
-                                            </FileUploader>
-                                            {formData.directorSign && (
-                                                <div className="file-display-card">
-                                                    <FiFile className="file-icon" />
-                                                    {typeof formData.directorSign === 'string' ? (
-                                                        <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.directorSign); }} className="file-name">{formData.directorSign.split(/[\\/]/).pop()}</a>
-                                                    ) : (<span className="file-name">{formData.directorSign.name}</span>)}
-                                                    <button type="button" onClick={() => removeFile("directorSign")} className="remove-file-btn"><FiX /></button>
-                                                </div>
-                                            )}
-                                            {renderError('directorSign')}
+                                            {formData.requestorSign ? (
+                                                <div>
+                                                    <label className="form-label">Requestor Sign & Date</label>
+                                                    <img src={`${API_URL}/${formData.requestorSign}`} alt="Requestor Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                                </div>)
+                                                : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />
+                                            }
+                                           
+                                            {/* <label className="form-label">Director Sign</label>
+                                            <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} /> */}
                                         </div>
-                                    )} */}
+                                        <div> {formData.directorSign ? (
+                                                <div>
+                                                    <label className="form-label">Director Sign</label>
+                                                    <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                                </div>
+                                            )
+
+                                                : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />}</div>
+                                   
+                                        </> )}
                                 </div>
                             </div>
                         )}
