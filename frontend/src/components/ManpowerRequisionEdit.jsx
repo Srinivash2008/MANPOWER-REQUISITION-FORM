@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiX } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
@@ -69,6 +69,7 @@ const ManpowerRequisitionEdit = () => {
     const [notification, setNotification] = useState({ open: false, message: "", severity: "success" });
     const [manpowerId, setManpowerId] = useState(null);
     const [manpowerStatus, setManpowerStatus] = useState(null);
+    const [isDraft, setIsDraft] = useState(false);
     const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
     const [queryText, setQueryText] = useState("");
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -86,6 +87,7 @@ const ManpowerRequisitionEdit = () => {
         if (selectedRequisition) {
             setManpowerStatus(selectedRequisition.status);
             setManpowerId(selectedRequisition.id);
+            setIsDraft(selectedRequisition.status === "Draft");
             setQueryText(selectedRequisition.query_name || "");
 
             let tatValue = "";
@@ -721,7 +723,7 @@ const ManpowerRequisitionEdit = () => {
                         )}
 
                         {/* Status Updation Section */}
-                        {(isDirector || isHr || (isSeniorManager && formData.hrstatus === 'Draft')) && (
+                        {(isDirector || isHr || (isSeniorManager && isDraft)) && (
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Status Updation</h3>
                                 <div className="section-grid multi-col">
@@ -732,7 +734,7 @@ const ManpowerRequisitionEdit = () => {
                                             size="small"
                                             sx={{ fontSize: "0.85rem", height: 36, borderRadius: '6px' }}
                                         >
-                                            {isSeniorManager && formData.hrstatus === 'Draft' && (
+                                            {isSeniorManager && isDraft && (
                                                 <MenuItem key="Pending" value="Pending">Pending</MenuItem>
                                             )}
                                             {isDirector && !isHr && [
