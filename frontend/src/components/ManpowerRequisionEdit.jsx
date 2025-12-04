@@ -469,7 +469,8 @@ const ManpowerRequisitionEdit = () => {
                     manpowerId,
                     newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
                     hr_comments: formData.hr_comments,
-                    director_comments: formData.director_comments
+                    director_comments: formData.director_comments,
+                    data : selectedRequisition
                 })).unwrap();
             }
 
@@ -856,7 +857,7 @@ const ManpowerRequisitionEdit = () => {
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
                                             ]}
                                             {isHr && [
-                                                 <MenuItem value="Pending">Select the Status</MenuItem>,
+                                                //  <MenuItem value="Pending">Select the Status</MenuItem>,
                                                 <MenuItem value="Approve">Select the Status</MenuItem>,
                                                 <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
