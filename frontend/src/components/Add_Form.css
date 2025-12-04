@@ -470,3 +470,32 @@
   font-size: 0.875rem;
   margin-top: 4px;
 }
+
+/* --- Modern Swal Styles --- */
+.modern-swal-popup {
+  border-radius: 16px !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07) !important;
+}
+
+.modern-swal-title {
+  color: #2a7f66 !important; /* darkAccent */
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+}
+
+.modern-swal-text {
+  color: #666666 !important; /* mediumText */
+}
+
+/* Customize the success icon colors */
+.swal2-success-circular-line-left,
+.swal2-success-circular-line-right,
+.swal2-success-fix {
+  background-color: transparent !important;
+}
+
+.swal2-success-line-tip,
+.swal2-success-line-long {
+  background-color: #2a7f66 !important; /* darkAccent */
+}

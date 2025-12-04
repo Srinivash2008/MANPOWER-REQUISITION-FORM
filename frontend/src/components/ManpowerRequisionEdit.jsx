@@ -2,14 +2,17 @@ import React, { useState, useEffect, use } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiX } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
-import "./Add_Form.css";
-import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import "./Add_Form.css"; 
+import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box, Typography, DialogContentText } from "@mui/material";
 import { FileUploader } from "react-drag-drop-files";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus, addQueryForm, fetchDepartmentsManagerId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import swal from "sweetalert2";
 import DirectorImage from "../assets/images/directorSign.png";
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ManpowerRequisitionEdit = () => {
     const dispatch = useDispatch();
@@ -75,6 +78,7 @@ const ManpowerRequisitionEdit = () => {
     const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
     const [queryText, setQueryText] = useState("");
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
     const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
 
@@ -474,15 +478,7 @@ const ManpowerRequisitionEdit = () => {
                 await dispatch(addQueryForm(queryAddData)).unwrap();
             }
 
-            swal.fire({
-                title: 'Updated!',
-                text: 'Manpower Requisition updated successfully.',
-                icon: 'success',
-                confirmButtonColor: theme.palette.primary.main,
-                confirmButtonText: 'OK'
-            }).then(() => {
-                navigate('/mrf-list');
-            });
+            setIsSuccessOpen(true);
 
         } catch (error) {
             swal.fire({
@@ -497,6 +493,11 @@ const ManpowerRequisitionEdit = () => {
     };
 
     const handleCloseConfirm = () => setIsConfirmOpen(false);
+    const handleCloseSuccess = () => {
+        setIsSuccessOpen(false);
+        navigate('/mrf-list');
+    };
+
      const DisplayField = ({ label, value }) => (
         <div>
             <label className="form-label">{label}</label>
@@ -914,11 +915,89 @@ const ManpowerRequisitionEdit = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+            <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} sx={{ mt: '64px' }}>
                 <MuiAlert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
                     {notification.message}
                 </MuiAlert>
             </Snackbar>
+
+            <AnimatePresence>
+                {isConfirmOpen && (
+                    <Dialog
+                        open={isConfirmOpen}
+                        onClose={handleCloseConfirm}
+                        PaperProps={{
+                            component: motion.div,
+                            variants: {
+                                hidden: { opacity: 0, scale: 0.8 },
+                                visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
+                                exit: { opacity: 0, scale: 0.8, transition: { duration: 0.2, ease: "easeIn" } },
+                            },
+                            initial: "hidden",
+                            animate: "visible",
+                            exit: "exit",
+                            style: { borderRadius: '16px', padding: '1.5rem' }
+                        }}
+                    >
+                        <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                            <HelpOutlineIcon color="primary" sx={{ fontSize: '3rem', mb: 1 }} />
+                            <br />
+                            Confirm Update
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body1" textAlign="center">
+                                Are you sure you want to update this Manpower Requisition?
+                            </Typography>
+                        </DialogContent>
+                        <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
+                            <Button onClick={handleCloseConfirm} variant="outlined" color="secondary">Cancel</Button>
+                            <Button onClick={handleConfirmUpdate} variant="contained" color="primary" autoFocus>
+                                Update
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                )}
+            </AnimatePresence>
+
+            {/* Super Cool Success Dialog */}
+            <AnimatePresence>
+                {isSuccessOpen && (
+                    <Dialog
+                        open={isSuccessOpen}
+                        onClose={handleCloseSuccess}
+                        PaperProps={{
+                            component: motion.div,
+                            variants: {
+                                hidden: { y: "-100vh", opacity: 0 },
+                                visible: { y: "0", opacity: 1, transition: { type: "spring", stiffness: 120, damping: 15 } },
+                                exit: { y: "100vh", opacity: 0, transition: { ease: "anticipate" } }
+                            },
+                            initial: "hidden",
+                            animate: "visible",
+                            exit: "exit",
+                            sx: { borderRadius: '20px', padding: '2rem', textAlign: 'center', backgroundColor: '#F3FAF8' }
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1, transition: { delay: 0.2, type: 'spring', stiffness: 260, damping: 20 } }}
+                        >
+                            <CheckCircleOutlineIcon sx={{ fontSize: '5rem', color: 'success.main' }} />
+                        </motion.div>
+                        <DialogTitle className="modern-swal-title" sx={{ p: '1rem 0 0.5rem' }}>
+                            Updated Successfully!
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography className="modern-swal-text">
+                                The Manpower Requisition has been updated.
+                            </Typography>
+                        </DialogContent>
+                        <DialogActions sx={{ justifyContent: 'center', p: '1rem 0 0' }}>
+                            <Button onClick={handleCloseSuccess} variant="contained" color="primary" size="large" sx={{ borderRadius: '50px', px: 4, fontWeight: 'bold' }}>OK</Button>
+                        </DialogActions>
+                    </Dialog>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
