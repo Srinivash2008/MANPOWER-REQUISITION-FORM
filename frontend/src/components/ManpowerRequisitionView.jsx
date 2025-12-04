@@ -318,6 +318,7 @@ console.log(selectedRequisition,"selectedRequisition")
                                     <div>
                                         <label className="form-label">Director Sign</label>
                                         <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                        <p style={{padding:'5%',fontSize:'13px'}}>{new Date(formData.created_at).toISOString().split('T')[0]}</p>
                                     </div>
                                 )
 
