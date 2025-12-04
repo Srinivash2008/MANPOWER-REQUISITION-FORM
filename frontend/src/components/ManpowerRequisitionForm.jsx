@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip   } from "@mui/material";
+  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip   } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId } from '../redux/cases/manpowerrequisitionSlice';  
 import swal from "sweetalert2"; 
@@ -84,6 +84,52 @@ const modalVariants = {
 const tickVariants = {
   hidden: { scale: 0, opacity: 0 },
   visible: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 200, damping: 10, delay: 0.05 } },
+};
+
+const StatusBadge = ({ status }) => {
+  const theme = useTheme();
+  
+  const statusStyles = {
+    'Approve': {
+      backgroundColor: '#28a745', // A vibrant green
+      color: '#fff',
+    },
+    'HR Approve': {
+      backgroundColor: '#20c997', // A slightly different, teal-like green
+      color: '#fff',
+    },
+    'Pending': {
+      backgroundColor: '#ffc107', // A warm amber/yellow
+      color: '#212529', // Dark text for better contrast on yellow
+    },
+    'Reject': {
+      backgroundColor: '#dc3545', // A strong red
+      color: '#fff',
+    },
+    'Raise Query': {
+      backgroundColor: '#0dcaf0', // A bright cyan/info blue
+      color: '#fff',
+    },
+    'On Hold': {
+      backgroundColor: '#6c757d', // A neutral, secondary grey
+      color: '#fff',
+    },
+    'Draft': {
+      backgroundColor: '#f8f9fa', // A very light grey
+      color: '#6c757d',
+      border: `1px solid #dee2e6`
+    },
+    default: {
+      backgroundColor: theme.palette.grey[500],
+      color: 'white',
+    }
+  };
+
+  const style = statusStyles[status] || statusStyles.default;
+
+  const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
+
+  return <Chip label={status} size="small" sx={sx} />;
 };
 
 const ManpowerRequisition = () => {
@@ -408,8 +454,9 @@ const ManpowerRequisition = () => {
                         <StyledTableCell>{manpower.experience}</StyledTableCell>
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
-                        <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-                         <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.status}</StyledTableCell>
+                        <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */
+                        }
+                         <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
                         
                         {/* <StyledTableCell>
                           <FormControl fullWidth size="small">

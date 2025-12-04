@@ -232,15 +232,15 @@ const ManpowerRequisitionEdit = () => {
                 }
                 break;
             case 'tatAgreed':
-                if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
+                if (isHr && !value.trim() ) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
                 else delete newErrors.tatAgreed;
                 break;
             case 'deliveryPhase':
-                if (isHr && !value) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
+                if (isHr && !value.trim()) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
                 else delete newErrors.deliveryPhase;
                 break;
             case 'hrReview':
-                if (isHr && !value) newErrors.hrReview = 'HR Review is required for HR.';
+                if (isHr && !value.trim()) newErrors.hrReview = 'HR Review is required for HR.';
                 else delete newErrors.hrReview;
                 break;
             case 'hr_comments':
@@ -394,7 +394,7 @@ const ManpowerRequisitionEdit = () => {
             }
         }
 
-        if (isHr && ['Reject', 'Raise Query'].includes(formData.status)) {
+        if (isHr && ['Reject'].includes(formData.status)) {
             const hrFieldsToValidate = {
                 hr_comments: 'HR Comments are required for HR Status.'
             };
@@ -406,6 +406,7 @@ const ManpowerRequisitionEdit = () => {
                 }
             });
         }
+
         if (isDirector && ['Approve','Reject'].includes(formData.status)) {
             const directorFieldsToValidate = {
                 director_comments: 'Director Comments are required for Director Status.'
@@ -804,17 +805,17 @@ const ManpowerRequisitionEdit = () => {
 
                                     </div>
                                     <div>
-                                        <label className="form-label">TAT Agreed (in days)<span className="required-star">*</span></label>
+                                        <label className="form-label">TAT Agreed (in days)<span className="required-star"></span></label>
                                         <input name="tatAgreed" className={`form-input ${getFieldClassName('tatAgreed')}`} value={formData.tatAgreed} onChange={handleInputChange} onBlur={handleBlur} />
                                         {renderError('tatAgreed')}
                                     </div>
                                     <div>
-                                        <label className="form-label">Phase of Delivery for bulk hiring<span className="required-star">*</span></label>
+                                        <label className="form-label">Phase of Delivery for bulk hiring<span className="required-star"></span></label>
                                         <input name="deliveryPhase" className={`form-input ${getFieldClassName('deliveryPhase')}`} value={formData.deliveryPhase} onChange={handleInputChange} onBlur={handleBlur} />
                                         {renderError('deliveryPhase')}
                                     </div>
                                     <div>
-                                        <label className="form-label">HR - Head Review<span className="required-star">*</span></label>
+                                        <label className="form-label">HR - Head Review<span className="required-star"></span></label>
                                         <input name="hrReview" className={`form-input ${getFieldClassName('hrReview')}`} value={formData.hrReview} onChange={handleInputChange} onBlur={handleBlur} />
                                         {renderError('hrReview')}
                                     </div>
@@ -878,7 +879,7 @@ const ManpowerRequisitionEdit = () => {
                                                 {renderError('director_comments')}
                                             </div>
                                         )}
-                                        {isHr && (
+                                        {( isHr && manpowerStatus != "Raise Query") && (
                                             <div style={{ marginTop: '1rem' }}>
                                                 <label className="form-label">HR Comments<span className="required-star">*</span></label>
                                                 <TextField fullWidth multiline rows={3} label="Enter your comments here" name="hr_comments" value={formData.hr_comments || ''} onChange={handleInputChange} variant="outlined" size="small" />
