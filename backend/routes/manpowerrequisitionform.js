@@ -29,7 +29,6 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
         }
         query += ' ORDER BY mr.id DESC';
         const [rows] = await pool.execute(query, params);
-console.log(rows,"rows")
         const fetchManpowerRequisitionByUser = rows.map((row, index) => ({
             id: row.id,
             s_no: index + 1,
@@ -250,7 +249,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     try {
         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, projection_plan, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, hr_status, director_status, hr_comments,  director_comments, created_at, mrq.query_name_hr, mrq.query_name_director, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
+        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, projection_plan, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, hr_status, director_status, hr_comments,  director_comments, created_by, created_at, mrq.query_name_hr, mrq.query_name_director, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Manpower requisition not found.' });
@@ -295,6 +294,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
             emp_name: row.emp_name,
             query_name_hr: row.query_name_hr,
             query_name_director: row.query_name_director,
+            created_by:row.created_by
         };
 
         res.json(fetchManpowerRequisitionById);
@@ -430,6 +430,59 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
             await connection.execute(query, params);
 
+            if (status === 'Pending') {
+                 const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+                  console.log(user_data[0],"user_datauser_datauser_datauser_data")
+const user_info = user_data[0];
+                // 1. Email to the Requestor/FH (Confirmation) 📧
+                // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
+                // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
+                const requestorMailOptions = {
+                    from: process.env.EMAIL_USER,
+                    // The 'to' email should be the submitter's email address (emp_email)
+                    // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
+                    to: "nikita@pdmrindia.com",
+                    // to: "je.rajesh@pdmrindia.com",
+                    // You might want to CC HR/Recruitment on the FH/Requestor email as well
+                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    // cc: `selvi@pdmrindia.com, ${rows?.mail_id}`
+                    subject: `A New Manpower requisition Form submitted for your approval`,
+                    html: `
+                        <div style="
+                            font-family: Arial, sans-serif;
+                        ">
+                            <p>Hello Rajesh,</p>
+
+                            <p>
+                                A new MRF (Manpower Requisition Form) has been submitted by ${user_info.emp_name} and is now awaiting your review.
+                            </p>
+
+                            <p>
+                                Please review it using the link below:
+                                <a href="http://localhost:5173/">View Manpower Requisition</a>
+                            </p>
+
+                            <p style="margin-top: 30px; color: #555;">
+                                Thanks & regards,<br>
+                                Automated MRF System
+                            </p>
+                        </div>`
+                };
+
+
+                // Send the two emails sequentially
+                try {
+                    await transporter.sendMail(requestorMailOptions);
+
+                    res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+
+                } catch (error) {
+                    console.error('Error sending email:', error);
+                    // You might want to send a different status if the form was saved but email failed
+                    res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
+                }
+            }
+
             if(status === "Approve"){
                  // 1. Email to the Requestor/FH (Confirmation) 📧
                 // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
@@ -474,7 +527,9 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             }
 
             if (status == "HR Approve") {
-
+                  const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+                  console.log(user_data[0],"user_datauser_datauser_datauser_data")
+const user_info = user_data[0];
                 // 1. Email to the Requestor/FH (Confirmation) 📧
                 // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
                 // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
@@ -492,7 +547,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                         <div style="
                             font-family: Arial, sans-serif;
                         ">
-                            <p>Hello FH,</p>
+                            <p>Hello ${user_info?.emp_name},</p>
 
                             <p>
                                 Your Manpower Requisition Form (MRF) has been successfully approved by the HR . Kindly note the MRF number ${mrfNumber} generated for your request.  </p>

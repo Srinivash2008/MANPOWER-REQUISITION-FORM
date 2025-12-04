@@ -787,16 +787,22 @@ const ManpowerRequisitionEdit = () => {
                                                 {/* <label className="form-label">Director Sign</label>
                                             <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} /> */}
                                             </div>
-                                            <div> {formData.directorSign && formData.directorstatus == "Approve" ? (
+                                            <div> 
+                                                {formData.directorSign && formData.directorstatus == "Approve" ? (
                                                 <div>
                                                     <label className="form-label">Director Sign</label>
                                                     <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
                                                 </div>
-                                            )
+                                                )
 
-                                                : <div>
+                                                : !isDirector && <div>
                                                     <label className="form-label" >Director Sign</label>
                                                     <p style={{paddingTop:'4%', fontSize:'13px'}}>Not provided.</p>
+                                                </div>}
+
+                                                {(isDirector && formData.status == "pending") &&<div>
+                                                    <label className="form-label">Director Sign</label>
+                                                    <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
                                                 </div>}
                                             </div>
 
