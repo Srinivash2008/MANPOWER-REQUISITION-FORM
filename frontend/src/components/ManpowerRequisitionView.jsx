@@ -310,7 +310,7 @@ console.log(selectedRequisition,"selectedRequisition")
                                     <div>
                                         <label className="form-label">Requestor Sign & Date</label>
                                         <img src={`${API_URL}/${formData.requestorSign}`} alt="Requestor Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
-                                        <DisplayField value={new Date(formData.created_at).toISOString().split('T')[0]} />
+                                        <p style={{padding:'5%',fontSize:'13px'}}>{new Date(formData.created_at).toISOString().split('T')[0]}</p>
                                     </div>)
                                     : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />
                                 }

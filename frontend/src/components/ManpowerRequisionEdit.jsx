@@ -3,7 +3,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiX } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import "./Add_Form.css"; 
+import "./Add_Form.css";
 import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box, Typography, DialogContentText } from "@mui/material";
 import { FileUploader } from "react-drag-drop-files";
 import { useParams, useNavigate } from "react-router-dom";
@@ -66,7 +66,8 @@ const ManpowerRequisitionEdit = () => {
         query_name_director: "",
         hr_comments: "",
         director_comments: "",
-        status: ""
+        status: "",
+        created_at: "",
     });
 
     const [errors, setErrors] = useState({});
@@ -132,7 +133,8 @@ const ManpowerRequisitionEdit = () => {
                 query_name_director: selectedRequisition.query_name_director || "",
                 hr_comments: selectedRequisition.hr_comments || "",
                 director_comments: selectedRequisition.director_comments || "",
-                status: selectedRequisition.status || ""
+                status: selectedRequisition.status || "",
+                created_at : selectedRequisition.created_at || "",
             });
         }
     }, [selectedRequisition]);
@@ -232,7 +234,7 @@ const ManpowerRequisitionEdit = () => {
                 }
                 break;
             case 'tatAgreed':
-                if (isHr && !value.trim() ) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
+                if (isHr && !value.trim()) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
                 else delete newErrors.tatAgreed;
                 break;
             case 'deliveryPhase':
@@ -371,12 +373,16 @@ const ManpowerRequisitionEdit = () => {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
         }
+         if (isHr && formData.status == "Pending") {
+            setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
+            return;
+        }
 
         if (isHr && formData.status === 'HR Approve') {
             const hrFieldsToValidate = {
-                tatAgreed: 'TAT Agreed is required for HR Approval.',
-                deliveryPhase: 'Phase of Delivery is required for HR Approval.',
-                hrReview: 'HR - Head Review is required for HR Approval.',
+                // tatAgreed: 'TAT Agreed is required for HR Approval.',
+                // deliveryPhase: 'Phase of Delivery is required for HR Approval.',
+                // hrReview: 'HR - Head Review is required for HR Approval.',
                 hr_comments: 'HR Comments are required for HR Approval.'
             };
             let hasHrErrors = false;
@@ -407,7 +413,7 @@ const ManpowerRequisitionEdit = () => {
             });
         }
 
-        if (isDirector && ['Approve','Reject'].includes(formData.status)) {
+        if (isDirector && ['Approve', 'Reject'].includes(formData.status)) {
             const directorFieldsToValidate = {
                 director_comments: 'Director Comments are required for Director Status.'
             };
@@ -499,7 +505,7 @@ const ManpowerRequisitionEdit = () => {
         navigate('/mrf-list');
     };
 
-     const DisplayField = ({ label, value }) => (
+    const DisplayField = ({ label, value }) => (
         <div>
             <label className="form-label">{label}</label>
             <p className="form-display-text">{value || 'N/A'}</p>
@@ -736,7 +742,7 @@ const ManpowerRequisitionEdit = () => {
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Approvals</h3>
                                 <div className="section-grid multi-col">
-                                    {isSeniorManager && user.emp_id != "1722"  && (
+                                    {isSeniorManager && user.emp_id != "1722" && (
                                         <div>
                                             <label className="form-label">Requestor Sign & Date<span className="required-star">*</span></label>
                                             <FileUploader
@@ -764,31 +770,36 @@ const ManpowerRequisitionEdit = () => {
                                         </div>
                                     )}
 
-                                    
+
                                     {(isDirector || isHr) && (
                                         <>
-                                        <div>
-                                            {formData.requestorSign ? (
-                                                <div>
-                                                    <label className="form-label">Requestor Sign & Date</label>
-                                                    <img src={`${API_URL}/${formData.requestorSign}`} alt="Requestor Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
-                                                </div>)
-                                                : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />
-                                            }
-                                           
-                                            {/* <label className="form-label">Director Sign</label>
+                                            <div>
+                                                {formData.requestorSign ? (
+                                                    <div>
+                                                        <label className="form-label">Requestor Sign & Date</label>
+                                                        <img src={`${API_URL}/${formData.requestorSign}`} alt="Requestor Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                                         <p style={{padding:'5%',fontSize:'13px'}}>{new Date(formData?.created_at).toISOString().split('T')[0]}</p>
+                                                    </div>)
+                                                    : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />
+                                                }
+
+                                                {/* <label className="form-label">Director Sign</label>
                                             <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} /> */}
-                                        </div>
-                                        <div> {formData.directorSign ? (
+                                            </div>
+                                            <div> {formData.directorSign && formData.directorstatus == "Approve" ? (
                                                 <div>
                                                     <label className="form-label">Director Sign</label>
                                                     <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
                                                 </div>
                                             )
 
-                                                : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />}</div>
-                                   
-                                        </> )}
+                                                : <div>
+                                                    <label className="form-label" >Director Sign</label>
+                                                    <p style={{paddingTop:'4%', fontSize:'13px'}}>Not provided.</p>
+                                                </div>}
+                                            </div>
+
+                                        </>)}
                                 </div>
                             </div>
                         )}
@@ -830,13 +841,13 @@ const ManpowerRequisitionEdit = () => {
                                 <div className="section-grid multi-col">
                                     <FormControl fullWidth size="small">
                                         <Select
-                                            value={formData.status }
+                                            value={formData.status}
                                             displayEmpty
                                             onChange={(e) => handleStatusChange(e, formData.id)}
                                             size="small"
                                             sx={{ fontSize: "0.85rem", height: 36, borderRadius: '6px' }}
                                         >
-                                            
+
                                             {isDirector && !isHr && [
                                                 <MenuItem value="Pending">Select the Status</MenuItem>,
                                                 <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
@@ -845,6 +856,7 @@ const ManpowerRequisitionEdit = () => {
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
                                             ]}
                                             {isHr && [
+                                                 <MenuItem value="Pending">Select the Status</MenuItem>,
                                                 <MenuItem value="Approve">Select the Status</MenuItem>,
                                                 <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
@@ -879,7 +891,7 @@ const ManpowerRequisitionEdit = () => {
                                                 {renderError('director_comments')}
                                             </div>
                                         )}
-                                        {( isHr && manpowerStatus != "Raise Query") && (
+                                        {(isHr && manpowerStatus != "Raise Query") && (
                                             <div style={{ marginTop: '1rem' }}>
                                                 <label className="form-label">HR Comments<span className="required-star">*</span></label>
                                                 <TextField fullWidth multiline rows={3} label="Enter your comments here" name="hr_comments" value={formData.hr_comments || ''} onChange={handleInputChange} variant="outlined" size="small" />

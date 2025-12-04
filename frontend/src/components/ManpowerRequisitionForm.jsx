@@ -500,6 +500,7 @@ const ManpowerRequisition = () => {
                         <StyledTableCell>
                           {(
                             <>
+                          
                             <Tooltip title="Edit Manpower" arrow placement="top">
                             <IconButton
                               aria-label="edit"
@@ -510,7 +511,7 @@ const ManpowerRequisition = () => {
                               <EditDocumentIcon />
                             </IconButton>
                           </Tooltip>
-                         {(user.emp_id !== "1722" && user.emp_id !== "1400") && 
+                         {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' &&
                           <Tooltip title="Delete Manpower" arrow placement="top">
                             <IconButton 
                               aria-label="delete"
@@ -521,7 +522,6 @@ const ManpowerRequisition = () => {
                               <DeleteForeverIcon />
                             </IconButton>
                           </Tooltip>
-                        
                          }
                           </>
                           )}
