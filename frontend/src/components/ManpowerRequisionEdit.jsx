@@ -401,7 +401,7 @@ const ManpowerRequisitionEdit = () => {
                 }
             });
         }
-        if (isDirector && ['Approve','Reject', 'Raise Query'].includes(formData.status)) {
+        if (isDirector && ['Approve','Reject'].includes(formData.status)) {
             const directorFieldsToValidate = {
                 director_comments: 'Director Comments are required for Director Status.'
             };
@@ -869,7 +869,7 @@ const ManpowerRequisitionEdit = () => {
                                 )}
                                 {formData.status && formData.status !== "" && (
                                     <>
-                                        {isDirector && (
+                                        {(isDirector && manpowerStatus != "Raise Query") && (
                                             <div style={{ marginTop: '1rem' }}>
                                                 <label className="form-label">Director Comments<span className="required-star">*</span></label>
                                                 <TextField fullWidth multiline rows={3} label="Enter your comments here" name="director_comments" value={formData.director_comments || ''} onChange={handleInputChange} variant="outlined" size="small" />
