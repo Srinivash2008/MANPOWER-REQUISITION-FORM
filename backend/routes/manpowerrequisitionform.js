@@ -29,7 +29,7 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
         }
         query += ' ORDER BY mr.id DESC';
         const [rows] = await pool.execute(query, params);
-
+console.log(rows,"rows")
         const fetchManpowerRequisitionByUser = rows.map((row, index) => ({
             id: row.id,
             s_no: index + 1,
@@ -53,6 +53,9 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             created_at: row.created_at,
             isdelete: row.isdelete,
             emp_name: row.emp_name,
+            hr_status: row.hr_status,
+            director_status: row.director_status,
+
         }));
         res.json(fetchManpowerRequisitionByUser);
 
