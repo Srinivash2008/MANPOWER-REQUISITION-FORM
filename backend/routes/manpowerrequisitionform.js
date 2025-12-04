@@ -430,6 +430,59 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
             await connection.execute(query, params);
 
+            if (status === 'Pending') {
+                 const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+                  console.log(user_data[0],"user_datauser_datauser_datauser_data")
+const user_info = user_data[0];
+                // 1. Email to the Requestor/FH (Confirmation) 📧
+                // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
+                // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
+                const requestorMailOptions = {
+                    from: process.env.EMAIL_USER,
+                    // The 'to' email should be the submitter's email address (emp_email)
+                    // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
+                    to: "nikita@pdmrindia.com",
+                    // to: "je.rajesh@pdmrindia.com",
+                    // You might want to CC HR/Recruitment on the FH/Requestor email as well
+                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    // cc: `selvi@pdmrindia.com, ${rows?.mail_id}`
+                    subject: `A New Manpower requisition Form submitted for your approval`,
+                    html: `
+                        <div style="
+                            font-family: Arial, sans-serif;
+                        ">
+                            <p>Hello Rajesh,</p>
+
+                            <p>
+                                A new MRF (Manpower Requisition Form) has been submitted by ${user_info.emp_name} and is now awaiting your review.
+                            </p>
+
+                            <p>
+                                Please review it using the link below:
+                                <a href="http://localhost:5173/">View Manpower Requisition</a>
+                            </p>
+
+                            <p style="margin-top: 30px; color: #555;">
+                                Thanks & regards,<br>
+                                Automated MRF System
+                            </p>
+                        </div>`
+                };
+
+
+                // Send the two emails sequentially
+                try {
+                    await transporter.sendMail(requestorMailOptions);
+
+                    res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+
+                } catch (error) {
+                    console.error('Error sending email:', error);
+                    // You might want to send a different status if the form was saved but email failed
+                    res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
+                }
+            }
+
             if(status === "Approve"){
                  // 1. Email to the Requestor/FH (Confirmation) 📧
                 // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
