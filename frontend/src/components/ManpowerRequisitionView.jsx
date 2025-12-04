@@ -57,7 +57,8 @@ const ManpowerRequisitionView = () => {
         query_name_director: "",
         hr_comments: "",
         director_comments: "",
-        status: ""
+        status: "",
+        created_at: ""
     });
 
     const [notification, setNotification] = useState({
@@ -109,7 +110,8 @@ console.log(selectedRequisition,"selectedRequisition")
                 query_name_director: selectedRequisition.query_name_director || "",
                 hr_comments: selectedRequisition.hr_comments || "-",
                 director_comments: selectedRequisition.director_comments || "-",
-                status: selectedRequisition.status || ""
+                status: selectedRequisition.status || "",
+                created_at: selectedRequisition.created_at || "-"
             });
         }
     }, [selectedRequisition]);
@@ -307,17 +309,18 @@ console.log(selectedRequisition,"selectedRequisition")
                                     <div>
                                         <label className="form-label">Requestor Sign & Date</label>
                                         <img src={`${API_URL}/${formData.requestorSign}`} alt="Requestor Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
+                                        <DisplayField value={new Date(formData.created_at).toISOString().split('T')[0]} />
                                     </div>)
                                     : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />
                                 }
-                                {formData.directorSign ? (
+                                {formData.directorSign && formData.directorstatus == "Approve" ? (
                                     <div>
                                         <label className="form-label">Director Sign</label>
                                         <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
                                     </div>
                                 )
 
-                                    : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />}
+                                    : <DisplayField label="Director Sign" value={'Not provided.'} />}
 
                             </div>
                         </div>

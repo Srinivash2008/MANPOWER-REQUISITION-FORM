@@ -346,7 +346,7 @@ const App_Form = () => {
     const onSizeError = (file) => {
         setNotification({
             open: true,
-            message: `File "${file.name}" is too large. Please upload a file under 2MB.`,
+            message: `File Size is too large. Please upload a file under 2MB.`,
             severity: 'error'
         });
     };

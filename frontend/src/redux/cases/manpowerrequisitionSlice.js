@@ -156,7 +156,6 @@ export const fetchManpowerRequisitionById = createAsyncThunk(
           },
         }
       );
-      console.log("Fetched MRF by ID Response:", response.data);
       return response.data;
     } catch (error) {
       const errorMessage =

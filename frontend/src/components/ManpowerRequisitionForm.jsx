@@ -463,7 +463,7 @@ const ManpowerRequisition = () => {
                               <EditDocumentIcon />
                             </IconButton>
                           </Tooltip>
-                         {user.emp_id != "1722" || user.emp_id != "1400" && 
+                         {(user.emp_id !== "1722" && user.emp_id !== "1400") && 
                           <Tooltip title="Delete Manpower" arrow placement="top">
                             <IconButton 
                               aria-label="delete"
