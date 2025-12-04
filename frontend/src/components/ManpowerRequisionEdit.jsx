@@ -800,10 +800,10 @@ const ManpowerRequisitionEdit = () => {
                                                     <p style={{paddingTop:'4%', fontSize:'13px'}}>Not provided.</p>
                                                 </div>}
 
-                                                {/* {isDirector &&  <div>
+                                                {(isDirector && formData.status == "pending") &&<div>
                                                     <label className="form-label">Director Sign</label>
                                                     <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} />
-                                                </div>} */}
+                                                </div>}
                                             </div>
 
                                         </>)}
