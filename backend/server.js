@@ -40,7 +40,7 @@ const io = initializeSocketIO(server);
 app.use(express.json());
 // Secure your app by setting various HTTP headers
 // app.use(helmet());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', cors(), express.static(path.join(__dirname, 'uploads')));
 
 // Add this line to serve static files from the 'system_updates_files' directory
 
@@ -54,7 +54,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // });
 
 
-app.use(cors());
+app.use(cors({ origin: '*' }));
 
 
 
