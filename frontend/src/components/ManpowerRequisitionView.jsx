@@ -149,18 +149,19 @@ console.log(selectedRequisition,"selectedRequisition")
     // };
 
     const handleDownload = async (filePath) => {
-    if (!filePath || typeof filePath !== 'string') {
-        setNotification({
-            open: true,
-            message: 'File path is invalid.',
-            severity: 'error'
-        });
-        return;
-    }
-    console.log(`${API_URL}/${filePath}`,"url")
+        if (!filePath || typeof filePath !== 'string') {
+            setNotification({
+                open: true,
+                message: 'File path is invalid.',
+                severity: 'error'
+            });
+            return;
+        }
+        const correctedFilePath = filePath.replace(/\\/g, '/');
+        console.log(`${API_URL}/${correctedFilePath}`, "url")
 
     try {
-        const response = await fetch(`${API_URL}/${filePath}`, {
+        const response = await fetch(`${API_URL}/${correctedFilePath}`, {
             method: "GET"
         });
 
@@ -172,7 +173,7 @@ console.log(selectedRequisition,"selectedRequisition")
         const url = window.URL.createObjectURL(blob);
 
         // Extract filename
-        let fileName = filePath.split(/[\\/]/).pop();
+        let fileName = correctedFilePath.split(/[\\/]/).pop();
 
         // If filename has no extension, detect based on MIME
         if (!fileName.includes(".")) {

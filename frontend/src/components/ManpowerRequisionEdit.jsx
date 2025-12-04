@@ -312,8 +312,9 @@ const ManpowerRequisitionEdit = () => {
             setNotification({ open: true, message: 'File path is invalid.', severity: 'error' });
             return;
         }
+        const correctedFilePath = filePath.replace(/\\/g, '/');
         try {
-            const response = await fetch(`${API_URL}/${filePath}`);
+            const response = await fetch(`${API_URL}/${correctedFilePath}`);
             if (!response.ok) throw new Error(`File not found. Status: ${response.status}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
