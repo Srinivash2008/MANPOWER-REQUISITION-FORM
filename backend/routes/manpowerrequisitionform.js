@@ -734,7 +734,7 @@ router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, as
     try {
         const { status, emp_id } = req.params;
         console.log(status, emp_id, "status, emp_id")
-        let query = 'SELECT mr.*, ep.emp_name, ed.depart AS department_name FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE ';
+        let query = 'SELECT mr.*, ep.emp_name, ed.depart AS department_name, CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))<=10 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE ';
         const params = [];
 
         if (status === 'Approve') {
@@ -775,6 +775,7 @@ router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, as
             created_by: row.created_by,
             isdelete: row.isdelete,
             emp_name: row.emp_name,
+            isWithdrawOpen: row.isWithdrawOpen,
         }));
         res.json(fetchManpowerRequisitionByStatus);
     } catch (error) {
