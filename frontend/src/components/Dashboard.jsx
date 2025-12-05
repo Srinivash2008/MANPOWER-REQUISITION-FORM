@@ -16,6 +16,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import PendingIcon from '@mui/icons-material/Pending';
 // New icon for the summary section
+import UndoIcon from '@mui/icons-material/Undo';
 import { PieChart } from '@mui/x-charts/PieChart';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useDispatch, useSelector } from 'react-redux';
@@ -343,7 +344,7 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const { mfrCounts } = useSelector((state) => state.manpowerRequisition);
 
-  // console.log("MFR Counts from Redux:", { ...mfrCounts });
+  console.log("MFR Counts from Redux:", { ...mfrCounts });
 
   useEffect(() => {
     if (user?.emp_id) {
@@ -359,6 +360,7 @@ const Dashboard = () => {
     raiseQuery: parseInt(mfrCounts?.raise_query_count) || 0,
     onHold: parseInt(mfrCounts?.on_hold_count) || 0,
     draft: parseInt(mfrCounts?.draft_count) || 0,
+    withdraw: parseInt(mfrCounts?.withdraw_count) || 0,
     total: parseInt(mfrCounts?.total_count) || 0
   };
 
@@ -398,6 +400,13 @@ const Dashboard = () => {
       icon: (props) => <CloseIcon {...props} />,
       color: 'error',
       description: 'Requisitions withdrawn or denied.',
+    },
+    {
+      status: 'Withdraw',
+      count: counts.withdraw,
+      icon: (props) => <UndoIcon {...props} />,
+      color: 'warning',
+      description: 'Requisitions withdrawn by the user.',
     },
   ];
 
