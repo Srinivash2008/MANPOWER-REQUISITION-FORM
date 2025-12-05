@@ -796,6 +796,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
                 COALESCE(SUM(status = 'Raise Query'), 0) AS raise_query_count,
                 COALESCE(SUM(status = 'On Hold'), 0) AS on_hold_count,
                 COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
+                COALESCE(SUM(status = 'Withdraw'), 0) AS withdraw_count,
                 COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
                 COALESCE(COUNT(*), 0) AS total_count
             FROM manpower_requisition
