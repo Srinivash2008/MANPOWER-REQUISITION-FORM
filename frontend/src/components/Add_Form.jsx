@@ -270,13 +270,13 @@ const App_Form = () => {
         }
 
         // Role-based validations
-        if ((isSeniorManager || isHr) && !formData.requestorSign) {
-            newErrors.requestorSign = 'Requestor Sign is required.';
-        }
+        // if ((isSeniorManager || isHr) && !formData.requestorSign) {
+        //     newErrors.requestorSign = 'Requestor Sign is required.';
+        // }
 
-        if ((isDirector || isHr) && !formData.directorSign) {
-            newErrors.directorSign = 'Director Sign is required.';
-        }
+        // if ((isDirector || isHr) && !formData.directorSign) {
+        //     newErrors.directorSign = 'Director Sign is required.';
+        // }
 
         if (isHr) {
             if (!formData.tatAgreed) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
@@ -871,7 +871,7 @@ const App_Form = () => {
                         </div>
 
                         {/* Approvals Section - Only show if user has permission */}
-                        {(isSeniorManager || isDirector || isHr) && (
+                        {/* {(isSeniorManager || isDirector || isHr) && (
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Approvals</h3>
                                 <div className="section-grid multi-col">
@@ -937,7 +937,7 @@ const App_Form = () => {
                                     )}
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* HR Use Only Section - Only show if user is HR */}
                         {isHr && (

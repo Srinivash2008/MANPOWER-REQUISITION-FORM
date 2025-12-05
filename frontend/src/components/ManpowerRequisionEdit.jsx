@@ -748,7 +748,7 @@ const ManpowerRequisitionEdit = () => {
                         </div>
 
                         {/* Approvals Section */}
-                        {(isSeniorManager || isDirector || isHr) && (
+                        {/* {(isSeniorManager || isDirector || isHr) && (
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Approvals</h3>
                                 <div className="section-grid multi-col">
@@ -793,8 +793,7 @@ const ManpowerRequisitionEdit = () => {
                                                     : <DisplayField label="Requestor Sign & Date" value={'Not provided.'} />
                                                 }
 
-                                                {/* <label className="form-label">Director Sign</label>
-                                            <img src={DirectorImage} alt="Director Sign" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'contain' }} /> */}
+                                              
                                             </div>
                                             <div> 
                                                 {formData.directorSign && formData.directorstatus == "Approve" ? (
@@ -818,7 +817,7 @@ const ManpowerRequisitionEdit = () => {
                                         </>)}
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                         {/* HR Use Only Section */}
                         {isHr && (

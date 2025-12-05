@@ -303,7 +303,7 @@ console.log(selectedRequisition,"selectedRequisition")
                         </div>
 
                         {/* Approvals Section - Conditionally Rendered */}
-                        <div className="form-section">
+                        {/* <div className="form-section">
                             <h3 className="section-title"><FaUserCheck /> Approvals</h3>
                             <div className="section-grid multi-col">
                                 {formData.requestorSign ? (
@@ -325,7 +325,7 @@ console.log(selectedRequisition,"selectedRequisition")
                                     : <DisplayField label="Director Sign" value={'Not provided.'} />}
 
                             </div>
-                        </div>
+                        </div> */}
 
 
                         {/* HR Use Only Section - Conditionally Rendered test */}
