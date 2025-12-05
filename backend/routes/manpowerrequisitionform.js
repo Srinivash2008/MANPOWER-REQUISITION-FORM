@@ -20,7 +20,7 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
     try {
         const { userId } = req.params;
 
-        let query = "SELECT mr.*, ep.*, ed.depart AS department_name FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE mr.isdelete = 'Active'";
+        let query = "SELECT mr.*,ep.*,ed.depart AS department_name,CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))<=10 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id=mr.created_by JOIN employee_depart AS ed ON ed.id=mr.department WHERE mr.isdelete='Active'";
         let params = [];
 
         if (!['12345', '1400', '1722'].includes(userId)) {
@@ -54,6 +54,7 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             emp_name: row.emp_name,
             hr_status: row.hr_status,
             director_status: row.director_status,
+            isWithdrawOpen: row.isWithdrawOpen,
 
         }));
         res.json(fetchManpowerRequisitionByUser);
@@ -529,7 +530,7 @@ const user_info = user_data[0];
             if (status == "HR Approve") {
                   const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                   console.log(user_data[0],"user_datauser_datauser_datauser_data")
-const user_info = user_data[0];
+                  const user_info = user_data[0];
                 // 1. Email to the Requestor/FH (Confirmation) 📧
                 // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
                 // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
@@ -628,6 +629,37 @@ router.put('/delete-manpower/:id', authMiddleware, async (req, res) => {
     }
 });
 
+router.put('/withdraw-manpower/:id', authMiddleware, async (req, res) => {
+    try {
+        const manpowerId = req.params.id;
+        const { status } = req.body;
+
+        if (!manpowerId) {
+            return res.status(400).json({ message: 'Missing manpower ID' });
+        }
+
+        // SQL query to update status
+        const query = `UPDATE manpower_requisition SET status = ? WHERE id = ?`;
+        const params = [status, manpowerId];
+
+        const [result] = await pool.execute(query, params);
+
+        emitManpowerRequisitionRefresh();
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Manpower not found' });
+        }
+
+        res.status(200).json({
+            message: 'Manpower Requisition successfully withdrawn.',
+            id: manpowerId
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error withdrawing manpower.' });
+    }
+});
 
 
 // router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) => {

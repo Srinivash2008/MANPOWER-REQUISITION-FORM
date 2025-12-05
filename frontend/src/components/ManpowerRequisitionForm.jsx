@@ -2,17 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip   } from "@mui/material";
+  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,   
+  Avatar} from "@mui/material";
 import Modal from "@mui/material/Modal";
 import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId } from '../redux/cases/manpowerrequisitionSlice';  
 import swal from "sweetalert2"; 
-import ModeEditOutlineIcon from '@mui/icons-material/ModeEditOutline';
+import { withdrawManpowerRequisition } from '../redux/cases/manpowerrequisitionSlice';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PreviewIcon from '@mui/icons-material/Preview';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import UndoIcon from '@mui/icons-material/Undo';
+import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import CloseIcon from '@mui/icons-material/Close';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import EditSquareIcon from '@mui/icons-material/EditSquare';
-import BackspaceIcon from '@mui/icons-material/Backspace';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import "react-quill-new/dist/quill.snow.css";
@@ -119,6 +126,11 @@ const StatusBadge = ({ status }) => {
       color: '#6c757d',
       border: `1px solid #dee2e6`
     },
+    'withdraw': {
+      backgroundColor: '#ff8800', // Orange color
+      color: '#fff',
+      border: `1px solid #ff8800`
+    },
     default: {
       backgroundColor: theme.palette.grey[500],
       color: 'white',
@@ -132,6 +144,136 @@ const StatusBadge = ({ status }) => {
   return <Chip label={status} size="small" sx={sx} />;
 };
 
+const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, onMenuClick }) => {
+  const theme = useTheme();
+  const { user } = useSelector((state) => state.auth);
+  const raisedByInitial = manpower.emp_name ? manpower.emp_name.charAt(0).toUpperCase() : '?';
+
+  const statusColors = {
+    'Approve': theme.palette.success.main,
+    'HR Approve': theme.palette.info.main,
+    'Pending': theme.palette.warning.main,
+    'Reject': theme.palette.error.main,
+    'Raise Query': theme.palette.info.dark,
+    'On Hold': theme.palette.grey[600],
+    'Draft': theme.palette.grey[400],
+    'withdraw': '#ff8800',
+    default: theme.palette.grey[500],
+  };
+
+  const cardBorderColor = statusColors[manpower.status] || statusColors.default;
+
+
+
+  return (
+    <Grid item xs={12} sm={6} md={4}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+      >
+        <Card sx={{
+          position: 'relative',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: '16px',
+          p: 0.5,
+          backgroundColor: 'rgba(243, 250, 248, 0.7)', // Light green tint
+          backdropFilter: 'blur(12px)',
+          border: `1px solid ${theme.palette.primary.main}20`, // Subtle green border
+          boxShadow: `0 8px 32px 0 ${theme.palette.primary.main}1A`, // Subtle green shadow
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          overflow: 'hidden',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: `0 12px 40px 0 ${cardBorderColor}4D`, // Enhanced hover glow
+          }
+        }}>
+          {/* Corner Status Ribbon */}
+          <Box sx={{
+            position: 'absolute',
+            top: -1, right: -7,
+            width: '50px', height: '40px',
+            backgroundColor: cardBorderColor,
+            clipPath: 'polygon(100% 0, 100% 100%, 0 100%, 100% 0)',
+            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          }} />
+
+          <CardContent sx={{ flexGrow: 1, p: 2.5, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+              <Box>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  {manpower.department_name}
+                </Typography>
+                <StatusBadge status={manpower.status} />
+              </Box>
+              <Tooltip title={`Raised by ${manpower.emp_name}`}>
+                <Avatar sx={{ bgcolor: cardBorderColor, width: 40, height: 40, fontSize: '1rem', fontWeight: 'bold' }}>
+                  {raisedByInitial}
+                </Avatar>
+              </Tooltip>
+            </Box>
+
+            <Typography variant="h5" component="div" sx={{ fontWeight: 700, color: 'text.primary', my: 'auto', lineHeight: 1.3 }}>
+              {manpower.designation}
+            </Typography>
+
+            <Box sx={{ my: 2, borderTop: `1px dashed ${theme.palette.divider}` }} />
+
+            <Grid container spacing={1.5}>
+              <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <BusinessCenterIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block">Employment</Typography>
+                  <Typography variant="body2" fontWeight="600">{manpower.employment_status}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CalendarTodayIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block">Created</Typography>
+                  <Typography variant="body2" fontWeight="600">{new Date(manpower.created_at).toLocaleDateString()}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                <AccessTimeFilledIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" display="block">Hiring TAT</Typography>
+                  <Typography variant="body2" fontWeight="600">{manpower.hiring_tat}</Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+          <CardActions sx={{
+            justifyContent: 'flex-end',
+            p: 1,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+          }}>
+            <Tooltip title="View">
+              <IconButton size="small" onClick={() => onView(manpower.id)}><PreviewIcon fontSize="small" color="info" /></IconButton>
+            </Tooltip>
+            <Tooltip title="Edit">
+              <IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton>
+            </Tooltip>
+            {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+              <Tooltip title="Withdraw">
+                <IconButton size="small" onClick={() => onWithdraw(manpower.id)}><UndoIcon fontSize="small" color="warning" /></IconButton>
+              </Tooltip>
+            )}
+            {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+              <Tooltip title="Delete">
+                <IconButton size="small" onClick={() => onDelete(manpower.id)}><DeleteForeverIcon fontSize="small" color="error" /></IconButton>
+              </Tooltip>
+            )}
+          </CardActions>
+        </Card>
+      </motion.div>
+    </Grid>
+  );
+};
+
 const ManpowerRequisition = () => {
   const dispatch  = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -143,6 +285,8 @@ const ManpowerRequisition = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawId, setWithdrawId] = useState(null);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [isRaiseQueryModalOpen, setIsRaiseQueryModalOpen] = useState(false);
@@ -156,6 +300,9 @@ const ManpowerRequisition = () => {
   const [isSuccessQueryModalOpen, setIsSuccessQueryModalOpen] = useState(false);
   const [isManpowerRequisitionViewModelOpen, setIsManpowerRequisitionViewModelOpen] = useState(false);
 
+  const [view, setView] = useState('table');
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [currentManpowerId, setCurrentManpowerId] = useState(null);
   const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
   const navigate = useNavigate();
 
@@ -208,6 +355,18 @@ const ManpowerRequisition = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0); // Reset to first page
   };
+
+  const handleViewChange = (event, newView) => {
+    if (newView !== null) {
+      setView(newView);
+    }
+  };
+
+  const handleMenuClick = (event, manpowerId) => {
+    setAnchorEl(event.currentTarget);
+    setCurrentManpowerId(manpowerId);
+  };
+  const handleMenuClose = () => setAnchorEl(null);
 
   const TablePaginationActions = (props) => {
     const { count, page, onPageChange } = props;
@@ -323,6 +482,23 @@ const ManpowerRequisition = () => {
     setDeleteId(null);
   };
 
+  const handleWithdrawClick = (id) => {
+    setWithdrawId(id);
+    setIsWithdrawModalOpen(true);
+  };
+
+  const confirmWithdraw = () => {
+    const withdrawData = {
+        id: withdrawId,
+    };
+    
+    dispatch(withdrawManpowerRequisition(withdrawData));
+    setIsWithdrawModalOpen(false);
+    setIsSuccessModalOpen(true); 
+    setWithdrawId(null);
+  };
+
+
   const handleClose = () => {
     setIsDeleteModalOpen(false); 
     setIsSuccessModalOpen(false)  
@@ -330,6 +506,7 @@ const ManpowerRequisition = () => {
     setIsSuccessQueryModalOpen(false);
     setIsManpowerRequisitionViewModelOpen(false);
   };
+
 
   const handleSaveSubmit = (e) => {
     e.preventDefault();
@@ -390,157 +567,109 @@ const ManpowerRequisition = () => {
                 >
                   Manpower Requisition List
                 </Typography>
-                <TextField
-                  label="Search"
-                  variant="outlined"
-                  size="small"
-                  value={searchTerm}
-                  onChange={(e) => { //NOSONAR
-                    setSearchTerm(e.target.value);
-                    setPage(0); // Reset to first page when searching
-                  }}
-                  sx={{ mr: 2, maxWidth: '250px' }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <TextField
+                    label="Search"
+                    variant="outlined"
+                    size="small"
+                    value={searchTerm}
+                    onChange={(e) => { //NOSONAR
+                      setSearchTerm(e.target.value);
+                      setPage(0); // Reset to first page when searching
+                    }}
+                    sx={{ width: '280px' }}
+                  />
+                  <ToggleButtonGroup
+                    value={view}
+                    exclusive
+                    onChange={handleViewChange}
+                    aria-label="view toggle"
+                    size="small"
+                  >
+                    <ToggleButton value="table" aria-label="table view"><Tooltip title="Table View"><ViewListIcon /></Tooltip></ToggleButton>
+                    <ToggleButton value="card" aria-label="card view"><Tooltip title="Card View"><ViewModuleIcon /></Tooltip></ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
               </Box>
-              <TableContainer
-                component={Paper}
-                sx={{
-                  borderRadius: theme.shape.borderRadius,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                  overflow: "auto",
-                  maxWidth: "100%",
-                }}
-              >
-                <Table sx={{ minWidth: 700 }}>
-                  <TableHead className="custom-header">
-                    <TableRow>
-                      <StyledTableCell>S.No</StyledTableCell>
-                      <StyledTableCell>Name</StyledTableCell>
-                      <StyledTableCell>Department</StyledTableCell>
-                      <StyledTableCell>Status of Employment</StyledTableCell>
-                      <StyledTableCell>Designation</StyledTableCell>
-                      {/* <StyledTableCell>No of Resources</StyledTableCell> */}
-                      <StyledTableCell>Requirement Type</StyledTableCell>
-                      {/* <StyledTableCell>Resigned Employee</StyledTableCell> */}
-                      {/* <StyledTableCell>Reason for Additional Resources</StyledTableCell> */}
-                      <StyledTableCell>TAT Request</StyledTableCell>
-                      {/* <StyledTableCell>Education</StyledTableCell>
-                      <StyledTableCell>Experience</StyledTableCell>
-                      <StyledTableCell>CTC Range</StyledTableCell>
-                      <StyledTableCell>Specific Info</StyledTableCell>
-                      <StyledTableCell>MRF Number</StyledTableCell> */}
-                      <StyledTableCell>Status</StyledTableCell>
-                      <StyledTableCell>
-                        Action
-                      </StyledTableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
+              {view === 'table' ? (
+                <TableContainer
+                  component={Paper}
+                  sx={{
+                    borderRadius: theme.shape.borderRadius,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    overflow: "auto",
+                    maxWidth: "100%",
+                  }}
+                >
+                  <Table sx={{ minWidth: 700 }}>
+                    <TableHead className="custom-header">
+                      <TableRow>
+                        <StyledTableCell>S.No</StyledTableCell>
+                        <StyledTableCell>Name</StyledTableCell>
+                        <StyledTableCell>Department</StyledTableCell>
+                        <StyledTableCell>Status of Employment</StyledTableCell>
+                        <StyledTableCell>Designation</StyledTableCell>
+                        <StyledTableCell>Requirement Type</StyledTableCell>
+                        <StyledTableCell>TAT Request</StyledTableCell>
+                        <StyledTableCell>Status</StyledTableCell>
+                        <StyledTableCell>Action</StyledTableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {paginatedManpower.map((manpower, index) => (
+                        <StyledTableRow key={manpower.id}>
+                          <StyledTableCell component="th" scope="row">{page * rowsPerPage + index + 1}</StyledTableCell>
+                          <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
+                          <StyledTableCell>{manpower.department_name}</StyledTableCell>
+                          <StyledTableCell>{manpower.employment_status}</StyledTableCell>
+                          <StyledTableCell>{manpower.designation}</StyledTableCell>
+                          <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
+                          <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
+                          <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
+                          <StyledTableCell>
+                            <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
+                              <MoreVertIcon />
+                            </IconButton>
+                            <Menu
+                              id={`actions-menu-${manpower.id}`}
+                              anchorEl={anchorEl}
+                              open={Boolean(anchorEl) && currentManpowerId === manpower.id}
+                              onClose={handleMenuClose}
+                              PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
+                            >
+                              <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
+                              <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                              {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                                <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
+                              )}
+                              {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                                <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
+                              )}
+                            </Menu>
+                          </StyledTableCell>
+                        </StyledTableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Box sx={{ pt: 2 }}>
+                  <Grid container spacing={3}>
                     {paginatedManpower.map((manpower, index) => (
-                      <StyledTableRow key={manpower.id}>
-                        <StyledTableCell component="th" scope="row">
-                          {page * rowsPerPage + index + 1}
-                        </StyledTableCell>
-                        <StyledTableCell>{manpower.created_by === 0 ? "-"  : `${manpower.emp_name}`}</StyledTableCell>
-                        <StyledTableCell>{manpower.department_name}</StyledTableCell>
-                        <StyledTableCell>{manpower.employment_status}</StyledTableCell>
-                        <StyledTableCell>{manpower.designation}</StyledTableCell>
-                        {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
-                        <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
-                        {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
-                        <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
-                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
-                        {/* <StyledTableCell>{manpower.education}</StyledTableCell>
-                        <StyledTableCell>{manpower.experience}</StyledTableCell>
-                        <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
-                        <StyledTableCell>{manpower.specific_info}</StyledTableCell>
-                        <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */
-                        }
-                         <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
-                        
-                        {/* <StyledTableCell>
-                          <FormControl fullWidth size="small">
-                            <Select
-                              value={manpower.status || "Pending"}
-                              onChange={(e) => handleStatusChange(e, manpower.id)}
-                              displayEmpty
-                              size="small"
-                              sx={{ fontSize: "0.85rem", height: 36, borderRadius: '6px' }}
-                              MenuProps={{
-                                PaperProps: {
-                                  style: {
-                                    maxHeight: 200,
-                                    width: 200,
-                                    zIndex: 20000,
-                                  },
-                                },
-                              }}
-                            >
-                              <MenuItem value="Draft" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                Draft
-                              </MenuItem>
-                              <MenuItem value="Pending" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                Pending
-                              </MenuItem>
-                              <MenuItem value="Approve" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                Approve
-                              </MenuItem>
-                              <MenuItem value="Reject" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                Reject
-                              </MenuItem>
-                              <MenuItem value="Raise Query" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                Raise Query
-                              </MenuItem>
-                              <MenuItem value="On Hold" sx={{ fontSize: "0.85rem", py: 0.5, '&:hover': { backgroundColor: '#E9F5F2' } }}>
-                                On Hold
-                              </MenuItem>
-                            </Select>
-                          </FormControl>
-                        </StyledTableCell> */}
-                        <StyledTableCell>
-                          {(
-                            <>
-                          
-                            <Tooltip title="Edit Manpower" arrow placement="top">
-                            <IconButton
-                              aria-label="edit"
-                              color="primary"
-                              sx={{ mr: 1, width: "30px" }}
-                               onClick={() => handleEditClick(manpower.id)}
-                            >
-                              <EditDocumentIcon />
-                            </IconButton>
-                          </Tooltip>
-                         {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' &&
-                          <Tooltip title="Delete Manpower" arrow placement="top">
-                            <IconButton 
-                              aria-label="delete"
-                              color="error"
-                              onClick={() => handleDeleteClick(manpower.id)}
-                              sx={{ mr: 1, width: "30px" }}
-                            >
-                              <DeleteForeverIcon />
-                            </IconButton>
-                          </Tooltip>
-                         }
-                          </>
-                          )}
-                          <Tooltip title="View Manpower" arrow placement="top">
-                            <IconButton
-                              aria-label="view"
-                              color="info"
-                              sx={{ mr: 1, width: "30px" }}
-                              onClick={() => handleViewClick(manpower.id)}
-                            >
-                              <PreviewIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </StyledTableCell>
-                      </StyledTableRow>
+                      <ManpowerCard 
+                        key={manpower.id}
+                        manpower={manpower}
+                        index={index}
+                        onView={handleViewClick}
+                        onEdit={handleEditClick}
+                        onWithdraw={handleWithdrawClick}
+                        onDelete={handleDeleteClick}
+                        onMenuClick={handleMenuClick}
+                      />
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                  </Grid>
+                </Box>
+              )}
               <TablePagination
                 rowsPerPageOptions={[10, 25, 50, 100]}
                 component="div"
@@ -593,6 +722,27 @@ const ManpowerRequisition = () => {
                 <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
                   <Button onClick={handleClose} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
                   <Button onClick={confirmDelete} color="error" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes</Button>
+                </DialogActions>
+              </motion.div>
+            </Dialog>
+          </AnimatePresence>
+        )}
+        {isWithdrawModalOpen && (
+          <AnimatePresence>
+            <Dialog open={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} maxWidth="xs" fullWidth>
+              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+                  <motion.div variants={tickVariants} initial="hidden" animate="visible" style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#ff9800', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+                    <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
+                  </motion.div>
+                  <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>Confirm Withdraw</DialogTitle>
+                </Box>
+                <DialogContent sx={{ p: 0, textAlign: 'center' }}>
+                  <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>Are you sure you want to withdraw this requisition? This action cannot be undone.</Typography>
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
+                  <Button onClick={() => setIsWithdrawModalOpen(false)} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
+                  <Button onClick={confirmWithdraw} color="warning" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes, Withdraw</Button>
                 </DialogActions>
               </motion.div>
             </Dialog>

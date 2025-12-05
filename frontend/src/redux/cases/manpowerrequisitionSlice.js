@@ -300,6 +300,37 @@ export const deleteManpowerRequisition = createAsyncThunk(
   }
 );
 
+export const withdrawManpowerRequisition = createAsyncThunk(
+  'manpowerRequisition/withdrawManpowerRequisition',
+  async ({ id }, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const withdrawBody = {
+        status: 'Withdraw'
+      };
+
+      const response = await axios.put(
+        `${API_URL}/api/cases/withdraw-manpower/${id}`,
+        withdrawBody,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return { manpowerId: id, message: response.data.message };
+
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to withdraw manpower status.';
+      return rejectWithValue({ manpowerId: id, error: errorMessage });
+    }
+  }
+);
 
 // Async thunk to fetch departments for the logged-in manager
 export const fetchDepartmentsManagerId = createAsyncThunk(
@@ -595,6 +626,18 @@ const manpowerrequisitionSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
         state.data = [];
+      })
+      .addCase(withdrawManpowerRequisition.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(withdrawManpowerRequisition.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = state.data.filter(item => item.id !== action.payload.manpowerId);
+      })
+      .addCase(withdrawManpowerRequisition.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       });
   }
 });

@@ -4,7 +4,7 @@ import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, Fi
 import { FaUserCheck } from "react-icons/fa";
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import "./Add_Form.css";
-import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box, Typography, DialogContentText } from "@mui/material";
+import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box, Typography, DialogContentText, Backdrop, CircularProgress } from "@mui/material";
 import { FileUploader } from "react-drag-drop-files";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchManpowerRequisitionById, updateManpowerRequisition, updateManpowerStatus, addQueryForm, fetchDepartmentsManagerId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
@@ -79,6 +79,7 @@ const ManpowerRequisitionEdit = () => {
     const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
     const [queryText, setQueryText] = useState("");
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
     const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
@@ -443,6 +444,7 @@ const ManpowerRequisitionEdit = () => {
 
     const handleConfirmUpdate = async () => {
         setIsConfirmOpen(false);
+        setIsUpdating(true);
 
         // If the form is a draft, manually set the status to "Pending" upon submission.
         if (isDraft) {
@@ -486,9 +488,11 @@ const ManpowerRequisitionEdit = () => {
                 await dispatch(addQueryForm(queryAddData)).unwrap();
             }
 
+            setIsUpdating(false);
             setIsSuccessOpen(true);
 
         } catch (error) {
+            setIsUpdating(false);
             swal.fire({
                 title: 'Error!',
                 text: error.message || 'Failed to update Manpower Requisition.',
@@ -528,6 +532,11 @@ const ManpowerRequisitionEdit = () => {
                         Please update the details below. Ensure all fields are accurate to streamline the approval process.
                     </p>
                 </div>
+                <Backdrop
+                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                    open={isUpdating}>
+                    <CircularProgress color="inherit" />
+                </Backdrop>
                 <form onSubmit={handleSubmit}>
                     <div className="form-grid">
                         {/* Requirement Details Section */}
