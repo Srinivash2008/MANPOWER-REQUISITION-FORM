@@ -67,7 +67,7 @@ const Footer = () => {
                 color="#2A7F66" // Dark accent green
                 sx={{ fontWeight: 'bold', textDecoration: 'none' }}
               >
-                PDMR
+                PDMR WEB TEAM
               </Link>
             </Typography>
           </Box>
