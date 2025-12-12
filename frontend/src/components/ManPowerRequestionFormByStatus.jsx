@@ -131,15 +131,19 @@ const StatusBadge = ({ status }) => {
     const style = statusStyles[status] || statusStyles.default;
 
     const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
-
-    return <Chip label={status} size="small" sx={sx} />;
+    return <Chip label={status} size="small" sx={sx} />
 };
 
 
-const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete }) => {
+const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, onMenuClick }) => {
     const theme = useTheme();
     const { user } = useSelector((state) => state.auth);
-  
+    const { managerList } = useSelector((state) => state.manpowerRequisition);
+
+    const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
+    const isDirector = user?.emp_id === "1400";
+    const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
+
     const raisedByInitial = manpower.emp_name ? manpower.emp_name.charAt(0).toUpperCase() : '?';
 
     const statusColors = {
@@ -156,11 +160,28 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete })
 
     const cardBorderColor = statusColors[manpower.status] || statusColors.default;
 
+    const cardPalettes = [
+        { bg: 'rgba(233, 245, 242, 0.7)', shadow: theme.palette.success.light }, // Soft Green
+        { bg: 'rgba(254, 246, 230, 0.7)', shadow: theme.palette.warning.light }, // Soft Amber
+        { bg: 'rgba(235, 245, 251, 0.7)', shadow: theme.palette.info.light },    // Soft Blue
+        { bg: 'rgba(243, 232, 253, 0.7)', shadow: '#d8cbf8' }, // Soft Lavender
+    ];
+
+    const currentPalette = cardPalettes[index % cardPalettes.length];
+
+
+
     return (
-        <Grid item xs={12} sm={6} md={4}>
+        <Box sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%'
+        }}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                style={{ height: '100%', display: 'flex' }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
             >
                 <Card sx={{
@@ -170,10 +191,10 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete })
                     flexDirection: 'column',
                     borderRadius: '16px',
                     p: 0.5,
-                    backgroundColor: 'rgba(243, 250, 248, 0.7)', // Light green tint
+                    backgroundColor: currentPalette.bg, // Light green tint
                     backdropFilter: 'blur(12px)',
-                    border: `1px solid ${theme.palette.primary.main}20`, // Subtle green border
-                    boxShadow: `0 8px 32px 0 ${theme.palette.primary.main}1A`, // Subtle green shadow
+                    border: `1px solid ${currentPalette.shadow}40`, // Subtle green border
+                    boxShadow: `0 8px 32px 0 ${currentPalette.shadow}3A`, // Subtle green shadow
                     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                     overflow: 'hidden',
                     '&:hover': {
@@ -197,7 +218,9 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete })
                                 <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5 }}>
                                     {manpower.department_name}
                                 </Typography>
-                                <StatusBadge status={manpower.status} />
+                                <Box sx={{ display: 'flex', gap: 0.5, flexDirection: 'column' }}>
+                                    <StatusBadge status={manpower.status}  />
+                                </Box>
                             </Box>
                             <Tooltip title={`Raised by ${manpower.emp_name}`}>
                                 <Avatar sx={{ bgcolor: cardBorderColor, width: 40, height: 40, fontSize: '1rem', fontWeight: 'bold' }}>
@@ -238,12 +261,26 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete })
                     </CardContent>
                     <CardActions sx={{ justifyContent: 'flex-end', p: 1, borderTop: `1px solid ${theme.palette.divider}`, backgroundColor: 'rgba(255, 255, 255, 0.3)' }}>
                         <Tooltip title="View"><IconButton size="small" onClick={() => onView(manpower.id)}><PreviewIcon fontSize="small" color="info" /></IconButton></Tooltip>
-                        <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+                        {/* {!((isHr && manpower.hr_status === "Approve") ||
+                            (isDirector && manpower.director_status === "HR Approve") ||
+                            (isSeniorManager && (manpower.director_status === "Approve" || manpower.hr_status === "HR Approve"))) && (
+                                <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+                            )} */}
+
+                        {(isDirector && manpower.director_status !== "Approve")
+                            && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+                        }
+                        {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
+                            && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+                        }
+                        {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve"
+                            && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+                        }
                         {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (<Tooltip title="Withdraw"><IconButton size="small" onClick={() => onWithdraw(manpower.id)}><UndoIcon fontSize="small" color="warning" /></IconButton></Tooltip>)}
                     </CardActions>
                 </Card>
             </motion.div>
-        </Grid>
+        </Box>
     );
 };
 
@@ -251,6 +288,7 @@ const ManpowerRequisitionByStatus = () => {
     const dispatch = useDispatch();
     const { param_status } = useParams(); // Returns { status: 'value-from-url' }
     const { user } = useSelector((state) => state.auth);
+    const { managerList } = useSelector((state) => state.manpowerRequisition);
     // Map URL param values to display names
     const statusDisplayNames = {
         pending: 'Pending',
@@ -259,6 +297,9 @@ const ManpowerRequisitionByStatus = () => {
         raise_query: 'Raise Query',
         rejected: 'Rejected',
     };
+    const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
+    const isDirector = user?.emp_id === "1400";
+    const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
 
     // Get display name or fallback to the param if not found
     const displayStatus = statusDisplayNames[param_status] || param_status;
@@ -277,10 +318,10 @@ const ManpowerRequisitionByStatus = () => {
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
     const handleMenuClick = (event, manpowerId) => {
-    setAnchorEl(event.currentTarget);
-    setCurrentManpowerId(manpowerId);
-  };
-  const handleMenuClose = () => setAnchorEl(null);
+        setAnchorEl(event.currentTarget);
+        setCurrentManpowerId(manpowerId);
+    };
+    const handleMenuClose = () => setAnchorEl(null);
 
     useEffect(() => {
         if (param_status) {
@@ -323,7 +364,7 @@ const ManpowerRequisitionByStatus = () => {
 
     const TablePaginationActions = (props) => {
         const { count, page, onPageChange } = props;
-        
+
         const isFirstPage = page === 0;
         const isLastPage = page >= Math.ceil(count / rowsPerPage) - 1;
         const isAllSelected = rowsPerPage === -1;
@@ -399,7 +440,7 @@ const ManpowerRequisitionByStatus = () => {
                 <Grid size={{ xs: 12, sm: 12 }}>
                     <Paper sx={{
                         p: { xs: 2, sm: 3 },
-                        borderRadius: '16px', // Softer corners
+                        borderRadius: '16px',
                         marginTop: '12vh',
                         backdropFilter: 'blur(10px)',
                         backgroundColor: 'rgba(255, 255, 255, 0.85)',
@@ -459,7 +500,7 @@ const ManpowerRequisitionByStatus = () => {
                                         {/* <StyledTableCell>Reason for Additional Resources</StyledTableCell> */}
                                         <StyledTableCell>TAT Request</StyledTableCell>
                                         {/* <StyledTableCell>Education</StyledTableCell>
-                      <StyledTableCell>Experience</StyledTableCell>
+                      <StyledTableCell>Experience</StyledTableCell> 
                       <StyledTableCell>CTC Range</StyledTableCell>
                       <StyledTableCell>Specific Info</StyledTableCell>
                       <StyledTableCell>MRF Number</StyledTableCell> */}
@@ -485,7 +526,7 @@ const ManpowerRequisitionByStatus = () => {
                         <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
                                             <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                                             {/* <StyledTableCell>{manpower.education}</StyledTableCell>
-                        <StyledTableCell>{manpower.experience}</StyledTableCell>
+                        <StyledTableCell>{manpower.experience}</StyledTableCell> 
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
@@ -513,45 +554,68 @@ const ManpowerRequisitionByStatus = () => {
                                                 </Tooltip>
                                             </StyledTableCell> */}
                                             <StyledTableCell>
-                            <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
-                              <MoreVertIcon />
-                            </IconButton>
-                            <Menu
-                              id={`actions-menu-${manpower.id}`}
-                               anchorEl={anchorEl}
-                              open={Boolean(anchorEl) && currentManpowerId === manpower.id}
-                              onClose={handleMenuClose}
-                              PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
-                            >
-                              <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
-                              <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
-                              {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
-                              )}
-                              {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
-                              )}
-                            </Menu>
-                          </StyledTableCell>
+                                                <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
+                                                    <MoreVertIcon />
+                                                </IconButton>
+                                                <Menu
+                                                    id={`actions-menu-${manpower.id}`}
+                                                    anchorEl={anchorEl}
+                                                    open={Boolean(anchorEl) && currentManpowerId === manpower.id}
+                                                    onClose={handleMenuClose}
+                                                    PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
+                                                >
+                                                    <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
+                                                    {/* {!((isHr && manpower.director_status === "Approve") ||
+                                                        (isDirector && manpower.hr_status === "HR Approve") ||
+                                                        (isSeniorManager && (manpower.director_status === "Approve" || manpower.hr_status === "HR Approve"))) && (
+                                                            <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                                        )} */}
+
+
+                                                    {(isDirector && manpower.director_status !== "Approve")
+                                                        && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                                    }
+                                                    {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
+                                                        && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                                    }
+                                                    {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve"
+                                                        && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                                    }
+                                                    {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                                                        <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
+                                                    )}
+                                                    {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                                                        <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
+                                                    )}
+                                                </Menu>
+                                            </StyledTableCell>
                                         </StyledTableRow>
                                     ))}
                                 </TableBody>
                             </Table>
                         </TableContainer>) : (
-                            <Box sx={{ pt: 2 }}>
-                                <Grid container spacing={3}>
-                                    {paginatedManpower.map((manpower, index) => (
-                                        <ManpowerCard
-                                            key={manpower.id}
-                                            manpower={manpower}
-                                            index={index}
-                                            onView={handleViewClick}
-                                            onEdit={handleEditClick}
-                                            onWithdraw={handleWithdrawClick}
-                                            onDelete={handleDeleteClick}
-                                        />
-                                    ))}
-                                </Grid>
+                            <Box sx={{
+                                pt: 2,
+                                display: 'grid',
+                                gridTemplateColumns: {
+                                    xs: '1fr',
+                                    sm: 'repeat(2, 1fr)', // 2 cards on small screens
+                                    md: 'repeat(3, 1fr)'  // 3 cards on medium and larger screens
+                                },
+                                gap: 3
+                            }}>
+                                {paginatedManpower.map((manpower, index) => (
+                                    <ManpowerCard
+                                        key={manpower.id}
+                                        manpower={manpower}
+                                        index={index}
+                                        onView={handleViewClick}
+                                        onEdit={handleEditClick}
+                                        onMenuClick={handleMenuClick}
+                                        onWithdraw={handleWithdrawClick}
+                                        onDelete={handleDeleteClick}
+                                    />
+                                ))}
                             </Box>
                         )}
                         <TablePagination
@@ -592,29 +656,29 @@ const ManpowerRequisitionByStatus = () => {
             </Grid>
 
             {isWithdrawModalOpen && (
-                      <AnimatePresence>
-                        <Dialog open={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} maxWidth="xs" fullWidth>
-                          <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px' }}>
+                <AnimatePresence>
+                    <Dialog open={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} maxWidth="xs" fullWidth>
+                        <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px' }}>
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-                              <motion.div variants={tickVariants} initial="hidden" animate="visible" style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#ff9800', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
-                                <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
-                              </motion.div>
-                              <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>Confirm Withdraw</DialogTitle>
+                                <motion.div variants={tickVariants} initial="hidden" animate="visible" style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#ff9800', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+                                    <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
+                                </motion.div>
+                                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>Confirm Withdraw</DialogTitle>
                             </Box>
                             <DialogContent sx={{ p: 0, textAlign: 'center' }}>
-                              <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>Are you sure you want to withdraw this requisition? This action cannot be undone.</Typography>
+                                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>Are you sure you want to withdraw this requisition? This action cannot be undone.</Typography>
                             </DialogContent>
                             <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
-                              <Button onClick={() => setIsWithdrawModalOpen(false)} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
-                              <Button onClick={confirmWithdraw} color="warning" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes, Withdraw</Button>
+                                <Button onClick={() => setIsWithdrawModalOpen(false)} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
+                                <Button onClick={confirmWithdraw} color="warning" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes, Withdraw</Button>
                             </DialogActions>
-                          </motion.div>
-                        </Dialog>
-                      </AnimatePresence>
-                    )}
+                        </motion.div>
+                    </Dialog>
+                </AnimatePresence>
+            )}
         </Box>
     );
 
-}
+};
 
 export default ManpowerRequisitionByStatus;

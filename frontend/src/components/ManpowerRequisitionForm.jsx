@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import { 
+import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,   
-  Avatar} from "@mui/material";
+  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
+  Avatar
+} from "@mui/material";
 import Modal from "@mui/material/Modal";
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId } from '../redux/cases/manpowerrequisitionSlice';  
-import swal from "sweetalert2"; 
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
+import swal from "sweetalert2";
 import { withdrawManpowerRequisition } from '../redux/cases/manpowerrequisitionSlice';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -95,7 +96,7 @@ const tickVariants = {
 
 const StatusBadge = ({ status }) => {
   const theme = useTheme();
-  
+
   const statusStyles = {
     'Approve': {
       backgroundColor: '#28a745', // A vibrant green
@@ -147,6 +148,7 @@ const StatusBadge = ({ status }) => {
 const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, onMenuClick }) => {
   const theme = useTheme();
   const { user } = useSelector((state) => state.auth);
+  const { managerList } = useSelector((state) => state.manpowerRequisition);
   const raisedByInitial = manpower.emp_name ? manpower.emp_name.charAt(0).toUpperCase() : '?';
 
   const statusColors = {
@@ -162,14 +164,34 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
   };
 
   const cardBorderColor = statusColors[manpower.status] || statusColors.default;
+  const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
+  const isDirector = user?.emp_id === "1400";
+  const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
+
+  const cardPalettes = [
+    { bg: 'rgba(233, 245, 242, 0.7)', shadow: theme.palette.success.light }, // Soft Green
+    { bg: 'rgba(254, 246, 230, 0.7)', shadow: theme.palette.warning.light }, // Soft Amber
+    { bg: 'rgba(235, 245, 251, 0.7)', shadow: theme.palette.info.light },    // Soft Blue
+    { bg: 'rgba(243, 232, 253, 0.7)', shadow: '#d8cbf8' }, // Soft Lavender
+  ];
+
+  const currentPalette = cardPalettes[index % cardPalettes.length];
+
+
 
 
 
   return (
-    <Grid item xs={12} sm={6} md={4}>
+    <Box sx={{
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%'
+    }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        style={{ height: '100%', display: 'flex' }}
         transition={{ duration: 0.3, delay: index * 0.05 }}
       >
         <Card sx={{
@@ -179,10 +201,10 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
           flexDirection: 'column',
           borderRadius: '16px',
           p: 0.5,
-          backgroundColor: 'rgba(243, 250, 248, 0.7)', // Light green tint
+          backgroundColor: currentPalette.bg, // Light green tint
           backdropFilter: 'blur(12px)',
-          border: `1px solid ${theme.palette.primary.main}20`, // Subtle green border
-          boxShadow: `0 8px 32px 0 ${theme.palette.primary.main}1A`, // Subtle green shadow
+          border: `1px solid ${currentPalette.shadow}40`, // Subtle green border
+          boxShadow: `0 8px 32px 0 ${currentPalette.shadow}3A`, // Subtle green shadow
           transition: 'transform 0.3s ease, box-shadow 0.3s ease',
           overflow: 'hidden',
           '&:hover': {
@@ -206,7 +228,9 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
                 <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5 }}>
                   {manpower.department_name}
                 </Typography>
-                <StatusBadge status={manpower.status} />
+                <Box sx={{ display: 'flex', gap: 0.5, flexDirection: 'column' }}>
+                  <StatusBadge status={manpower.status} />
+                </Box>
               </Box>
               <Tooltip title={`Raised by ${manpower.emp_name}`}>
                 <Avatar sx={{ bgcolor: cardBorderColor, width: 40, height: 40, fontSize: '1rem', fontWeight: 'bold' }}>
@@ -252,11 +276,19 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
           }}>
             <Tooltip title="View">
-              <IconButton size="small" onClick={() => onView(manpower.id)}><PreviewIcon fontSize="small" color="info" /></IconButton>
+              <IconButton size="small" onClick={() => onView(manpower.id)}>
+                <PreviewIcon fontSize="small" color="info" />
+              </IconButton>
             </Tooltip>
-            <Tooltip title="Edit">
-              <IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton>
-            </Tooltip>
+            {(isDirector && manpower.director_status !== "Approve")
+              && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+            }
+            {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
+              && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+            }
+            {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve"
+              && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
+            }
             {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
               <Tooltip title="Withdraw">
                 <IconButton size="small" onClick={() => onWithdraw(manpower.id)}><UndoIcon fontSize="small" color="warning" /></IconButton>
@@ -270,15 +302,15 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
           </CardActions>
         </Card>
       </motion.div>
-    </Grid>
+    </Box>
   );
 };
 
 const ManpowerRequisition = () => {
-  const dispatch  = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const manpowerRequisitionList = useSelector((state)=> state.manpowerRequisition.data); 
-  console.log(manpowerRequisitionList,"manpowerRequisitionList")
+  const dispatch = useDispatch();
+  const { user, token } = useSelector((state) => state.auth);
+  const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
+  console.log(manpowerRequisitionList, "manpowerRequisitionList")
   const status = useSelector((state) => state.manpowerRequisition.status);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
@@ -307,27 +339,43 @@ const ManpowerRequisition = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-      if(status === 'idle' && user){
-        //  dispatch(fetchManpowerRequisition());
-         dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-      }
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const socket = io(API_URL);
-      socket.on('manpowerrequisition-refresh', () => {
-          // dispatch(fetchManpowerRequisition());
-             dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-          
-      });
-  },[status, user, dispatch]);
+    if (token) {
+      dispatch(fetchManagerList());
+    }
+  }, [token, dispatch]);
+
+
+  const { managerList } = useSelector((state) => state.manpowerRequisition);
+
+  // --- Role-based visibility flags ---
+  const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
+  const isDirector = user?.emp_id === "1400";
+  const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
+
+
+
+  useEffect(() => {
+    if (status === 'idle' && user) {
+      //  dispatch(fetchManpowerRequisition());
+      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+    }
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const socket = io(API_URL);
+    socket.on('manpowerrequisition-refresh', () => {
+      // dispatch(fetchManpowerRequisition());
+      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+
+    });
+  }, [status, user, dispatch]);
 
   useEffect(() => {
     //  dispatch(fetchManpowerRequisition());
-      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+    dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
   }, [dispatch]);
 
   const currentUserId = user?.emp_id || null;
   const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
-  const formattedDate = new Date().toISOString().split('T')[0]; 
+  const formattedDate = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     if (open) {
@@ -373,7 +421,7 @@ const ManpowerRequisition = () => {
     const isFirstPage = page === 0;
     const isLastPage = page >= Math.ceil(count / rowsPerPage) - 1;
     const isAllSelected = rowsPerPage === -1;
-  
+
     const handleToggleShowAll = () => {
       const newRowsPerPage = isAllSelected ? 10 : -1;
       setRowsPerPage(newRowsPerPage);
@@ -410,60 +458,60 @@ const ManpowerRequisition = () => {
   };
 
 
-//   const handleStatusChange = (event, manpowerId) => {
-//     const newStatus = event.target.value;
-//     const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
+  //   const handleStatusChange = (event, manpowerId) => {
+  //     const newStatus = event.target.value;
+  //     const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
 
-//     if (!originalManpower || newStatus === originalManpower.status) {
-//       return;
-//     }
+  //     if (!originalManpower || newStatus === originalManpower.status) {
+  //       return;
+  //     }
 
-//     if (newStatus === "Raise Query") {
-//       setManpowerId(manpowerId);
-//       setManpowerStatus(newStatus);
-//       setIsRaiseQueryModalOpen(true);
-//       return;
-//     }
+  //     if (newStatus === "Raise Query") {
+  //       setManpowerId(manpowerId);
+  //       setManpowerStatus(newStatus);
+  //       setIsRaiseQueryModalOpen(true);
+  //       return;
+  //     }
 
-//     swal.fire({
-//       title: "Are you sure?",
-//       text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
-//       icon: '',
-//       iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-//       showCancelButton: true,      
-//       confirmButtonColor: theme.palette.primary.main,
-//       cancelButtonColor: theme.palette.error.main,
-//       confirmButtonText: "Yes, update it!",
-//     }).then(async (result) => {
-//       if (!result.isConfirmed) {
-//         return;
-//       }
+  //     swal.fire({
+  //       title: "Are you sure?",
+  //       text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
+  //       icon: '',
+  //       iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+  //       showCancelButton: true,      
+  //       confirmButtonColor: theme.palette.primary.main,
+  //       cancelButtonColor: theme.palette.error.main,
+  //       confirmButtonText: "Yes, update it!",
+  //     }).then(async (result) => {
+  //       if (!result.isConfirmed) {
+  //         return;
+  //       }
 
-//       dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
-// console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with newStatus:', newStatus);
-//        try {
-//         await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
-//         swal.fire({
-//           title: 'Updated!',
-//           text: 'Manpower status updated successfully.',
-//           icon: '',
-//           iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-//           confirmButtonColor: theme.palette.error.main,
-//           confirmButtonText: 'OK'
-//         });
-//       } catch (err) {
-//         dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
-//         swal.fire({
-//           title: 'Error!',
-//           text: err.message || 'Failed to update Manpower.',
-//           icon: '',
-//           iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-//           confirmButtonColor: theme.palette.error.main,
-//           confirmButtonText: 'OK'
-//         });
-//       }
-//     });
-//   }
+  //       dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
+  // console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with newStatus:', newStatus);
+  //        try {
+  //         await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
+  //         swal.fire({
+  //           title: 'Updated!',
+  //           text: 'Manpower status updated successfully.',
+  //           icon: '',
+  //           iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+  //           confirmButtonColor: theme.palette.error.main,
+  //           confirmButtonText: 'OK'
+  //         });
+  //       } catch (err) {
+  //         dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
+  //         swal.fire({
+  //           title: 'Error!',
+  //           text: err.message || 'Failed to update Manpower.',
+  //           icon: '',
+  //           iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+  //           confirmButtonColor: theme.palette.error.main,
+  //           confirmButtonText: 'OK'
+  //         });
+  //       }
+  //     });
+  //   }
 
   const handleDeleteClick = (id) => {
     setDeleteId(id);
@@ -472,10 +520,10 @@ const ManpowerRequisition = () => {
 
   const confirmDelete = () => {
     const deletemanpowerdata = {
-        id: deleteId,
-        is_delete:'Inactive',
+      id: deleteId,
+      is_delete: 'Inactive',
     };
-    
+
     dispatch(deleteManpowerRequisition(deletemanpowerdata));
     setIsDeleteModalOpen(false);
     setIsSuccessModalOpen(true); // Show success modal after deletion.
@@ -489,19 +537,19 @@ const ManpowerRequisition = () => {
 
   const confirmWithdraw = () => {
     const withdrawData = {
-        id: withdrawId,
+      id: withdrawId,
     };
-    
+
     dispatch(withdrawManpowerRequisition(withdrawData));
     setIsWithdrawModalOpen(false);
-    setIsSuccessModalOpen(true); 
+    setIsSuccessModalOpen(true);
     setWithdrawId(null);
   };
 
 
   const handleClose = () => {
-    setIsDeleteModalOpen(false); 
-    setIsSuccessModalOpen(false)  
+    setIsDeleteModalOpen(false);
+    setIsSuccessModalOpen(false)
     setIsRaiseQueryModalOpen(false);
     setIsSuccessQueryModalOpen(false);
     setIsManpowerRequisitionViewModelOpen(false);
@@ -510,7 +558,7 @@ const ManpowerRequisition = () => {
 
   const handleSaveSubmit = (e) => {
     e.preventDefault();
-    
+
     const query_manpower_requisition_pid = form.query_manpower_requisition_pid;
     const query_name = form.query_name;
     // Validation: check if query_name is empty
@@ -532,409 +580,441 @@ const ManpowerRequisition = () => {
     dispatch(updateManpowerStatus({ manpowerId: manpowerId, newStatus: manpowerStatus })).unwrap();
     setIsRaiseQueryModalOpen(false);
     setIsSuccessQueryModalOpen(true);
-   
+
   }
 
   const handleViewClick = (id) => {
     navigate(`/manpower_requisition_view/${id}`);
-  } 
+  }
   const handleEditClick = (id) => {
     navigate(`/manpower_requisition_edit/${id}`);
   }
 
 
-    return (
-      <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, sm: 12 }}>
-            <Paper sx={{ p: 2, borderRadius: '8px',marginTop: '12vh' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant='h6' sx={{
-                  flexGrow: 1,
-                  cursor: 'pointer',
-                  display: 'inline-block',
-                  '@keyframes moveWord': {
-                    '0%': { transform: 'translate(0, 0)' },
-                    '25%': { transform: 'translate(5px, -5px)' },   // Move right and up
-                    '50%': { transform: 'translate(10px, 0)' },    // Move further right
-                    '75%': { transform: 'translate(5px, 5px)' },   // Move right and down
-                    '100%': { transform: 'translate(0, 0)' },      // Back to initial
-                  },
-                  '&:hover': {
-                    animation: 'moveWord 1s ease-in-out forwards',
-                  },
-                  }}
-                >
-                  Manpower Requisition List
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <TextField
-                    label="Search"
-                    variant="outlined"
-                    size="small"
-                    value={searchTerm}
-                    onChange={(e) => { //NOSONAR
-                      setSearchTerm(e.target.value);
-                      setPage(0); // Reset to first page when searching
-                    }}
-                    sx={{ width: '280px' }}
-                  />
-                  <ToggleButtonGroup
-                    value={view}
-                    exclusive
-                    onChange={handleViewChange}
-                    aria-label="view toggle"
-                    size="small"
-                  >
-                    <ToggleButton value="table" aria-label="table view"><Tooltip title="Table View"><ViewListIcon /></Tooltip></ToggleButton>
-                    <ToggleButton value="card" aria-label="card view"><Tooltip title="Card View"><ViewModuleIcon /></Tooltip></ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
-              </Box>
-              {view === 'table' ? (
-                <TableContainer
-                  component={Paper}
-                  sx={{
-                    borderRadius: theme.shape.borderRadius,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                    overflow: "auto",
-                    maxWidth: "100%",
-                  }}
-                >
-                  <Table sx={{ minWidth: 700 }}>
-                    <TableHead className="custom-header">
-                      <TableRow>
-                        <StyledTableCell>S.No</StyledTableCell>
-                        <StyledTableCell>Name</StyledTableCell>
-                        <StyledTableCell>Department</StyledTableCell>
-                        <StyledTableCell>Status of Employment</StyledTableCell>
-                        <StyledTableCell>Designation</StyledTableCell>
-                        <StyledTableCell>Requirement Type</StyledTableCell>
-                        <StyledTableCell>TAT Request</StyledTableCell>
-                        <StyledTableCell>Status</StyledTableCell>
-                        <StyledTableCell>Action</StyledTableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {paginatedManpower.map((manpower, index) => (
-                        <StyledTableRow key={manpower.id}>
-                          <StyledTableCell component="th" scope="row">{page * rowsPerPage + index + 1}</StyledTableCell>
-                          <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
-                          <StyledTableCell>{manpower.department_name}</StyledTableCell>
-                          <StyledTableCell>{manpower.employment_status}</StyledTableCell>
-                          <StyledTableCell>{manpower.designation}</StyledTableCell>
-                          <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
-                          <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
-                          <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
-                          <StyledTableCell>
-                            <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
-                              <MoreVertIcon />
-                            </IconButton>
-                            <Menu
-                              id={`actions-menu-${manpower.id}`}
-                              anchorEl={anchorEl}
-                              open={Boolean(anchorEl) && currentManpowerId === manpower.id}
-                              onClose={handleMenuClose}
-                              PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
-                            >
-                              <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
-                              <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
-                              {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
-                              )}
-                              {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
-                              )}
-                            </Menu>
-                          </StyledTableCell>
-                        </StyledTableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                <Box sx={{ pt: 2 }}>
-                  <Grid container spacing={3}>
-                    {paginatedManpower.map((manpower, index) => (
-                      <ManpowerCard 
-                        key={manpower.id}
-                        manpower={manpower}
-                        index={index}
-                        onView={handleViewClick}
-                        onEdit={handleEditClick}
-                        onWithdraw={handleWithdrawClick}
-                        onDelete={handleDeleteClick}
-                        onMenuClick={handleMenuClick}
-                      />
-                    ))}
-                  </Grid>
-                </Box>
-              )}
-              <TablePagination
-                rowsPerPageOptions={[10, 25, 50, 100]}
-                component="div"
-                count={filteredManpower.length}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage === -1 ? paginatedManpower.length : rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                labelRowsPerPage="Rows per page"
-                labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : `All ${assessmentList.length}`} cases`}
-                ActionsComponent={TablePaginationActions}
-                sx={{
-                  mt: 2,
-                  '& .MuiTablePagination-toolbar': {
-                    justifyContent: 'flex-end',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    gap: { xs: 1, sm: 0 },
-                    minHeight: 'auto',
-                  },
-                  '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
-                    mb: { xs: 1, sm: 0 },
-                  },
-                  '& .MuiTablePagination-actions': {
-                    ml: { xs: 0, sm: 2 }
-                  },
-                  '& .MuiInputBase-root': {
-                    minWidth: { xs: 'auto', sm: 80 }
-                  },
-                  '& .MuiTablePagination-select': {
-                    paddingRight: '24px !important',
-                  },
-                }}
-              /> 
-            </Paper>
-          </Grid>
-        </Grid>
-        {isDeleteModalOpen && (
-          <AnimatePresence>
-            <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-                  <motion.div variants={tickVariants} initial="hidden" animate="visible" style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#4CAF50', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
-                    <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
-                  </motion.div>
-                  <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>Confirm Deletion</DialogTitle>
-                </Box>
-                <DialogContent sx={{ p: 0, textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>Are you sure you want to delete? This action cannot be undone.</Typography>
-                </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
-                  <Button onClick={handleClose} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
-                  <Button onClick={confirmDelete} color="error" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes</Button>
-                </DialogActions>
-              </motion.div>
-            </Dialog>
-          </AnimatePresence>
-        )}
-        {isWithdrawModalOpen && (
-          <AnimatePresence>
-            <Dialog open={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} maxWidth="xs" fullWidth>
-              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-                  <motion.div variants={tickVariants} initial="hidden" animate="visible" style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#ff9800', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
-                    <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
-                  </motion.div>
-                  <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>Confirm Withdraw</DialogTitle>
-                </Box>
-                <DialogContent sx={{ p: 0, textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>Are you sure you want to withdraw this requisition? This action cannot be undone.</Typography>
-                </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
-                  <Button onClick={() => setIsWithdrawModalOpen(false)} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
-                  <Button onClick={confirmWithdraw} color="warning" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes, Withdraw</Button>
-                </DialogActions>
-              </motion.div>
-            </Dialog>
-          </AnimatePresence>
-        )}
-         {isSuccessModalOpen && (
-          <AnimatePresence>
-            <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit"
-                style={{
-                  display: 'flex', flexDirection: 'column', backgroundColor: 'white',
-                  borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px',
-                }}
+  return (
+    <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, sm: 12 }}>
+          <Paper sx={{ p: 2, borderRadius: '8px', marginTop: '12vh' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant='h6' sx={{
+                flexGrow: 1,
+                cursor: 'pointer',
+                display: 'inline-block',
+                '@keyframes moveWord': {
+                  '0%': { transform: 'translate(0, 0)' },
+                  '25%': { transform: 'translate(5px, -5px)' },   // Move right and up
+                  '50%': { transform: 'translate(10px, 0)' },    // Move further right
+                  '75%': { transform: 'translate(5px, 5px)' },   // Move right and down
+                  '100%': { transform: 'translate(0, 0)' },      // Back to initial
+                },
+                '&:hover': {
+                  animation: 'moveWord 1s ease-in-out forwards',
+                },
+              }}
               >
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-                  <motion.div variants={tickVariants} initial="hidden" animate="visible"
-                    style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: '50%',
-                      backgroundColor: '#4CAF50',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      marginBottom: '10px',
-                    }}
-                  >
-                    <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
-                  </motion.div>
-                  <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>
-                    Success!
-                  </DialogTitle>
-                </Box>
-                <DialogContent sx={{ p: 0, textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-                    Your Manpower Requisition has been successfully Deleted.
-                  </Typography>
-                </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
-                  <Button onClick={handleClose} color="primary" variant="contained" sx={{ borderRadius: 2, minWidth: '100px' }}>
-                    OK
-                  </Button>
-                </DialogActions>
-              </motion.div>
-            </Dialog>
-          </AnimatePresence>
-        )}
-
-        {isRaiseQueryModalOpen && (
-          <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description" closeAfterTransition={false}  >
-            <Box sx={modalStyle}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <AssessmentIcon
-                  sx={{
-                    color: '#1f7150ff',
-                    fontSize: 24,               // Customize size as needed
-                    transition: 'color 0.3s ease, transform 0.3s ease',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      color: '#1f7150ff',         // Brighter red on hover
-                      transform: 'scale(1.2)', // Slightly grow the icon on hover
-                      filter: 'drop-shadow(0 0 5px #1f7150ff)', // Glow effect
-                    },
-                  }}
-                />
-                <Typography id="modal-modal-title" variant='h6' component="h2" sx={{
-                  flexGrow: 1,
-                  cursor: 'pointer',
-                  display: 'inline-block',
-                  '@keyframes moveWord': {
-                    '0%': { transform: 'translate(0, 0)' },
-                    '25%': { transform: 'translate(5px, -5px)' },   
-                    '50%': { transform: 'translate(10px, 0)' },   
-                    '75%': { transform: 'translate(5px, 5px)' },
-                    '100%': { transform: 'translate(0, 0)' },
-                  },
-                  '&:hover': {
-                    animation: 'moveWord 1s ease-in-out forwards',
-                  },
-                }}
-                >
-                  Raise Query
-                </Typography>
-                <IconButton onClick={handleClose} sx={{ width: 50, color: 'red' }}>
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-
-              <Box component="form" noValidate autoComplete="off">
-                <input type="hidden" name="query_manpower_requisition_pid" value={manpowerId} />
-                <input type="hidden" name="status" value={manpowerStatus} />
+                Manpower Requisition List
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <TextField
-                  fullWidth
-                  label="Raise Query"
+                  label="Search"
                   variant="outlined"
-                  name="query_name"
-                  multiline
-                  minRows={4}   
-                  // value={form.query_name}
-                  onChange={(e) => setForm({ ...form, query_name: e.target.value })}
-                  sx={{
-                    mb: 2,
-                    transition: 'box-shadow 0.3s, border-color 0.3s',
-                    '&:hover': {
-                      boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-                    },
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#1f7150ff',
-                      },
-                    },
+                  size="small"
+                  value={searchTerm}
+                  onChange={(e) => { //NOSONAR
+                    setSearchTerm(e.target.value);
+                    setPage(0); // Reset to first page when searching
                   }}
-                  error={error}
-                  helperText={error ? "This field is required" : ""}
+                  sx={{ width: '280px' }}
                 />
-                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                  <Button variant="outlined" onClick={handleClose}
-                    sx={{
-                      whiteSpace: 'nowrap',
-                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                      '&:hover': {
-                        transform: 'scale(1.05)',                  
-                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', 
-                        backgroundColor: 'white',            
-                      },
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button variant="contained" onClick={handleSaveSubmit}
-                    sx={{
-                      whiteSpace: 'nowrap',
-                      transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                      '&:hover': {
-                        transform: 'scale(1.05)',                  
-                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', 
-                        backgroundColor: '#1f7150ff',            
-                      },
-                    }}
-                  >
-                    Save
-                  </Button>
-                </Box>
+                <ToggleButtonGroup
+                  value={view}
+                  exclusive
+                  onChange={handleViewChange}
+                  aria-label="view toggle"
+                  size="small"
+                >
+                  <ToggleButton value="table" aria-label="table view"><Tooltip title="Table View"><ViewListIcon /></Tooltip></ToggleButton>
+                  <ToggleButton value="card" aria-label="card view"><Tooltip title="Card View"><ViewModuleIcon /></Tooltip></ToggleButton>
+                </ToggleButtonGroup>
               </Box>
             </Box>
-          </Modal>
-        )}
-
-        {isSuccessQueryModalOpen && (
-          <AnimatePresence>
-            <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-              <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit"
-                style={{
-                  display: 'flex', flexDirection: 'column', backgroundColor: 'white',
-                  borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px',
+            {view === 'table' ? (
+              <TableContainer
+                component={Paper}
+                sx={{
+                  borderRadius: theme.shape.borderRadius,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  overflow: "auto",
+                  maxWidth: "100%",
                 }}
               >
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-                  <motion.div variants={tickVariants} initial="hidden" animate="visible"
-                    style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: '50%',
-                      backgroundColor: '#4CAF50',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      marginBottom: '10px',
-                    }}
-                  >
-                    <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
-                  </motion.div>
-                  <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>
-                    Success!
-                  </DialogTitle>
+                <Table sx={{ minWidth: 700 }}>
+                  <TableHead className="custom-header">
+                    <TableRow>
+                      <StyledTableCell>S.No</StyledTableCell>
+                      <StyledTableCell>Name</StyledTableCell>
+                      <StyledTableCell>Department</StyledTableCell>
+                      <StyledTableCell>Status of Employment</StyledTableCell>
+                      <StyledTableCell>Designation</StyledTableCell>
+                      <StyledTableCell>Requirement Type</StyledTableCell>
+                      <StyledTableCell>TAT Request</StyledTableCell>
+                      {/* <StyledTableCell>Director Status</StyledTableCell> */}
+                      <StyledTableCell>Status</StyledTableCell>
+                      <StyledTableCell>Action</StyledTableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {paginatedManpower.map((manpower, index) => (
+                      <StyledTableRow key={manpower.id}>
+                        <StyledTableCell component="th" scope="row">{page * rowsPerPage + index + 1}</StyledTableCell>
+                        <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
+                        <StyledTableCell>{manpower.department_name}</StyledTableCell>
+                        <StyledTableCell>{manpower.employment_status}</StyledTableCell>
+                        <StyledTableCell>{manpower.designation}</StyledTableCell>
+                        <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
+                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
+                        {/* <StyledTableCell><StatusBadge status={manpower.director_status} /></StyledTableCell> */}
+                        <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
+                        <StyledTableCell>
+                          <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
+                            <MoreVertIcon />
+                          </IconButton>
+                          <Menu
+                            id={`actions-menu-${manpower.id}`}
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl) && currentManpowerId === manpower.id}
+                            onClose={handleMenuClose}
+                            PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
+                          >
+                            <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
+                            {/* {!((isHr && manpower.hr_status === "Approve") ||
+                                (isDirector && manpower.director_status === "HR Approve") ||
+                                (isSeniorManager && (manpower.director_status === "Approve" || manpower.hr_status === "HR Approve"))) && (
+                                  <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                )} */}
+
+
+
+                            {(isDirector && manpower.director_status !== "Approve")
+                              && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                            }
+                            {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
+                              && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                            }
+                            {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve"
+                              && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                            }
+
+
+
+                            {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                              <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
+                            )}
+                            {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                              <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
+                            )}
+                          </Menu>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box sx={{ pt: 2 }}>
+                <Box sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)', // 2 cards on small screens
+                    md: 'repeat(3, 1fr)'  // 3 cards on medium and larger screens
+                  },
+                  gap: 3
+                }}>
+                  {paginatedManpower.map((manpower, index) => (
+                    <ManpowerCard
+                      key={manpower.id}
+                      manpower={manpower}
+                      isHr={isHr}
+                      isDirector={isDirector}
+                      isSeniorManager={isSeniorManager}
+                      managerList={managerList}
+                      index={index}
+                      onView={handleViewClick}
+                      onEdit={handleEditClick}
+                      onWithdraw={handleWithdrawClick}
+                      onDelete={handleDeleteClick}
+                    />
+                  ))}
                 </Box>
-                <DialogContent sx={{ p: 0, textAlign: 'center' }}>
-                  <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-                    Your Manpower Requisition Query has been successfully Added.
-                  </Typography>
-                </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
-                  <Button onClick={handleClose} color="primary" variant="contained" sx={{ borderRadius: 2, minWidth: '100px' }}>
-                    OK
-                  </Button>
-                </DialogActions>
-              </motion.div>
-            </Dialog>
-          </AnimatePresence>
-        )}
-      </Box>
-    );
+              </Box>
+            )}
+            <TablePagination
+              rowsPerPageOptions={[10, 25, 50, 100]}
+              component="div"
+              count={filteredManpower.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage === -1 ? paginatedManpower.length : rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              labelRowsPerPage="Rows per page"
+              labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : `All ${assessmentList.length}`} cases`}
+              ActionsComponent={TablePaginationActions}
+              sx={{
+                mt: 2,
+                '& .MuiTablePagination-toolbar': {
+                  justifyContent: 'flex-end',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 1, sm: 0 },
+                  minHeight: 'auto',
+                },
+                '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+                  mb: { xs: 1, sm: 0 },
+                },
+                '& .MuiTablePagination-actions': {
+                  ml: { xs: 0, sm: 2 }
+                },
+                '& .MuiInputBase-root': {
+                  minWidth: { xs: 'auto', sm: 80 }
+                },
+                '& .MuiTablePagination-select': {
+                  paddingRight: '24px !important',
+                },
+              }}
+            />
+          </Paper>
+        </Grid>
+      </Grid>
+      {isDeleteModalOpen && (
+        <AnimatePresence>
+          <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+            <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+                <motion.div variants={tickVariants} initial="hidden" animate="visible" style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#4CAF50', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+                  <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
+                </motion.div>
+                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>Confirm Deletion</DialogTitle>
+              </Box>
+              <DialogContent sx={{ p: 0, textAlign: 'center' }}>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>Are you sure you want to delete? This action cannot be undone.</Typography>
+              </DialogContent>
+              <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
+                <Button onClick={handleClose} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
+                <Button onClick={confirmDelete} color="error" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes</Button>
+              </DialogActions>
+            </motion.div>
+          </Dialog>
+        </AnimatePresence>
+      )}
+      {isWithdrawModalOpen && (
+        <AnimatePresence>
+          <Dialog open={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} maxWidth="xs" fullWidth>
+            <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+                <motion.div variants={tickVariants} initial="hidden" animate="visible" style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#ff9800', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+                  <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
+                </motion.div>
+                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>Confirm Withdraw</DialogTitle>
+              </Box>
+              <DialogContent sx={{ p: 0, textAlign: 'center' }}>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>Are you sure you want to withdraw this requisition? This action cannot be undone.</Typography>
+              </DialogContent>
+              <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
+                <Button onClick={() => setIsWithdrawModalOpen(false)} color="primary" variant="outlined" sx={{ borderRadius: 2, minWidth: '100px' }}>No</Button>
+                <Button onClick={confirmWithdraw} color="warning" variant="contained" sx={{ borderRadius: 2, minWidth: '100px', ml: 2 }}>Yes, Withdraw</Button>
+              </DialogActions>
+            </motion.div>
+          </Dialog>
+        </AnimatePresence>
+      )}
+      {isSuccessModalOpen && (
+        <AnimatePresence>
+          <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+            <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit"
+              style={{
+                display: 'flex', flexDirection: 'column', backgroundColor: 'white',
+                borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px',
+              }}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+                <motion.div variants={tickVariants} initial="hidden" animate="visible"
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: '50%',
+                    backgroundColor: '#4CAF50',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: '10px',
+                  }}
+                >
+                  <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
+                </motion.div>
+                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>
+                  Success!
+                </DialogTitle>
+              </Box>
+              <DialogContent sx={{ p: 0, textAlign: 'center' }}>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
+                  Your Manpower Requisition has been successfully Deleted.
+                </Typography>
+              </DialogContent>
+              <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
+                <Button onClick={handleClose} color="primary" variant="contained" sx={{ borderRadius: 2, minWidth: '100px' }}>
+                  OK
+                </Button>
+              </DialogActions>
+            </motion.div>
+          </Dialog>
+        </AnimatePresence>
+      )}
+
+      {isRaiseQueryModalOpen && (
+        <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description" closeAfterTransition={false}  >
+          <Box sx={modalStyle}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <AssessmentIcon
+                sx={{
+                  color: '#1f7150ff',
+                  fontSize: 24,               // Customize size as needed
+                  transition: 'color 0.3s ease, transform 0.3s ease',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    color: '#1f7150ff',         // Brighter red on hover
+                    transform: 'scale(1.2)', // Slightly grow the icon on hover
+                    filter: 'drop-shadow(0 0 5px #1f7150ff)', // Glow effect
+                  },
+                }}
+              />
+              <Typography id="modal-modal-title" variant='h6' component="h2" sx={{
+                flexGrow: 1,
+                cursor: 'pointer',
+                display: 'inline-block',
+                '@keyframes moveWord': {
+                  '0%': { transform: 'translate(0, 0)' },
+                  '25%': { transform: 'translate(5px, -5px)' },
+                  '50%': { transform: 'translate(10px, 0)' },
+                  '75%': { transform: 'translate(5px, 5px)' },
+                  '100%': { transform: 'translate(0, 0)' },
+                },
+                '&:hover': {
+                  animation: 'moveWord 1s ease-in-out forwards',
+                },
+              }}
+              >
+                Raise Query
+              </Typography>
+              <IconButton onClick={handleClose} sx={{ width: 50, color: 'red' }}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+
+            <Box component="form" noValidate autoComplete="off">
+              <input type="hidden" name="query_manpower_requisition_pid" value={manpowerId} />
+              <input type="hidden" name="status" value={manpowerStatus} />
+              <TextField
+                fullWidth
+                label="Raise Query"
+                variant="outlined"
+                name="query_name"
+                multiline
+                minRows={4}
+                // value={form.query_name}
+                onChange={(e) => setForm({ ...form, query_name: e.target.value })}
+                sx={{
+                  mb: 2,
+                  transition: 'box-shadow 0.3s, border-color 0.3s',
+                  '&:hover': {
+                    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+                  },
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#1f7150ff',
+                    },
+                  },
+                }}
+                error={error}
+                helperText={error ? "This field is required" : ""}
+              />
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <Button variant="outlined" onClick={handleClose}
+                  sx={{
+                    whiteSpace: 'nowrap',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                      backgroundColor: 'white',
+                    },
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button variant="contained" onClick={handleSaveSubmit}
+                  sx={{
+                    whiteSpace: 'nowrap',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                      backgroundColor: '#1f7150ff',
+                    },
+                  }}
+                >
+                  Save
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        </Modal>
+      )}
+
+      {isSuccessQueryModalOpen && (
+        <AnimatePresence>
+          <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+            <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit"
+              style={{
+                display: 'flex', flexDirection: 'column', backgroundColor: 'white',
+                borderRadius: '12px', boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.2)', padding: '20px',
+              }}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+                <motion.div variants={tickVariants} initial="hidden" animate="visible"
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: '50%',
+                    backgroundColor: '#4CAF50',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: '10px',
+                  }}
+                >
+                  <CheckCircleOutlineIcon sx={{ fontSize: 40, color: 'white' }} />
+                </motion.div>
+                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>
+                  Success!
+                </DialogTitle>
+              </Box>
+              <DialogContent sx={{ p: 0, textAlign: 'center' }}>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
+                  Your Manpower Requisition Query has been successfully Added.
+                </Typography>
+              </DialogContent>
+              <DialogActions sx={{ justifyContent: 'center', pt: 2 }}>
+                <Button onClick={handleClose} color="primary" variant="contained" sx={{ borderRadius: 2, minWidth: '100px' }}>
+                  OK
+                </Button>
+              </DialogActions>
+            </motion.div>
+          </Dialog>
+        </AnimatePresence>
+      )}
+    </Box>
+  );
 
 }
 

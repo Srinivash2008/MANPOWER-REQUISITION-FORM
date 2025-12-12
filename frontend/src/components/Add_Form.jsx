@@ -8,6 +8,7 @@ import { addManpowerRequisition, fetchDepartmentsManagerId, fetchManagerList } f
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { useNavigate } from 'react-router-dom';
+import { Backdrop, CircularProgress } from '@mui/material';
 
 const App_Form = () => {
 
@@ -557,7 +558,9 @@ const App_Form = () => {
                                         className={`form-select ${getFieldClassName('department')}`}
                                     >
                                         <option value="">Select Department</option>
-                                        {departments?.map((dept) => (
+                                        {(user?.emp_id === '1722'
+                                            ? departments?.filter(d => d.depart === 'Human Resource')
+                                            : departments)?.map((dept) => (
                                             <option key={dept.id} value={dept.id}>
                                                 {dept.depart}
                                             </option>
@@ -1009,7 +1012,7 @@ const App_Form = () => {
                             onClick={handleSaveAsDraft}
                             disabled={submissionStatus === 'loading'}
                         >
-                            {submissionStatus === 'loading' ? 'Saving...' : 'Save as Draft'}
+                            {'Save as Draft'}
                         </button>
                         <button
                             type="submit"
@@ -1031,6 +1034,12 @@ const App_Form = () => {
                     {notification.message}
                 </Alert>
             </Snackbar>
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={submissionStatus === 'loading'}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
         </div>
     );
 };

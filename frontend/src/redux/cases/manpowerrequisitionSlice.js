@@ -358,6 +358,10 @@ export const fetchDepartmentsManagerId = createAsyncThunk(
     }
   }
 );
+
+
+
+
 // Async thunk to add a new Manpower Requisition Form entry
 export const addManpowerRequisition = createAsyncThunk(
   'manpowerRequisition/addManpowerRequisition',
@@ -554,6 +558,12 @@ const manpowerrequisitionSlice = createSlice({
         state.error = action.payload;
         state.departments = [];
       })
+
+
+  
+
+
+
 
       // Handle addManpowerRequisition
       .addCase(addManpowerRequisition.pending, (state) => {

@@ -545,7 +545,7 @@ const ManpowerRequisitionEdit = () => {
                             <div className="section-grid multi-col">
                                 <div>
                                     <label className="form-label">Department</label>
-                                    <select name="depart_id"
+                                    <select name="depart_id" disabled
                                         className={`form-select ${getFieldClassName('department')}`}
                                         value={formData.depart_id}
                                         onChange={handleInputChange}
