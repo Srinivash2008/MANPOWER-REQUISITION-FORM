@@ -3,7 +3,8 @@ import { styled, useTheme } from '@mui/material/styles';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
-  Avatar
+  Avatar,
+  Divider
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
@@ -146,40 +147,27 @@ const StatusBadge = ({ status }) => {
 };
 
 const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, onMenuClick }) => {
-  const theme = useTheme();
+  const theme = useTheme(); //NOSONAR
   const { user } = useSelector((state) => state.auth);
   const { managerList } = useSelector((state) => state.manpowerRequisition);
   const raisedByInitial = manpower.emp_name ? manpower.emp_name.charAt(0).toUpperCase() : '?';
 
   const statusColors = {
-    'Approve': theme.palette.success.main,
-    'HR Approve': theme.palette.info.main,
-    'Pending': theme.palette.warning.main,
-    'Reject': theme.palette.error.main,
-    'Raise Query': theme.palette.info.dark,
-    'On Hold': theme.palette.grey[600],
-    'Draft': theme.palette.grey[400],
-    'withdraw': '#ff8800',
+    'Approve': { light: '#6EE7B7', main: '#34D399' },
+    'HR Approve': { light: '#60A5FA', main: '#3B82F6' },
+    'Pending': { light: '#FBBF24', main: '#F59E0B' },
+    'Reject': { light: '#F87171', main: '#EF4444' },
+    'Raise Query': { light: '#67E8F9', main: '#06B6D4' },
+    'On Hold': { light: '#A1A1AA', main: '#71717A' },
+    'Draft': { light: '#E5E7EB', main: '#D1D5DB' },
+    'Withdraw': { light: '#FCA5A5', main: '#F97316' },
     default: theme.palette.grey[500],
   };
 
-  const cardBorderColor = statusColors[manpower.status] || statusColors.default;
+  const { light: lightColor, main: mainColor } = statusColors[manpower.status] || statusColors.default;
   const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
   const isDirector = user?.emp_id === "1400";
   const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
-
-  const cardPalettes = [
-    { bg: 'rgba(233, 245, 242, 0.7)', shadow: theme.palette.success.light }, // Soft Green
-    { bg: 'rgba(254, 246, 230, 0.7)', shadow: theme.palette.warning.light }, // Soft Amber
-    { bg: 'rgba(235, 245, 251, 0.7)', shadow: theme.palette.info.light },    // Soft Blue
-    { bg: 'rgba(243, 232, 253, 0.7)', shadow: '#d8cbf8' }, // Soft Lavender
-  ];
-
-  const currentPalette = cardPalettes[index % cardPalettes.length];
-
-
-
-
 
   return (
     <Box sx={{
@@ -191,115 +179,78 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        style={{ height: '100%', display: 'flex' }}
+        style={{ height: '100%' }}
         transition={{ duration: 0.3, delay: index * 0.05 }}
       >
         <Card sx={{
-          position: 'relative',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           borderRadius: '16px',
-          p: 0.5,
-          backgroundColor: currentPalette.bg, // Light green tint
-          backdropFilter: 'blur(12px)',
-          border: `1px solid ${currentPalette.shadow}40`, // Subtle green border
-          boxShadow: `0 8px 32px 0 ${currentPalette.shadow}3A`, // Subtle green shadow
+          backgroundColor: '#fff',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.07)',
           transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          overflow: 'hidden',
           '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: `0 12px 40px 0 ${cardBorderColor}4D`, // Enhanced hover glow
+            transform: 'translateY(-6px)',
+            boxShadow: `0 12px 28px rgba(0,0,0,0.1)`,
           }
         }}>
-          {/* Corner Status Ribbon */}
+          {/* Gradient Header */}
           <Box sx={{
-            position: 'absolute',
-            top: -1, right: -7,
-            width: '50px', height: '40px',
-            backgroundColor: cardBorderColor,
-            clipPath: 'polygon(100% 0, 100% 100%, 0 100%, 100% 0)',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-          }} />
+            background: `linear-gradient(135deg, ${lightColor} 0%, ${mainColor} 100%)`,
+            p: 2,
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
+            color: 'white',
+            position: 'relative'
+          }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <StatusBadge status={manpower.status} />
+              <IconButton size="small" onClick={(e) => onMenuClick(e, manpower.id)} sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 700, mt: 1.5, textShadow: '1px 1px 3px rgba(0,0,0,0.2)' }}>
+              {manpower.designation}
+            </Typography>
+          </Box>
 
           <CardContent sx={{ flexGrow: 1, p: 2.5, display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  {manpower.department_name}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 0.5, flexDirection: 'column' }}>
-                  <StatusBadge status={manpower.status} />
-                </Box>
-              </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                {manpower.department_name}
+              </Typography>
               <Tooltip title={`Raised by ${manpower.emp_name}`}>
-                <Avatar sx={{ bgcolor: cardBorderColor, width: 40, height: 40, fontSize: '1rem', fontWeight: 'bold' }}>
+                <Avatar sx={{ bgcolor: mainColor, width: 32, height: 32, fontSize: '0.875rem', fontWeight: 'bold' }}>
                   {raisedByInitial}
                 </Avatar>
               </Tooltip>
             </Box>
 
-            <Typography variant="h5" component="div" sx={{ fontWeight: 700, color: 'text.primary', my: 'auto', lineHeight: 1.3 }}>
-              {manpower.designation}
-            </Typography>
-
-            <Box sx={{ my: 2, borderTop: `1px dashed ${theme.palette.divider}` }} />
-
-            <Grid container spacing={1.5}>
+            <Grid container spacing={2} sx={{ mt: 'auto' }}>
               <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <BusinessCenterIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
                 <Box>
                   <Typography variant="caption" color="text.secondary" display="block">Employment</Typography>
-                  <Typography variant="body2" fontWeight="600">{manpower.employment_status}</Typography>
+                  <Typography variant="body2" fontWeight="500">{manpower.employment_status}</Typography>
                 </Box>
               </Grid>
               <Grid item xs={6} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CalendarTodayIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
                 <Box>
                   <Typography variant="caption" color="text.secondary" display="block">Created</Typography>
-                  <Typography variant="body2" fontWeight="600">{new Date(manpower.created_at).toLocaleDateString()}</Typography>
+                  <Typography variant="body2" fontWeight="500">{new Date(manpower.created_at).toLocaleDateString()}</Typography>
                 </Box>
               </Grid>
-              <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+              <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AccessTimeFilledIcon sx={{ color: 'text.secondary', fontSize: '1.1rem' }} />
                 <Box>
                   <Typography variant="caption" color="text.secondary" display="block">Hiring TAT</Typography>
-                  <Typography variant="body2" fontWeight="600">{manpower.hiring_tat}</Typography>
+                  <Typography variant="body2" fontWeight="500">{manpower.hiring_tat}</Typography>
                 </Box>
               </Grid>
             </Grid>
-          </CardContent>
-          <CardActions sx={{
-            justifyContent: 'flex-end',
-            p: 1,
-            borderTop: `1px solid ${theme.palette.divider}`,
-            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-          }}>
-            <Tooltip title="View">
-              <IconButton size="small" onClick={() => onView(manpower.id)}>
-                <PreviewIcon fontSize="small" color="info" />
-              </IconButton>
-            </Tooltip>
-            {(isDirector && manpower.director_status !== "Approve")
-              && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
-            }
-            {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
-              && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
-            }
-            {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve"
-              && <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(manpower.id)}><EditDocumentIcon fontSize="small" color="primary" /></IconButton></Tooltip>
-            }
-            {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-              <Tooltip title="Withdraw">
-                <IconButton size="small" onClick={() => onWithdraw(manpower.id)}><UndoIcon fontSize="small" color="warning" /></IconButton>
-              </Tooltip>
-            )}
-            {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-              <Tooltip title="Delete">
-                <IconButton size="small" onClick={() => onDelete(manpower.id)}><DeleteForeverIcon fontSize="small" color="error" /></IconButton>
-              </Tooltip>
-            )}
-          </CardActions>
+          </CardContent>          
         </Card>
       </motion.div>
     </Box>
@@ -627,16 +578,7 @@ const ManpowerRequisition = () => {
                   }}
                   sx={{ width: '280px' }}
                 />
-                <ToggleButtonGroup
-                  value={view}
-                  exclusive
-                  onChange={handleViewChange}
-                  aria-label="view toggle"
-                  size="small"
-                >
-                  <ToggleButton value="table" aria-label="table view"><Tooltip title="Table View"><ViewListIcon /></Tooltip></ToggleButton>
-                  <ToggleButton value="card" aria-label="card view"><Tooltip title="Card View"><ViewModuleIcon /></Tooltip></ToggleButton>
-                </ToggleButtonGroup>
+                
               </Box>
             </Box>
             {view === 'table' ? (

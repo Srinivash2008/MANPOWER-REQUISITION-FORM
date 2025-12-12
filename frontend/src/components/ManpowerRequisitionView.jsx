@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile } from "react-icons/fi";
+import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Snackbar, Alert as MuiAlert } from "@mui/material";
+import { Snackbar, Alert as MuiAlert, Button, Tooltip } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
@@ -253,9 +253,20 @@ console.log(selectedRequisition,"selectedRequisition")
                                         <div className="full-width">
                                             <label className="form-label">Uploaded File</label>
                                             {formData.rampUpFile ? (
-                                                <div className="file-display-card">
-                                                    <FiFile className="file-icon" />
-                                                    <a href="#" onClick={(e) => { e.preventDefault(); handleDownload(formData.rampUpFile); }} className="file-name">{formData.rampUpFile.split(/[\\/]/).pop()}</a>
+                                                <div className="professional-file-display">
+                                                    <div className="file-info">
+                                                        <FiFile className="file-info-icon" />
+                                                        <Tooltip title={formData.rampUpFile.split(/[\\/]/).pop()} placement="top">
+                                                            <span className="file-info-name">{formData.rampUpFile.split(/[\\/]/).pop()}</span>
+                                                        </Tooltip>
+                                                    </div>
+                                                    <Button
+                                                        variant="outlined"
+                                                        onClick={(e) => { e.preventDefault(); handleDownload(formData.rampUpFile); }}
+                                                        startIcon={<FiDownload />}
+                                                        size="small">
+                                                        Download
+                                                    </Button>
                                                 </div>
                                             ) : (<p className="form-display-text">No file uploaded.</p>)}
                                         </div>

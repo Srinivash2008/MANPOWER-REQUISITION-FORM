@@ -523,7 +523,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                             nextMrfNum = lastNum + 1;
                         }
                     }
-                    mrfNumber = `MRF- ${String(nextMrfNum).padStart(2, '0')}`;
+                    // mrfNumber = `MRF- ${String(nextMrfNum).padStart(2, '0')}`;
+                    mrfNumber = `MRF-${String(nextMrfNum).padStart(6, '0')}`;
                 }
             }
 

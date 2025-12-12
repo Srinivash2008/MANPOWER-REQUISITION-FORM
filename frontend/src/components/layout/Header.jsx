@@ -285,8 +285,7 @@ const Header = () => {
       submenu: [
         !isDirector && { label: "Add MRF", link: "/add-mrf" },
         { label: "View MRF", link: "/mrf-list" },
-
-      ],
+      ].filter(Boolean),
     },
     { label: "Reports", link: "/reports" },
   ];
