@@ -365,7 +365,7 @@ const Dashboard = () => {
   };
 
   // Dynamic status metrics based on API data - Now with 5 cards
-  const statusMetrics = [
+  let statusMetrics = [
     {
       status: 'Pending',
       count: counts.pending,
@@ -409,6 +409,10 @@ const Dashboard = () => {
       description: 'Requisitions withdrawn by the user.',
     },
   ];
+
+  if (user?.emp_id === '1400' || user?.emp_id === '1722') {
+    statusMetrics = statusMetrics.filter(metric => metric.status !== 'Withdraw');
+  }
 
   // Calculate Pending Metrics dynamically - Now includes Pending, On Hold, and Raise Query
   const pendingStatuses = statusMetrics.filter(m =>
