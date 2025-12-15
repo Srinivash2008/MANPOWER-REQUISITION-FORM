@@ -14,7 +14,7 @@ import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import "react-quill-new/dist/quill.snow.css";
 import { useDispatch, useSelector } from 'react-redux';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, color } from 'framer-motion';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
@@ -96,31 +96,31 @@ const StatusBadge = ({ status }) => {
     const statusStyles = {
         'Approve': {
             backgroundColor: '#28a745', // A vibrant green
-            color: '#fff',
+            // color: '#fff',
         },
         'HR Approve': {
             backgroundColor: '#20c997', // A slightly different, teal-like green
-            color: '#fff',
+            // color: '#fff',
         },
         'Pending': {
             backgroundColor: '#ffc107', // A warm amber/yellow
-            color: '#212529', // Dark text for better contrast on yellow
+            // color: '#212529', // Dark text for better contrast on yellow
         },
         'Reject': {
             backgroundColor: '#dc3545', // A strong red
-            color: '#fff',
+            // color: '#fff',
         },
         'Raise Query': {
             backgroundColor: '#0dcaf0', // A bright cyan/info blue
-            color: '#fff',
+            // color: '#fff',
         },
         'On Hold': {
             backgroundColor: '#6c757d', // A neutral, secondary grey
-            color: '#fff',
+            // color: '#fff',
         },
         'Draft': {
             backgroundColor: '#f8f9fa', // A very light grey
-            color: '#6c757d',
+            // color: '#6c757d',
             border: `1px solid #dee2e6`
         },
         default: {
@@ -131,8 +131,10 @@ const StatusBadge = ({ status }) => {
 
     const style = statusStyles[status] || statusStyles.default;
 
-    const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
-    return <Chip label={status} size="small" sx={sx} />
+    const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'};
+    return <Chip  label={status} size="small" sx={{...sx, '& .MuiChip-label': {
+      color: 'white'
+    }}} />
 };
 
 
@@ -460,7 +462,10 @@ const ManpowerRequisitionByStatus = () => {
                       <StyledTableCell>CTC Range</StyledTableCell>
                       <StyledTableCell>Specific Info</StyledTableCell>
                       <StyledTableCell>MRF Number</StyledTableCell> */}
-                                        <StyledTableCell>Status</StyledTableCell>
+                                        {/* <StyledTableCell>Status</StyledTableCell> */}
+                                        <StyledTableCell>Director Status</StyledTableCell>
+                                        <StyledTableCell>HR Status</StyledTableCell>
+                                        
                                         <StyledTableCell>
                                             Action
                                         </StyledTableCell>
@@ -486,7 +491,10 @@ const ManpowerRequisitionByStatus = () => {
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-                                            <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
+                                            {/* <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell> */}
+                                            <StyledTableCell><StatusBadge status={manpower.director_status  !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell> 
+                                              <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
+                                               
                                             {/* <StyledTableCell>
                                                 <Tooltip title="Edit Manpower" arrow placement="top">
                                                     <IconButton
@@ -534,7 +542,7 @@ const ManpowerRequisitionByStatus = () => {
                                                     {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
                                                         && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
                                                     }
-                                                    {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve"
+                                                    {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
                                                         && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
                                                     }
                                                     {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status == 'Pending' && (

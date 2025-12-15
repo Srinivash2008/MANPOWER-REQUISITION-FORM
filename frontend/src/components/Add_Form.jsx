@@ -183,7 +183,7 @@ const App_Form = () => {
             case 'experience':
                 if (!value) newErrors.experience = 'Experience is required.';
                 else if(value < 1) newErrors.experience = 'Experience must be at least 1 year.';
-                else if(value > 10) newErrors.experience = 'Experience must be at most 10 years.';
+                else if(value > 25) newErrors.experience = 'Experience must be at most 25 years.';
                 else delete newErrors.experience;
                 break;
             case 'ctcRange':
@@ -217,18 +217,18 @@ const App_Form = () => {
                     delete newErrors.directorSign;
                 }
                 break;
-            case 'tatAgreed':
-                if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
-                else delete newErrors.tatAgreed;
-                break;
-            case 'deliveryPhase':
-                if (isHr && !value) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
-                else delete newErrors.deliveryPhase;
-                break;
-            case 'hrReview':
-                if (isHr && !value) newErrors.hrReview = 'HR Review is required for HR.';
-                else delete newErrors.hrReview;
-                break;
+            // case 'tatAgreed':
+            //     if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
+            //     else delete newErrors.tatAgreed;
+            //     break;
+            // case 'deliveryPhase':
+            //     if (isHr && !value) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
+            //     else delete newErrors.deliveryPhase;
+            //     break;
+            // case 'hrReview':
+            //     if (isHr && !value) newErrors.hrReview = 'HR Review is required for HR.';
+            //     else delete newErrors.hrReview;
+            //     break;
             default:
                 break;
         }
@@ -279,11 +279,11 @@ const App_Form = () => {
         //     newErrors.directorSign = 'Director Sign is required.';
         // }
 
-        if (isHr) {
-            if (!formData.tatAgreed) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
-            if (!formData.deliveryPhase) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
-            if (!formData.hrReview) newErrors.hrReview = 'HR Review is required for HR.';
-        }
+        // if (isHr) {
+        //     if (!formData.tatAgreed) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
+        //     if (!formData.deliveryPhase) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
+        //     if (!formData.hrReview) newErrors.hrReview = 'HR Review is required for HR.';
+        // }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -800,7 +800,7 @@ const App_Form = () => {
                                         onBlur={handleBlur}
                                         onKeyPress={(e) => {if (!/[0-9\-]/.test(e.key)) { e.preventDefault(); }}}
                                         className={`form-input ${getFieldClassName('experience')}`}
-                                        placeholder="e.g., 1-10 years"
+                                        placeholder="e.g., 1-25 years"
                                     />
                                     {renderError('experience')}
                                 </div>
@@ -962,7 +962,7 @@ const App_Form = () => {
                                         <small style={{ color: '#555', marginTop: '4px' }}>This field is auto-generated upon submission.</small>
                                     </div>
                                     <div>
-                                        <label className="form-label">TAT Agreed (in days)<span className="required-star">*</span></label>
+                                        <label className="form-label">TAT Agreed (in days)<span className="required-star"></span></label>
                                         <input
                                             type="text"
                                             name="tatAgreed"
@@ -975,7 +975,7 @@ const App_Form = () => {
                                         {renderError('tatAgreed')}
                                     </div>
                                     <div>
-                                        <label className="form-label">Phase of Delivery for bulk hiring<span className="required-star">*</span></label>
+                                        <label className="form-label">Phase of Delivery for bulk hiring<span className="required-star"></span></label>
                                         <input
                                             type="text"
                                             name="deliveryPhase"
@@ -988,7 +988,7 @@ const App_Form = () => {
                                         {renderError('deliveryPhase')}
                                     </div>
                                     <div>
-                                        <label className="form-label">HR - Head Review<span className="required-star">*</span></label>
+                                        <label className="form-label">HR - Head Review<span className="required-star"></span></label>
                                         <input
                                             type="text"
                                             name="hrReview"

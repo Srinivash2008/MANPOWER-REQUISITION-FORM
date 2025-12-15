@@ -27,7 +27,7 @@ import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import "react-quill-new/dist/quill.snow.css";
 import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, color } from 'framer-motion';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -134,7 +134,7 @@ const StatusBadge = ({ status }) => {
       border: `1px solid #ff8800`
     },
     default: {
-      backgroundColor: theme.palette.grey[500],
+      backgroundColor: "#9bebebff", // Default grey
       color: 'white',
     }
   };
@@ -143,7 +143,9 @@ const StatusBadge = ({ status }) => {
 
   const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
 
-  return <Chip label={status} size="small" sx={sx} />;
+  return <Chip label={status} size="small" sx={{...sx, '& .MuiChip-label': {
+        color: 'white'
+      }}} />;
 };
 
 const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, onMenuClick }) => {
@@ -601,8 +603,8 @@ const ManpowerRequisition = () => {
                       <StyledTableCell>Designation</StyledTableCell>
                       <StyledTableCell>Requirement Type</StyledTableCell>
                       <StyledTableCell>TAT Request</StyledTableCell>
-                      {/* <StyledTableCell>Director Status</StyledTableCell> */}
-                      <StyledTableCell>Status</StyledTableCell>
+                      <StyledTableCell>Director Status</StyledTableCell>
+                      <StyledTableCell>HR Status</StyledTableCell>
                       <StyledTableCell>Action</StyledTableCell>
                     </TableRow>
                   </TableHead>
@@ -616,8 +618,9 @@ const ManpowerRequisition = () => {
                         <StyledTableCell>{manpower.designation}</StyledTableCell>
                         <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                         <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
-                        {/* <StyledTableCell><StatusBadge status={manpower.director_status} /></StyledTableCell> */}
-                        <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
+                        <StyledTableCell><StatusBadge  status={manpower.director_status  !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
+                        <StyledTableCell><StatusBadge status={manpower.hr_status  !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
+                        {/* <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell> */}
                         <StyledTableCell>
                           <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
                             <MoreVertIcon />

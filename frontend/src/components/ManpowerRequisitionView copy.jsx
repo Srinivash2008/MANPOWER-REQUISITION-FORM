@@ -214,18 +214,18 @@ const ManpowerRequisitionView = () => {
                 if (isHr && !value) newErrors.mrfNumber = 'MRF Number is required for HR.';
                 else delete newErrors.mrfNumber;
                 break;
-            case 'tatAgreed':
-                if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
-                else delete newErrors.tatAgreed;
-                break;
-            case 'deliveryPhase':
-                if (isHr && !value) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
-                else delete newErrors.deliveryPhase;
-                break;
-            case 'hrReview':
-                if (isHr && !value) newErrors.hrReview = 'HR Review is required for HR.';
-                else delete newErrors.hrReview;
-                break;
+            // case 'tatAgreed':
+            //     if (isHr && !value) newErrors.tatAgreed = 'TAT Agreed is required for HR.';
+            //     else delete newErrors.tatAgreed;
+            //     break;
+            // case 'deliveryPhase':
+            //     if (isHr && !value) newErrors.deliveryPhase = 'Phase of Delivery is required for HR.';
+            //     else delete newErrors.deliveryPhase;
+            //     break;
+            // case 'hrReview':
+            //     if (isHr && !value) newErrors.hrReview = 'HR Review is required for HR.';
+            //     else delete newErrors.hrReview;
+            //     break;
             default:
                 break;
         }
@@ -780,17 +780,17 @@ const ManpowerRequisitionView = () => {
                                         {renderError('mrfNumber')}
                                     </div>
                                     <div>
-                                        <label className="form-label">TAT Agreed (in days)<span className="required-star">*</span></label>
+                                        <label className="form-label">TAT Agreed (in days)<span className="required-star"></span></label>
                                         <input name="tatAgreed" className={`form-input ${getFieldClassName('tatAgreed')}`} value={formData.tatAgreed} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                         {renderError('tatAgreed')}
                                     </div>
                                     <div>
-                                        <label className="form-label">Phase of Delivery for bulk hiring<span className="required-star">*</span></label>
+                                        <label className="form-label">Phase of Delivery for bulk hiring<span className="required-star"></span></label>
                                         <input name="deliveryPhase" className={`form-input ${getFieldClassName('deliveryPhase')}`} value={formData.deliveryPhase} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                         {renderError('deliveryPhase')}
                                     </div>
                                     <div>
-                                        <label className="form-label">HR - Head Review<span className="required-star">*</span></label>
+                                        <label className="form-label">HR - Head Review<span className="required-star"></span></label>
                                         <input name="hrReview" className={`form-input ${getFieldClassName('hrReview')}`} value={formData.hrReview} readOnly={!isEditMode} onChange={handleInputChange} onBlur={handleBlur} />
                                         {renderError('hrReview')}
                                     </div>

@@ -374,10 +374,10 @@ const ManpowerRequisitionEdit = () => {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
         }
-         if (isHr && formData.status == "Pending") {
-            setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
-            return;
-        }
+        //  if (isHr && formData.status == "Pending") {
+        //     setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
+        //     return;
+        // }
 
         if (isHr && formData.status === 'HR Approve') {
             const hrFieldsToValidate = {
@@ -850,7 +850,8 @@ const ManpowerRequisitionEdit = () => {
                         )}
 
                         {/* Status Updation Section */}
-                        {(isDirector || isHr) && !isDraft && (
+
+                        {((isDirector && !isDraft) || (isHr && !isDraft && formData.directorstatus === 'Approve')) && (
                             <div className="form-section">
                                 <h3 className="section-title"><FaUserCheck /> Status Updation</h3>
                                 <div className="section-grid multi-col">
@@ -870,6 +871,7 @@ const ManpowerRequisitionEdit = () => {
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
                                             ]}
+                                            
                                             {isHr && [
                                                 //  <MenuItem value="Pending">Select the Status</MenuItem>,
                                                 <MenuItem value="Approve">Select the Status</MenuItem>,

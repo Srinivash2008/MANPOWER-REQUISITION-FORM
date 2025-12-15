@@ -15,16 +15,31 @@ const COMPREHENSIVE_VIEW_ROLES = ['Senior Manager', 'Senior Client Support Execu
 const ALL_DASHBOARD_ACCESS_ROLES = ['Senior Manager', 'Senior Client Support Executive', 'Client Support Executive'];
 
 
+router.get('/get-user-by-empid/:emp_id', authMiddleware, async (req, res) => {
+    try {
+        const { emp_id } = req.params;
+        const [rows] = await pool.execute('SELECT * FROM employee_personal WHERE employee_id = ?', [emp_id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+            }
+        const user = rows[0];
+        res.json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
+
 
 router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, res) => {
     try {
         const { userId } = req.params;
 
-        let query = "SELECT mr.*,ep.*,ed.depart AS department_name,CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))<=10 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id=mr.created_by JOIN employee_depart AS ed ON ed.id=mr.department WHERE mr.isdelete='Active'";
+        let query = "SELECT mr.*,ep.*,ed.depart AS department_name,CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))>7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id=mr.created_by JOIN employee_depart AS ed ON ed.id=mr.department WHERE mr.isdelete='Active'";
         let params = [];
 
         if (['12345', '1400', '1722'].includes(userId)){
-            query += " AND mr.status != 'Draft'";
+            query += " AND mr.status != 'Draft' AND mr.status != 'Withdraw'";
         }
         if (!['12345', '1400', '1722'].includes(userId)) {
             query += " AND mr.created_by = ?";
@@ -174,7 +189,7 @@ router.post(
                             <p>Hello Rajesh,</p>
 
                             <p>
-                                A new MRF (Manpower Requisition Form) has been submitted by ${emp_name} and is now awaiting your review.
+                                A new <b>Manpower Requisition Form (MRF)</b> has been submitted by <b>${emp_name}</b> and is now awaiting your review.
                             </p>
 
                             <p>
@@ -198,7 +213,7 @@ router.post(
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                             <p>Dear Rajesh,</p>
                             <p>
-                                This is an automated notification to inform you that a new Manpower Requisition Form (MRF) has been submitted in the system.
+                                This is an automated notification to inform you that a new <b>Manpower Requisition Form (MRF)</b> has been submitted in the system.
                             </p>
                             <p>
                                 Please review the submitted MRF and take the necessary action at the earliest.
@@ -419,7 +434,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
                     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                         <p>Dear ${creator.emp_name},</p>
                         <p>
-                            <b>${queryRaiserName}</b> has raised a query on your MRF. Please review the query and provide the necessary information to continue the process.
+                            <b>${queryRaiserName}</b> raised a query on your MRF; please review the query and reply to this email with the required information so the process can continue.
                         </p>
                         <p>
                             You can view the MRF and the query here:
@@ -549,7 +564,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
             await connection.execute(query, params);
 
-            if (status === 'Pending') {
+            if (status === 'Pending' && user?.emp_id !== '1400' && user?.emp_id !== '1722') {
                 const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 console.log(user_data[0], "user_datauser_datauser_datauser_data")
                 const user_info = user_data[0];
@@ -573,7 +588,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                             <p>Hello Rajesh,</p>
 
                             <p>
-                                A new MRF (Manpower Requisition Form) has been submitted by ${user_info.emp_name} and is now awaiting your review.
+                                A new <b>Manpower Requisition Form (MRF)</b> has been submitted by <b>${user_info.emp_name}</b> and is now awaiting your review.
                             </p>
 
                             <p>
@@ -597,7 +612,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                             <p>Dear Rajesh,</p>
                             <p>
-                                This is an automated notification to inform you that a new Manpower Requisition Form (MRF) has been submitted in the system.
+                                This is an automated notification to inform you that a new <b>Manpower Requisition Form (MRF)</b> has been submitted in the system.
                             </p>
                             <p>
                                 Please review the submitted MRF and take the necessary action at the earliest.
@@ -641,10 +656,10 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                             <p>Dear Selvi,</p>
                             <p>
-                                This is an automated notification to inform you that the Manpower Requisition Form (MRF) submitted has been approved by Rajesh.
+                                This is an automated notification to inform you that the <b>Manpower Requisition Form (MRF)</b> submitted has been approved by <b>Rajesh</b>.
                             </p>
                             <p>
-                                The hiring manager has also been notified for further coordination.
+                                The <b>${hiringManager?.emp_name}</b> has also been notified for further coordination.
                             </p>
                             <br>
                             <p style="color: #555;">
@@ -691,7 +706,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                             <p>Hello ${user_info?.emp_name},</p>
 
                             <p>
-                                Your Manpower Requisition Form (MRF) has been successfully approved by the HR . Kindly note the MRF number ${mrfNumber} generated for your request.  </p>
+                                Your <b>Manpower Requisition Form (MRF)</b> has been successfully approved by the <b>HR</b>. Kindly note the MRF number <b>${mrfNumber}</b> generated for your request.  </p>
 
                             <p style="margin-top: 30px; color: #555;">
                                 Thanks & regards,<br>
@@ -871,8 +886,8 @@ router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
 router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, async (req, res) => {
     try {
         const { status, emp_id } = req.params;
-        console.log(status, emp_id, "status, emp_id")
-        let query = 'SELECT mr.*, ep.emp_name, ed.depart AS department_name, CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))<=10 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE ';
+        console.log(status, emp_id, "status, emp_id");
+        let query = 'SELECT mr.*, ep.emp_name, ed.depart AS department_name, CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))>7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE ';
         const params = [];
 
         if (status === 'Approve') {

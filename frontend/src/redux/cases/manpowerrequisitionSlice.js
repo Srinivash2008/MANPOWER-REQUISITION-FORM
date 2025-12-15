@@ -3,6 +3,36 @@ import axios from 'axios';
 
 // Async thunk to fetch email Template data
 
+
+
+export const fetchUserByEmpId = createAsyncThunk(
+  'manpowerRequisition/fetchUserByEmpId',
+  async (emp_id, { rejectWithValue, getState }) => {
+    console.log('fetchUserByEmpId called with emp_id:', emp_id);
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/cases/get-user-by-empid/${emp_id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch user by emp_id.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+
+
 // Async thunk to fetch email Template data
 export const fetchManpowerRequisitionByuserId = createAsyncThunk(
   'manpowerRequisition/fetchManpowerRequisitionByuserId',
@@ -428,6 +458,7 @@ export const updateManpowerRequisition = createAsyncThunk(
 const manpowerrequisitionSlice = createSlice({
   name: 'manpowerRequisition',
   initialState: {
+    userByEmpId: null,
     data: [],
     mfrCounts: [],
     departments: [],
@@ -451,6 +482,19 @@ const manpowerrequisitionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchUserByEmpId.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchUserByEmpId.fulfilled, (state, action) => {
+        state.status = 'succeeded'; 
+        state.userByEmpId = action.payload;
+      })
+      .addCase(fetchUserByEmpId.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.userByEmpId = null;
+      })
 
       .addCase(fetchManpowerRequisition.pending, (state) => {
         state.status = 'loading';
