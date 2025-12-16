@@ -472,30 +472,31 @@ const ManpowerRequisitionByStatus = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {paginatedManpower.map((manpower, index) => (
-                                        <StyledTableRow key={manpower.id}>
-                                            <StyledTableCell component="th" scope="row">
-                                                {page * rowsPerPage + index + 1}
-                                            </StyledTableCell>
-                                            <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
-                                            <StyledTableCell>{manpower.department_name}</StyledTableCell>
-                                            <StyledTableCell>{manpower.employment_status}</StyledTableCell>
-                                            <StyledTableCell>{manpower.designation}</StyledTableCell>
-                                            {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
-                                            <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
-                                            {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
+                                    {paginatedManpower.length > 0 ? (
+                                        paginatedManpower.map((manpower, index) => (
+                                            <StyledTableRow key={manpower.id}>
+                                                <StyledTableCell component="th" scope="row">
+                                                    {page * rowsPerPage + index + 1}
+                                                </StyledTableCell>
+                                                <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
+                                                <StyledTableCell>{manpower.department_name}</StyledTableCell>
+                                                <StyledTableCell>{manpower.employment_status}</StyledTableCell>
+                                                <StyledTableCell>{manpower.designation}</StyledTableCell>
+                                                {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
+                                                <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
+                                                {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
                         <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
-                                            <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
-                                            {/* <StyledTableCell>{manpower.education}</StyledTableCell>
+                                                <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
+                                                {/* <StyledTableCell>{manpower.education}</StyledTableCell>
                         <StyledTableCell>{manpower.experience}</StyledTableCell> 
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-                                            {/* <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell> */}
-                                            <StyledTableCell><StatusBadge status={manpower.director_status  !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell> 
-                                              <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
-                                               
-                                            {/* <StyledTableCell>
+                                                {/* <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell> */}
+                                                <StyledTableCell><StatusBadge status={manpower.director_status !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
+                                                <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
+
+                                                {/* <StyledTableCell>
                                                 <Tooltip title="Edit Manpower" arrow placement="top">
                                                     <IconButton
                                                         aria-label="edit"
@@ -517,44 +518,51 @@ const ManpowerRequisitionByStatus = () => {
                                                     </IconButton>
                                                 </Tooltip>
                                             </StyledTableCell> */}
-                                            <StyledTableCell>
-                                                <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
-                                                    <MoreVertIcon />
-                                                </IconButton>
-                                                <Menu
-                                                    id={`actions-menu-${manpower.id}`}
-                                                    anchorEl={anchorEl}
-                                                    open={Boolean(anchorEl) && currentManpowerId === manpower.id}
-                                                    onClose={handleMenuClose}
-                                                    PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
-                                                >
-                                                    <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
-                                                    {/* {!((isHr && manpower.director_status === "Approve") ||
+                                                <StyledTableCell>
+                                                    <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
+                                                        <MoreVertIcon />
+                                                    </IconButton>
+                                                    <Menu
+                                                        id={`actions-menu-${manpower.id}`}
+                                                        anchorEl={anchorEl}
+                                                        open={Boolean(anchorEl) && currentManpowerId === manpower.id}
+                                                        onClose={handleMenuClose}
+                                                        PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
+                                                    >
+                                                        <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
+                                                        {/* {!((isHr && manpower.director_status === "Approve") ||
                                                         (isDirector && manpower.hr_status === "HR Approve") ||
                                                         (isSeniorManager && (manpower.director_status === "Approve" || manpower.hr_status === "HR Approve"))) && (
                                                             <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
                                                         )} */}
 
 
-                                                    {(isDirector && manpower.director_status !== "Approve")
-                                                        && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
-                                                    }
-                                                    {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
-                                                        && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
-                                                    }
-                                                    {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
-                                                        && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
-                                                    }
-                                                    {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status == 'Pending' && (
-                                                        <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
-                                                    )}
-                                                    {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                                        <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
-                                                    )}
-                                                </Menu>
+                                                        {(isDirector && manpower.director_status !== "Approve")
+                                                            && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                                        }
+                                                        {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
+                                                            && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                                        }
+                                                        {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
+                                                            && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                                        }
+                                                        {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status == 'Pending' && (
+                                                            <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
+                                                        )}
+                                                        {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                                                            <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
+                                                        )}
+                                                    </Menu>
+                                                </StyledTableCell>
+                                            </StyledTableRow>
+                                        ))
+                                    ) : (
+                                        <StyledTableRow>
+                                            <StyledTableCell colSpan={10} align="center">
+                                                No data available.
                                             </StyledTableCell>
                                         </StyledTableRow>
-                                    ))}
+                                    )}
                                 </TableBody>
                             </Table>
                         </TableContainer>) : (
@@ -567,20 +575,24 @@ const ManpowerRequisitionByStatus = () => {
                                     md: 'repeat(3, 1fr)'  // 3 cards on medium and larger screens
                                 },
                                 gap: 3
-                            }}>
-                                {paginatedManpower.map((manpower, index) => (
-                                    <ManpowerCard
-                                        key={manpower.id}
-                                        manpower={manpower}
-                                        index={index}
-                                        onView={handleViewClick}
-                                        onEdit={handleEditClick}
-                                        onMenuClick={handleMenuClick}
-                                        onWithdraw={handleWithdrawClick}
-                                        onDelete={handleDeleteClick}
-                                    />
-                                ))}
-                            </Box>
+                            }}> 
+                                {paginatedManpower.length > 0 ? (
+                                    paginatedManpower.map((manpower, index) => (
+                                        <ManpowerCard
+                                            key={manpower.id}
+                                            manpower={manpower}
+                                            index={index}
+                                            onView={handleViewClick}
+                                            onEdit={handleEditClick}
+                                            onMenuClick={handleMenuClick}
+                                            onWithdraw={handleWithdrawClick}
+                                            onDelete={handleDeleteClick}
+                                        />
+                                    ))
+                                ) : (
+                                    <Typography sx={{ textAlign: 'center', p: 4, gridColumn: '1 / -1' }}>No data available.</Typography>
+                                )}
+                            </Box> 
                         )}
                         <TablePagination
                             rowsPerPageOptions={[10, 25, 50, 100]}

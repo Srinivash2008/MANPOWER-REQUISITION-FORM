@@ -541,42 +541,50 @@ const ManpowerRequisitionReport = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {paginatedManpower.map((manpower, index) => (
-                    <StyledTableRow key={manpower.id}>
-                      <StyledTableCell component="th" scope="row">
-                        {page * rowsPerPage + index + 1}
-                      </StyledTableCell>
-                      <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
-                      <StyledTableCell>{manpower.department_name}</StyledTableCell>
-                      <StyledTableCell>{manpower.employment_status}</StyledTableCell>
-                      <StyledTableCell>{manpower.designation}</StyledTableCell>
-                      {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
-                      <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
-                      {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
+                  {paginatedManpower.length > 0 ? (
+                    paginatedManpower.map((manpower, index) => (
+                      <StyledTableRow key={manpower.id}>
+                        <StyledTableCell component="th" scope="row">
+                          {page * rowsPerPage + index + 1}
+                        </StyledTableCell>
+                        <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
+                        <StyledTableCell>{manpower.department_name}</StyledTableCell>
+                        <StyledTableCell>{manpower.employment_status}</StyledTableCell>
+                        <StyledTableCell>{manpower.designation}</StyledTableCell>
+                        {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
+                        <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
+                        {/* <StyledTableCell>{manpower.replacement_detail}</StyledTableCell>
                         <StyledTableCell>{manpower.ramp_up_reason}</StyledTableCell> */}
-                      <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
-                      {/* <StyledTableCell>{manpower.education}</StyledTableCell>
+                        <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
+                        {/* <StyledTableCell>{manpower.education}</StyledTableCell>
                         <StyledTableCell>{manpower.experience}</StyledTableCell>
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-                        
-                      <StyledTableCell><StatusBadge status={manpower.director_status == "Pending" ? "-" : manpower.director_status} /></StyledTableCell>
-                      <StyledTableCell><StatusBadge status={manpower.hr_status == "Pending" ? "-" : manpower.hr_status} /></StyledTableCell>
-                      <StyledTableCell>
-                        <Tooltip title="View Manpower" arrow placement="top">
-                          <IconButton
-                            aria-label="view"
-                            color="info"
-                            sx={{ mr: 1, width: "30px" }}
-                            onClick={() => handleViewClick(manpower.id)}
-                          >
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
+
+                        <StyledTableCell><StatusBadge status={manpower.director_status == "Pending" ? "-" : manpower.director_status} /></StyledTableCell>
+                        <StyledTableCell><StatusBadge status={manpower.hr_status == "Pending" ? "-" : manpower.hr_status} /></StyledTableCell>
+                        <StyledTableCell>
+                          <Tooltip title="View Manpower" arrow placement="top">
+                            <IconButton
+                              aria-label="view"
+                              color="info"
+                              sx={{ mr: 1, width: "30px" }}
+                              onClick={() => handleViewClick(manpower.id)}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))
+                  ) : (
+                    <StyledTableRow>
+                      <StyledTableCell colSpan={10} align="center">
+                        No data available.
                       </StyledTableCell>
                     </StyledTableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
