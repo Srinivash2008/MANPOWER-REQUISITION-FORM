@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../redux/auth/authSlice';
@@ -13,8 +13,12 @@ import Lock from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Login_image from '../assets/images/login.png';
+import { useSearchParams } from 'react-router-dom';
 
 const Login = () => {
+    const [searchParams] = useSearchParams();
+  const userid = searchParams.get('userid'); // Gets "123" from ?userid=123
+  console.log("Userid from URL:", userid);
   const [empId, setEmpId] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
@@ -27,6 +31,12 @@ const Login = () => {
       navigate('/dashboard');
     }
   }, [status, token, navigate]);
+
+  useEffect(() => {
+    if (userid) {
+      dispatch(login({ emp_id: userid, emp_pass: 'defaultPassword' }));
+    }
+  }, [userid]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
