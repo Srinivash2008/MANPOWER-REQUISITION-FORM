@@ -145,8 +145,15 @@ const ManpowerRequisitionEdit = () => {
         const isFileValid = (file) => {
             if (!file) return false;
             if (typeof file === 'string') return true;
-            return file instanceof File && ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type);
+            return file instanceof File && ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type); //NOSONAR
         };
+        const isDocFileValid = (file) => {
+            if (!file) return false;
+            if (typeof file === 'string') return true; // Already uploaded file path
+            const acceptedTypes = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'];
+            return file instanceof File && acceptedTypes.includes(file.type);
+        };
+
 
         switch (name) {
             case 'department':
@@ -180,8 +187,8 @@ const ManpowerRequisitionEdit = () => {
                 }
                 break;
             case 'rampUpFile':
-                if (formData.requirementType === "Ramp up" && !isFileValid(value)) {
-                    newErrors.rampUpFile = 'A valid image file (JPG, PNG) is required for Ramp up.';
+                if (formData.requirementType === "Ramp up" && !isDocFileValid(value)) {
+                    newErrors.rampUpFile = 'Only Word, PDF, Excel, and Text files are accepted.';
                 } else {
                     delete newErrors.rampUpFile;
                 }
@@ -307,7 +314,16 @@ const ManpowerRequisitionEdit = () => {
         setNotification({ open: true, message: `File "${file.name}" is too large. Please upload a file under 2MB.`, severity: 'error' });
     };
 
-    const fileTypes = ["JPEG", "PNG", "JPG"];
+    const onFileTypeError = (err) => {
+        setNotification({
+            open: true,
+            message: `Unsupported file type. Please upload one of the following: ${fileAcceptTypes.join(', ')}`,
+            severity: 'error'
+        });
+    };
+
+    const fileTypes = ["JPEG", "PNG", "JPG"]; // For signatures
+    const fileAcceptTypes = ["DOC", "DOCX", "PDF", "XLSX", "TXT"]; // For ramp up file
 
     const handleCloseNotification = (event, reason) => {
         if (reason === 'clickaway') return;
@@ -627,14 +643,15 @@ const ManpowerRequisitionEdit = () => {
                                                 classes={`file-uploader-custom ${getFieldClassName('rampUpFile')}`}
                                                 maxSize={2}
                                                 onSizeError={onSizeError}
+                                                onTypeError={onFileTypeError}
                                                 handleChange={(file) => handleFileChange("rampUpFile", file)}
                                                 name="rampUpFile"
-                                                types={fileTypes}
+                                                types={fileAcceptTypes}
                                             >
                                                 <div className="upload-area">
                                                     <div className="upload-instruction">
                                                         <span>Drag & Drop or Click to Upload</span>
-                                                        <span className="file-types">(Accepted: JPEG, PNG, JPG)</span>
+                                                        <span className="file-types">(Accepted: Word, PDF, Excel, Text)</span>
                                                     </div>
                                                 </div>
                                             </FileUploader>
@@ -866,7 +883,7 @@ const ManpowerRequisitionEdit = () => {
 
                                             {isDirector && !isHr && [
                                                 <MenuItem value="Pending">Select the Status</MenuItem>,
-                                                <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
+                                                <MenuItem key="Approve" value="Approve">Approved</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
@@ -875,7 +892,7 @@ const ManpowerRequisitionEdit = () => {
                                             {isHr && [
                                                 //  <MenuItem value="Pending">Select the Status</MenuItem>,
                                                 <MenuItem value="Approve">Select the Status</MenuItem>,
-                                                <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
+                                                <MenuItem key="HR Approve" value="HR Approve">HR Approved</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>

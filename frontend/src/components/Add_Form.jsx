@@ -152,9 +152,10 @@ const App_Form = () => {
             case 'rampUpFile':
                 if (formData.requirementType === "Ramp up" && !value) {
                     newErrors.rampUpFile = 'File upload is required for Ramp up.';
-                } else if (value && !['application/msword', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(value.type)) {
-                    newErrors.rampUpFile = 'Only Word, PDF, Excel files are accepted';
+                } else if (value && !['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'].includes(value.type)) {
+                    newErrors.rampUpFile = 'Only Word, DOCX, PDF, Excel, and Text files are accepted';
                 } else {
+                  
                     delete newErrors.rampUpFile;
                 }
                 break;
@@ -255,8 +256,8 @@ const App_Form = () => {
             if (!formData.projectName) newErrors.projectName = 'Project Name is required for Ramp up.';
             if (!formData.projectionPlan) newErrors.projectionPlan = 'Projection Plan is required for Ramp up.';
             if (!formData.rampUpFile) newErrors.rampUpFile = 'File upload is required for Ramp up.';
-            else if (!['application/msword', 'application/pdf', 'application/vnd.ms-excel'].includes(formData.rampUpFile.type)) {
-                newErrors.rampUpFile = 'Only Word, PDF, Excel files are accepted';
+            else if (!['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'].includes(formData.rampUpFile.type)) {
+                newErrors.rampUpFile = 'Only Word, DOCX, PDF, Excel, and Text files are accepted';
             }
         }
 
@@ -329,7 +330,7 @@ const App_Form = () => {
     });
 
     const fileTypes = ["JPEG", "PNG", "JPG"];
-    const fileAcceptTypes = ["Word", "PDF", "Excel"];
+    const fileAcceptTypes = ["DOC", "DOCX", "PDF", "XLSX", "TXT"];
 
     useEffect(() => {
         if (user?.emp_id) {
@@ -668,7 +669,7 @@ const App_Form = () => {
                                                 name="rampUpFile"
                                                 types={fileAcceptTypes}
                                             >
-                                                <div className={`upload-area ${getFieldClassName('rampUpFile')}`}>
+                                                <div className={`upload-area ${getFieldClassName('rampUpFile')}`} style={{border: errors.rampUpFile ? '2px dashed red' : ''}}>
                                                     <div className="upload-instruction">
                                                         <span>Drag & Drop or Click to Upload</span>
                                                         <span className="file-types">(Accepted: Word, PDF, Excel)</span>

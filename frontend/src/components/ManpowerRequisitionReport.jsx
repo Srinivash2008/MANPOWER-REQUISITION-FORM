@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Box, Typography, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Tooltip, Chip
-} from "@mui/material";
+  Box, Typography, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Tooltip, Chip,
+  MenuItem, FormControl, InputLabel, Select, Input
+} from "@mui/material"; 
+import FilterListIcon from '@mui/icons-material/FilterList';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
+import EventIcon from '@mui/icons-material/Event';
+import ChecklistIcon from '@mui/icons-material/Checklist';
 import { fetchManpowerRequisition, fetchManpowerRequisitionByuserId, fetchManpowerRequisitionFH } from '../redux/cases/manpowerrequisitionSlice';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import "react-quill-new/dist/quill.snow.css";
@@ -55,7 +60,12 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const StatusBadge = ({ status }) => {
   const theme = useTheme();
-
+  let displayStatus = status;
+  if (status === 'Approve') {
+    displayStatus = 'Approved';
+  } else if (status === 'HR Approve') {
+    displayStatus = 'HR Approved';
+  }
   const statusStyles = {
     'Approve': {
       backgroundColor: '#28a745', // A vibrant green
@@ -92,28 +102,32 @@ const StatusBadge = ({ status }) => {
     }
   };
 
-  const style = statusStyles[status] || statusStyles.default;
+  const style = statusStyles[displayStatus] || statusStyles[status] || statusStyles.default;
 
   const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
 
-  return <Chip label={status} size="small" sx={sx} />;
+  return <Chip label={displayStatus} size="small" sx={{...sx, '& .MuiChip-label': {
+          color: 'white'
+        }}} />;
 };
 
 const ManpowerRequisitionReport = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
-  const manpowerRequisitionFHList = useSelector((state) => state.manpowerRequisition.selectedRequisitionFH);
+  let manpowerRequisitionFHList = useSelector((state) => state.manpowerRequisition.selectedRequisitionFH);
   const status = useSelector((state) => state.manpowerRequisition.status);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const navigate = useNavigate();
-  const [statusfilter, setStatusFilter] = useState("");
   const [startdatefilter, setStartDateFilter] = useState("");
   const [enddatefilter, setEndDateFilter] = useState("");
+  const [directorStatusFilter, setDirectorStatusFilter] = useState("");
+  const [hrStatusFilter, setHrStatusFilter] = useState("");
   const [functionalheadfilter, setFunctionalHeadFilter] = useState("");
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     if (status === 'idle' && user) {
@@ -148,8 +162,10 @@ const ManpowerRequisitionReport = () => {
       (manpower?.created_by !== undefined && manpower?.created_by !== null &&
         String(manpower.created_by) === String(functionalheadfilter));
 
-    const matchesStatus = statusfilter === "" || manpower?.status === statusfilter;
-
+    const matchesDirectorStatus = directorStatusFilter === "" || manpower?.director_status === directorStatusFilter;
+    
+    const matchesHrStatus = hrStatusFilter === "" || manpower?.hr_status === hrStatusFilter;
+    
     const matchesStartDate = !startdatefilter ||
       (manpower?.created_at && manpower.created_at.split('T')[0] >= startdatefilter);
 
@@ -159,7 +175,7 @@ const ManpowerRequisitionReport = () => {
     const matchesSearchTerm = manpower?.employment_status?.toLowerCase().includes(lowerSearchTerm) ||
       manpower?.designation?.toLowerCase().includes(lowerSearchTerm);
 
-    return matchesFunctionalHead && matchesStatus && matchesStartDate && matchesEndDate && matchesSearchTerm;
+    return matchesFunctionalHead && matchesDirectorStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesSearchTerm;
   });
 
   const paginatedManpower =
@@ -225,17 +241,37 @@ const ManpowerRequisitionReport = () => {
     navigate(`/manpower_requisition_view/${id}`);
   }
 
-  const statuses = ["Pending", "Approve", "Reject", "Raise Query", "On Hold", "HR Approve"];
+  const directorStatuses = [
+    { value: "Pending", label: "Pending" },
+    { value: "Approve", label: "Approved" },
+    { value: "Reject", label: "Reject" },
+    { value: "Raise Query", label: "Raise Query" },
+    { value: "On Hold", label: "On Hold" },
+  ];
+  const hrStatuses = [
+    { value: "Pending", label: "Pending" },
+    { value: "HR Approve", label: "HR Approved" },
+    { value: "Reject", label: "Reject" },
+    { value: "Raise Query", label: "Raise Query" },
+    { value: "On Hold", label: "On Hold" },
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "statusfilter") {
-      setStatusFilter(value);
-    } else if (name === "startdatefilter") {
+    if (name === "startdatefilter") {
+      if (enddatefilter && value > enddatefilter) {
+        setEndDateFilter("");
+      }
       setStartDateFilter(value);
     } else if (name === "enddatefilter") {
-      setEndDateFilter(value);
+      if (!startdatefilter || value >= startdatefilter) {
+        setEndDateFilter(value);
+      }
+    } else if (name === "directorStatusFilter") {
+      setDirectorStatusFilter(value);
+    } else if (name === "hrStatusFilter") {
+      setHrStatusFilter(value);
     } else if (name === "functionalheadfilter") {
       setFunctionalHeadFilter(value);
     }
@@ -357,9 +393,9 @@ const ManpowerRequisitionReport = () => {
         m.hiring_tat_normal_cat2,
         m.mrf_number,
         m.status,
-        m.hr_status,
-        m.hr_comments,
-        m.director_status,
+        m.hr_status === 'HR Approve' ? 'HR Approved' : m.hr_status,
+        m.hr_comments, 
+        m.director_status === 'Approve' ? 'Approved' : m.director_status,
         m.director_comments,
         m.created_at?.split("T")[0] ?? ""
       ]);
@@ -386,85 +422,155 @@ const ManpowerRequisitionReport = () => {
           <Paper sx={{ p: 2, borderRadius: '8px' }} >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant='h5' sx={{
-                fontWeight: 'bold',
-                mb: 2,
+                fontWeight: 700,
+                color: 'primary.success',
               }}>
                 Manpower Requisition Report
               </Typography>
             </Box>
 
-            <div className="form-grid">
-              <div className="form-section">
-                <div className="section-grid multi-cols" >
-                  <div className="form-field-item">
-                    <label className="form-label">Functional Head</label>
-                    <select
-                      style={{ width: "60%" }}
-                      name="functionalheadfilter"
-                      value={functionalheadfilter}
-                      onChange={handleChange}
-                      className="form-select"
-                    >
-                      <option value="">Select Functional Head</option>
-                      {manpowerRequisitionFHList?.map((fh) => (
-                        <option key={fh.employee_id} value={fh.employee_id}>
-                          {fh.ReportingManager}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-field-item">
-                    <label className="form-label" style={{ marginLeft: "-40%" }}>Status</label>
-                    <select
-                      style={{ width: "60%", marginLeft: "-40%" }}
-                      name="statusfilter"
-                      value={statusfilter}
-                      onChange={handleChange}
-                      className="form-select"
-                    >
-                      <option value="">Select Status</option>
-                      {statuses?.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(auto-fit, minmax(240px, 1fr))' },
+              gap: 2.5,
+              p: 2.5,
+              borderRadius: '12px',
+              bgcolor: 'rgba(42, 127, 102, 0.05)',
+              border: '1px solid rgba(42, 127, 102, 0.1)',
+            }}>
+                {(user.emp_id == "1722" || user.emp_id == "1400") && (
+                    <FormControl variant="standard" fullWidth>
+                        <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Functional Head</InputLabel>
+                        <Select
+                            name="functionalheadfilter"
+                            value={functionalheadfilter}
+                            onChange={handleChange}
+                            displayEmpty
+                            MenuProps={{
+                                PaperProps: {
+                                    style: {
+                                        maxHeight: 240, // Approx 5 items
+                                    },
+                                },
+                            }}
+                        >
+                            <MenuItem value=""><em>All Functional Heads</em></MenuItem>
+                            {manpowerRequisitionFHList?.filter(fh => fh.employee_id != 1400).map((fh) => (
+                                <MenuItem key={fh.employee_id} value={fh.employee_id}>
+                                    {fh.ReportingManager}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
 
-                  <div className="form-field-item">
-                    <label className="form-label" style={{ marginLeft: "-80%" }}>Start Date</label>
-                    <input
-                      style={{ width: "60%", marginLeft: "-80%" }}
-                      className="form-input"
-                      type="date"
-                      name="startdatefilter"
-                      value={startdatefilter}
-                      onChange={handleChange}
-                      max={enddatefilter}
-                    />
-                  </div>
+                 <FormControl variant="standard" fullWidth>
+                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Director Status</InputLabel>
+                    <Select
+                        name="directorStatusFilter"
+                        value={directorStatusFilter}
+                        onChange={handleChange}
+                        displayEmpty
+                        MenuProps={{
+                            PaperProps: {
+                                style: {
+                                    maxHeight: 240,
+                                },
+                            },
+                        }}
+                    >
+                        <MenuItem value=""><em>All Director Statuses</em></MenuItem>
+                        {directorStatuses?.map((status) => (
+                            <MenuItem key={status.value} value={status.value}>
+                                {status.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-                  <div className="form-field-item">
-                    <label className="form-label" style={{ marginLeft: "-120%" }}>End Date</label>
-                    <input
-                      style={{ width: "60%", marginLeft: "-120%" }}
-                      className="form-input"
-                      type="date"
-                      name="enddatefilter"
-                      value={enddatefilter}
-                      onChange={handleChange}
-                      min={startdatefilter}
+                <FormControl variant="standard" fullWidth>
+                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>HR Status</InputLabel>
+                    <Select
+                        name="hrStatusFilter"
+                        value={hrStatusFilter}
+                        onChange={handleChange}
+                        displayEmpty
+                        MenuProps={{
+                            PaperProps: {
+                                style: {
+                                    maxHeight: 240,
+                                },
+                            },
+                        }}
+                    >
+                        <MenuItem value=""><em>All HR Statuses</em></MenuItem>
+                        {hrStatuses?.map((status) => (
+                            <MenuItem key={status.value} value={status.value}>
+                                {status.label}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                <FormControl variant="standard" fullWidth>
+                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Start Date</InputLabel>
+                    <Input
+                        type="date"
+                        name="startdatefilter"
+                        value={startdatefilter}
+                        onChange={handleChange}
+                        max={enddatefilter || today}
+                        sx={{
+                            '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
+                            '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
+                        }}
                     />
-                  </div>
-                </div>
-              </div>
-            </div>
+                </FormControl>
+
+                <FormControl variant="standard" fullWidth>
+                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>End Date</InputLabel>
+                    <Input
+                        type="date"
+                        name="enddatefilter"
+                        value={enddatefilter}
+                        onChange={handleChange}
+                        min={startdatefilter}
+                        max={today}
+                        sx={{
+                            '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
+                            '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
+                        }}
+                    />
+                </FormControl>
+
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setFunctionalHeadFilter("");
+                  setDirectorStatusFilter("");
+                  setHrStatusFilter("");
+                  setStartDateFilter("");
+                  setEndDateFilter("");
+                  setSearchTerm("");
+                }}
+                startIcon={<FilterListIcon sx={{color:"#fff"}}/>}
+                sx={{
+                  height: '36px',
+                  width: '100px',
+                  bgcolor: 'primary.main',
+                  '&:hover': { bgcolor: 'primary.dark' },
+                  alignSelf: 'end'
+                }}
+              >
+                Clear
+              </Button>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 12 }}>
-          <Paper sx={{ p: 2, borderRadius: '8px', marginTop: '8vh' }}>
+          <Paper sx={{ p: 2, borderRadius: '8px', marginTop: '2vh' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant='h6' sx={{
                 flexGrow: 1,
@@ -532,9 +638,11 @@ const ManpowerRequisitionReport = () => {
                       <StyledTableCell>CTC Range</StyledTableCell>
                       <StyledTableCell>Specific Info</StyledTableCell>
                       <StyledTableCell>MRF Number</StyledTableCell> */}
+                       <StyledTableCell>Created Date</StyledTableCell>
              
                     <StyledTableCell>Director Status</StyledTableCell>
-                           <StyledTableCell>HR Status</StyledTableCell>
+                    <StyledTableCell>HR Status</StyledTableCell>
+                   
                     <StyledTableCell>
                       Action
                     </StyledTableCell>
@@ -558,12 +666,12 @@ const ManpowerRequisitionReport = () => {
                         <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.education}</StyledTableCell>
                         <StyledTableCell>{manpower.experience}</StyledTableCell>
-                        <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-
+                        <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
                         <StyledTableCell><StatusBadge status={manpower.director_status == "Pending" ? "-" : manpower.director_status} /></StyledTableCell>
                         <StyledTableCell><StatusBadge status={manpower.hr_status == "Pending" ? "-" : manpower.hr_status} /></StyledTableCell>
+                       
                         <StyledTableCell>
                           <Tooltip title="View Manpower" arrow placement="top">
                             <IconButton

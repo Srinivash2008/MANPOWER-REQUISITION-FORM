@@ -194,7 +194,7 @@ router.post(
 
                             <p>
                                 Please review it using the link below:
-                                <a href="http://localhost:5173/">View Manpower Requisition</a>
+                                <a href="${process.env.FRONTEND_URL}">View Manpower Requisition</a>
                             </p>
 
                             <p style="margin-top: 30px; color: #555;">
@@ -438,7 +438,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
                         </p>
                         <p>
                             You can view the MRF and the query here:
-                            <a href="http://localhost:5173/manpower_requisition_view/${query_manpower_requisition_pid}">View MRF</a>
+                            <a href="${process.env.FRONTEND_URL}/manpower_requisition_view/${query_manpower_requisition_pid}">View MRF</a>
                         </p>
                         <br>
                         <p style="color: #555;">
@@ -471,13 +471,13 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
                     subject: `Query Raised by ${queryRaiserName} on Your MRF`,
                     html: `
                     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                        <p>Dear Rajesh,</p>
+                        <p>Dear ${creator.emp_name},</p>
                         <p>
                             <b>${queryRaiserName}</b> has raised a query on your MRF. Please review the query and reply to this email with the required information so the hiring process can proceed further.
                         </p>
                         <p>
                             You can view the MRF and the query here:
-                            <a href="http://localhost:5173/manpower_requisition_view/${query_manpower_requisition_pid}">View MRF</a>
+                            <a href="${process.env.FRONTEND_URL}/manpower_requisition_view/${query_manpower_requisition_pid}">View MRF</a>
                         </p>
                         <br>
                         <p style="color: #555;">
@@ -533,12 +533,12 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
                     let nextMrfNum = 1;
                     if (lastMrf.length > 0 && lastMrf[0].mrf_number) {
-                        const lastNum = parseInt(lastMrf[0].mrf_number.split('- ')[1], 10);
+                          const lastNum = parseInt(lastMrf[0].mrf_number.split('-')[1], 10);
+                      
                         if (!isNaN(lastNum)) {
                             nextMrfNum = lastNum + 1;
                         }
                     }
-                    // mrfNumber = `MRF- ${String(nextMrfNum).padStart(2, '0')}`;
                     mrfNumber = `MRF-${String(nextMrfNum).padStart(6, '0')}`;
                 }
             }
@@ -593,7 +593,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
                             <p>
                                 Please review it using the link below:
-                                <a href="http://localhost:5173/">View Manpower Requisition</a>
+                                <a href="${process.env.FRONTEND_URL}">View Manpower Requisition</a>
                             </p>
 
                             <p style="margin-top: 30px; color: #555;">
@@ -929,6 +929,7 @@ router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, as
             isdelete: row.isdelete,
             emp_name: row.emp_name,
             hr_status: row.hr_status,
+            created_at: row.created_at,
             director_status: row.director_status,
             isWithdrawOpen: row.isWithdrawOpen,
         }));

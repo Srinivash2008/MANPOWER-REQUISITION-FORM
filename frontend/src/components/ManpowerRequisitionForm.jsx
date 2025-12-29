@@ -97,7 +97,12 @@ const tickVariants = {
 
 const StatusBadge = ({ status }) => {
   const theme = useTheme();
-
+  let displayStatus = status;
+  if (status === 'Approve') {
+    displayStatus = 'Approved';
+  } else if (status === 'HR Approve') {
+    displayStatus = 'HR Approved';
+  }
   const statusStyles = {
     'Approve': {
       backgroundColor: '#28a745', // A vibrant green
@@ -139,11 +144,11 @@ const StatusBadge = ({ status }) => {
     }
   };
 
-  const style = statusStyles[status] || statusStyles.default;
+  const style = statusStyles[displayStatus] || statusStyles[status] || statusStyles.default;
 
   const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
 
-  return <Chip label={status} size="small" sx={{...sx, '& .MuiChip-label': {
+  return <Chip label={displayStatus} size="small" sx={{...sx, '& .MuiChip-label': {
         color: 'white'
       }}} />;
 };
@@ -603,6 +608,7 @@ const ManpowerRequisition = () => {
                       <StyledTableCell>Designation</StyledTableCell>
                       <StyledTableCell>Requirement Type</StyledTableCell>
                       <StyledTableCell>TAT Request</StyledTableCell>
+                      <StyledTableCell>Created Date</StyledTableCell>
                       <StyledTableCell>Director Status</StyledTableCell>
                       <StyledTableCell>HR Status</StyledTableCell>
                       <StyledTableCell>Action</StyledTableCell>
@@ -619,6 +625,7 @@ const ManpowerRequisition = () => {
                           <StyledTableCell>{manpower.designation}</StyledTableCell>
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
+                          <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.director_status !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
                           {/* <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell> */}

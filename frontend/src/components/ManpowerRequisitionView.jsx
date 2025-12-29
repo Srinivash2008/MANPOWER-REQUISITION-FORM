@@ -353,7 +353,7 @@ console.log(selectedRequisition,"selectedRequisition")
                         <div className="form-section">
                             <h3 className="section-title"><FaUserCheck /> Director Status</h3>
                             <div className="section-grid multi-col">
-                                <DisplayField label="Director Status Name" value={formData.directorstatus == 'Pending' ? "-" : formData.directorstatus} />
+                                <DisplayField label="Director Status Name" value={formData.directorstatus == 'Pending' ? "-" : (formData.directorstatus === 'Approve' ? 'Approved' : formData.directorstatus)} />
                             </div>
                             {formData.directorstatus === 'Raise Query' ? (
                                 <div style={{ marginTop: '1rem' }}>
@@ -369,7 +369,7 @@ console.log(selectedRequisition,"selectedRequisition")
                         <div className="form-section">
                             <h3 className="section-title"><FaUserCheck /> HR Status</h3>
                             <div className="section-grid multi-col">
-                                <DisplayField label="Status Name" value={formData.hrstatus == 'Pending' ? "-" : formData.hrstatus} />
+                                <DisplayField label="Status Name" value={formData.hrstatus == 'Pending' ? "-" : (formData.hrstatus === 'HR Approve' ? 'HR Approved' : formData.hrstatus)} />
                             </div>
                             {formData.hrstatus === 'Raise Query' ? (
                                 <div style={{ marginTop: '1rem' }}>
