@@ -177,10 +177,8 @@ router.post(
                     // The 'to' email should be the submitter's email address (emp_email)
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
                     to: "nikita@pdmrindia.com",
-                    // to: "je.rajesh@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
                     cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
-                    // cc: `selvi@pdmrindia.com, ${rows?.mail_id}`
                     subject: `A New Manpower requisition Form submitted for your approval`,
                     html: `
                         <div style="
@@ -426,7 +424,6 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
                 const mailOptions = {
                     from: process.env.EMAIL_USER,
                     // to: creator.mail_id, // Hiring Manager's email
-                    // cc: 'selvi@pdmrindia.com', // HR email
                     to: "srinivasan@pdmrindia.com",
                     cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
                     subject: 'Query Raised on Your MRF',
@@ -576,10 +573,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                     // The 'to' email should be the submitter's email address (emp_email)
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
                     to: "nikita@pdmrindia.com",
-                    // to: "je.rajesh@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
                     cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
-                    // cc: `selvi@pdmrindia.com, ${rows?.mail_id}`
                     subject: `A New Manpower requisition Form submitted for your approval`,
                     html: `
                         <div style="
@@ -647,7 +642,6 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
                 const requestorMailOptions = {
                     from: process.env.EMAIL_USER,
-                    // to: "selvi@pdmrindia.com",
                     // cc: hiringManager?.mail_id,
                     to: "srinivasan@pdmrindia.com",
                     cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
@@ -694,10 +688,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                     // The 'to' email should be the submitter's email address (emp_email)
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
                     to: "nikita@pdmrindia.com",
-                    // to: "je.rajesh@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
                     cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
-                    // cc: `selvi@pdmrindia.com, ${rows?.mail_id}`
                     subject: `MRF Approval Confirmation`,
                     html: `
                         <div style="

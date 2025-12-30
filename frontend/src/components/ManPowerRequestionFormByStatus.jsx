@@ -98,6 +98,13 @@ const StatusBadge = ({ status }) => {
     } else if (status === 'HR Approve') {
         displayStatus = 'HR Approved';
     }
+        else if (status === 'Reject') {
+        displayStatus = 'Rejected';
+    }
+        else if (status === 'Raise Query') {
+        displayStatus = 'Raise Query';
+    }
+
     const statusStyles = {
         'Approve': {
             backgroundColor: '#28a745', // A vibrant green
@@ -309,10 +316,18 @@ const ManpowerRequisitionByStatus = () => {
 
     const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
-    const filteredManpower = manpowerArray.filter(manpower =>
-        manpower?.employment_status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        manpower?.designation.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredManpower = manpowerArray.filter(manpower => {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return (manpower?.emp_name && manpower.emp_name.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.department_name && manpower.department_name.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.employment_status && manpower.employment_status.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.designation && manpower.designation.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.requirement_type && manpower.requirement_type.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.hiring_tat && manpower.hiring_tat.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.director_status && manpower.director_status.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.hr_status && manpower.hr_status.toLowerCase().includes(lowerSearchTerm)) ||
+            (manpower?.created_at && new Date(manpower.created_at).toLocaleDateString().toLowerCase().includes(lowerSearchTerm));
+    });
 
     const paginatedManpower =
         rowsPerPage === -1

@@ -4,6 +4,7 @@ import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, Fi
 import { FaUserCheck } from "react-icons/fa";
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import "./Add_Form.css";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Select, MenuItem, FormControl, Button, Snackbar, Alert as MuiAlert, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box, Typography, DialogContentText, Backdrop, CircularProgress } from "@mui/material";
 import { FileUploader } from "react-drag-drop-files";
 import { useParams, useNavigate } from "react-router-dom";
@@ -254,12 +255,19 @@ const ManpowerRequisitionEdit = () => {
                 else delete newErrors.hrReview;
                 break;
             case 'hr_comments':
-                if (isHr && !value) newErrors.hr_comments = 'HR Comments are required for HR.';
+                if (isHr && !value && formData.status !== 'Raise Query') newErrors.hr_comments = 'HR Comments are required for this action.';
                 else delete newErrors.hr_comments;
                 break;
             case 'director_comments':
-                if (isDirector && !value) newErrors.director_comments = 'Director Comments are required for HR.';
+                if (isDirector && !value && formData.status !== 'Raise Query') newErrors.director_comments = 'Director Comments are required for this action.';
                 else delete newErrors.director_comments;
+                break;
+            case 'query_name':
+                if (formData.status === 'Raise Query' && !value.trim()) {
+                    newErrors.query_name = 'Query text cannot be empty when raising a query.';
+                } else {
+                    delete newErrors.query_name;
+                }
                 break;
             default:
                 break;
@@ -358,7 +366,21 @@ const ManpowerRequisitionEdit = () => {
         const newStatus = event.target.value;
         setManpowerStatus(newStatus);
         setManpowerId(manpowerId);
-        setFormData(prev => ({ ...prev, status: newStatus }));
+        setFormData(prev => ({
+            ...prev,
+            status: newStatus,
+            hr_comments: '',
+            director_comments: '',
+            query_name: ''
+        }));
+        setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.hr_comments;
+            delete newErrors.director_comments;
+            delete newErrors.query_name;
+            return newErrors;
+        });
+        setQueryText('');
 
         if (!newStatus) {
             setNotification({ open: true, message: 'Status cannot be empty.', severity: 'error' });
@@ -542,6 +564,18 @@ const ManpowerRequisitionEdit = () => {
     return (
         <div className="page-wrapper">
             <div className="form-panel">
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2,mt:5, flexDirection: "row-reverse" }}>
+                     <Button
+                        variant="outlined"
+                        onClick={() => navigate(-1)}
+                        startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
+                        sx={{
+                            backgroundColor: 'success.main',
+                            color: 'white',
+                            '&:hover': { backgroundColor: 'success.dark' },
+                        }}
+                    >Back</Button>
+                </Box>
                 <div className="form-header">
                     <h1 className="info-title">Edit Manpower Requisition</h1>
                     <p className="info-subtitle">
@@ -884,7 +918,7 @@ const ManpowerRequisitionEdit = () => {
                                             {isDirector && !isHr && [
                                                 <MenuItem value="Pending">Select the Status</MenuItem>,
                                                 <MenuItem key="Approve" value="Approve">Approved</MenuItem>,
-                                                <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
+                                                <MenuItem key="Reject" value="Reject">Rejected</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
                                             ]}
@@ -893,7 +927,7 @@ const ManpowerRequisitionEdit = () => {
                                                 //  <MenuItem value="Pending">Select the Status</MenuItem>,
                                                 <MenuItem value="Approve">Select the Status</MenuItem>,
                                                 <MenuItem key="HR Approve" value="HR Approve">HR Approved</MenuItem>,
-                                                <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
+                                                <MenuItem key="Reject" value="Reject">Rejected</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
                                             ]}
@@ -911,8 +945,13 @@ const ManpowerRequisitionEdit = () => {
                                             label="Enter your query here"
                                             value={queryText}
                                             onChange={handleQueryTextChange}
+                                            onBlur={handleBlur}
                                             variant="outlined"
                                             size="small"
+                                            name="query_name"
+                                            required
+                                            error={!!(touched.query_name && errors.query_name)}
+                                            helperText={touched.query_name && errors.query_name}
                                         />
                                     </div>
                                 )}

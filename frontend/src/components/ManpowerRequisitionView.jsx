@@ -2,18 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Snackbar, Alert as MuiAlert, Button, Tooltip } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box } from "@mui/material";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import DirectorImage from "../assets/images/directorSign.png"
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const ManpowerRequisitionView = () => {
     const dispatch = useDispatch();
     const { id } = useParams();
     const { token, user } = useSelector((state) => state.auth);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
+ const navigate = useNavigate();
     useEffect(() => {
         if (token) {
             dispatch(fetchManagerList());
@@ -225,6 +225,18 @@ console.log(selectedRequisition,"selectedRequisition")
     return (
         <div className="page-wrapper">
             <div className="form-panel">
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2,mt:5, flexDirection: "row-reverse" }}>
+                     <Button
+                        variant="outlined"
+                        onClick={() => navigate(-1)}
+                        startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
+                        sx={{
+                            backgroundColor: 'success.main',
+                            color: 'white',
+                            '&:hover': { backgroundColor: 'success.dark' },
+                        }}
+                    >Back</Button>
+                </Box>
                 <div className="form-header">
                     <h1 className="info-title">
                         View Manpower Requisition

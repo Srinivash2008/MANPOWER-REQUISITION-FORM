@@ -66,6 +66,16 @@ const StatusBadge = ({ status }) => {
   } else if (status === 'HR Approve') {
     displayStatus = 'HR Approved';
   }
+  else if (status === 'Reject') {
+    displayStatus = 'Rejected';
+  }
+  else if (status === 'Raise Query') {
+    displayStatus = 'Raise Query';
+  }
+  else if (status === 'On Hold') {
+    displayStatus = 'On Hold';
+  }
+
   const statusStyles = {
     'Approve': {
       backgroundColor: '#28a745', // A vibrant green
@@ -172,8 +182,16 @@ const ManpowerRequisitionReport = () => {
     const matchesEndDate = !enddatefilter ||
       (manpower?.created_at && manpower.created_at.split('T')[0] <= enddatefilter);
     const lowerSearchTerm = searchTerm.toLowerCase();
-    const matchesSearchTerm = manpower?.employment_status?.toLowerCase().includes(lowerSearchTerm) ||
-      manpower?.designation?.toLowerCase().includes(lowerSearchTerm);
+    const matchesSearchTerm = (manpower?.emp_name && manpower.emp_name.toLowerCase().includes(lowerSearchTerm)) ||
+      (manpower?.department_name && manpower.department_name.toLowerCase().includes(lowerSearchTerm)) ||
+      (manpower?.employment_status && manpower.employment_status.toLowerCase().includes(lowerSearchTerm)) ||
+      (manpower?.designation && manpower.designation.toLowerCase().includes(lowerSearchTerm)) ||
+      (manpower?.requirement_type && manpower.requirement_type.toLowerCase().includes(lowerSearchTerm)) ||
+      (manpower?.hiring_tat && manpower.hiring_tat.toLowerCase().includes(lowerSearchTerm)) ||
+      (manpower?.mrf_number && manpower.mrf_number.toLowerCase().includes(lowerSearchTerm))
+      || (manpower?.created_at && manpower.created_at.toLowerCase().includes(lowerSearchTerm))
+      || (manpower?.director_status && manpower.director_status.toLowerCase().includes(lowerSearchTerm))
+      || (manpower?.hr_status && manpower.hr_status.toLowerCase().includes(lowerSearchTerm));
 
     return matchesFunctionalHead && matchesDirectorStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesSearchTerm;
   });
@@ -244,14 +262,14 @@ const ManpowerRequisitionReport = () => {
   const directorStatuses = [
     { value: "Pending", label: "Pending" },
     { value: "Approve", label: "Approved" },
-    { value: "Reject", label: "Reject" },
+    { value: "Reject", label: "Rejected" },
     { value: "Raise Query", label: "Raise Query" },
     { value: "On Hold", label: "On Hold" },
   ];
   const hrStatuses = [
     { value: "Pending", label: "Pending" },
     { value: "HR Approve", label: "HR Approved" },
-    { value: "Reject", label: "Reject" },
+    { value: "Reject", label: "Rejected" },
     { value: "Raise Query", label: "Raise Query" },
     { value: "On Hold", label: "On Hold" },
   ];
