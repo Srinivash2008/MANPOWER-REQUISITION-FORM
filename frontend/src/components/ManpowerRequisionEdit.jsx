@@ -259,6 +259,7 @@ const ManpowerRequisitionEdit = () => {
                 else delete newErrors.hr_comments;
                 break;
             case 'director_comments':
+                console.log(value,"valuevalue")
                 if (isDirector && !value && formData.status !== 'Raise Query') newErrors.director_comments = 'Director Comments are required for this action.';
                 else delete newErrors.director_comments;
                 break;
@@ -439,7 +440,7 @@ const ManpowerRequisitionEdit = () => {
             }
         }
 
-        if (isHr && ['Reject'].includes(formData.status)) {
+        if (isHr && ['Reject','On Hold'].includes(formData.status)) {
             const hrFieldsToValidate = {
                 hr_comments: 'HR Comments are required for HR Status.'
             };
@@ -452,7 +453,7 @@ const ManpowerRequisitionEdit = () => {
             });
         }
 
-        if (isDirector && ['Approve', 'Reject'].includes(formData.status)) {
+        if (isDirector && ['Approve', 'Reject','On Hold'].includes(formData.status)) {
             const directorFieldsToValidate = {
                 director_comments: 'Director Comments are required for Director Status.'
             };
