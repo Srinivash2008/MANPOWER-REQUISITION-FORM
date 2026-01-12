@@ -23,7 +23,7 @@ export const DonutChart = ({ data, total, size = 200, strokeWidth = 25 }) => {
                 {data.map((item) => {
                     const percentage = total > 0 ? (item.count / total) * 100 : 0;
                     const segmentLength = (percentage / 100) * circumference;
-                    const paletteColor = theme.palette[item.color];
+                    const paletteColor = theme.palette[item.color] || theme.palette.grey[900];
 
                     const startingOffset = (accumulatedPercentage / 100) * circumference;
                     const strokeDashoffset = circumference - startingOffset;
