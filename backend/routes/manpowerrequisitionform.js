@@ -75,7 +75,6 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             isWithdrawOpen: row.isWithdrawOpen,
 
         }));
-        console.log(fetchManpowerRequisitionByUser, "fetchManpowerRequisitionByUserfetchManpowerRequisitionByUserfetchManpowerRequisitionByUser")
         res.json(fetchManpowerRequisitionByUser);
 
     } catch (error) {
@@ -128,7 +127,6 @@ router.get('/my-requisitions/:userId', authMiddleware, async (req, res) => {
             isWithdrawOpen: row.isWithdrawOpen,
 
         }));
-        console.log(fetchManpowerRequisitionByUser, "fetchManpowerRequisitionByUserfetchManpowerRequisitionByUserfetchManpowerRequisitionByUser")
         res.json(fetchManpowerRequisitionByUser);
 
     } catch (error) {
@@ -467,29 +465,36 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
         // Fetch creator of the MRF to send an email
         const [mrfCreator] = await pool.execute(
-            'SELECT ep.mail_id, ep.emp_name FROM manpower_requisition mr JOIN employee_personal ep ON mr.created_by = ep.employee_id WHERE mr.id = ?',
+            'SELECT ep.mail_id, ep.emp_name, mr.created_by FROM manpower_requisition mr JOIN employee_personal ep ON mr.created_by = ep.employee_id WHERE mr.id = ?',
             [query_manpower_requisition_pid]
         );
-        if (isDirectorUpdate) {
-            if (mrfCreator.length > 0) {
-                const creator = mrfCreator[0];
-                const queryRaiserName = user.emp_name; // From auth middleware
 
+        if (mrfCreator.length > 0) {
+            const creator = mrfCreator[0];
+            const queryRaiserName = user.emp_name; // From auth middleware
+
+            // Fetch the Functional Head (FH) of the creator
+            const [fh] = await pool.execute(
+                'SELECT mail_id, emp_name FROM employee_personal WHERE employee_id = (SELECT ReportingManager FROM employee_personal WHERE employee_id = ?)',
+                [creator.created_by]
+            );
+
+            if (fh.length > 0) {
+                const fhUser = fh[0];
                 const mailOptions = {
                     from: process.env.EMAIL_USER,
-                    // to: creator.mail_id, // Hiring Manager's email
-                    to: "srinivasan@pdmrindia.com",
+                    to: fhUser.mail_id, // FH's email
                     cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
-                    subject: 'Query Raised on Your MRF',
+                    subject: 'Query Raised on MRF',
                     html: `
                     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                        <p>Dear ${creator.emp_name},</p>
+                        <p>Dear ${fhUser.emp_name},</p>
                         <p>
-                            <b>${queryRaiserName}</b> raised a query on your MRF; please review the query and reply to this email with the required information so the process can continue.
+                            <b>${queryRaiserName}</b> has raised a query on an MRF submitted by <b>${creator.emp_name}</b>. Please review the query and provide your reply.
                         </p>
                         <p>
-                            You can view the MRF and the query here:
-                            <a href="${process.env.FRONTEND_URL}/manpower_requisition_view/${query_manpower_requisition_pid}">View MRF</a>
+                            You can view the MRF and reply to the query here:
+                            <a href="${process.env.FRONTEND_URL}/fh-reply/${query_manpower_requisition_pid}">View and Reply to MRF</a>
                         </p>
                         <br>
                         <p style="color: #555;">
@@ -502,48 +507,9 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
                 try {
                     await transporter.sendMail(mailOptions);
-                    console.log(`Query notification email sent to ${creator.mail_id}`);
+                    console.log(`Query notification email sent to FH at ${fhUser.mail_id}`);
                 } catch (emailError) {
-                    console.error('Failed to send query notification email:', emailError);
-                    // We don't want to fail the whole request if the email fails, so we just log it.
-                }
-            }
-        }
-
-        if (isHrUpdate) {
-            if (mrfCreator.length > 0) {
-                const creator = mrfCreator[0];
-                const queryRaiserName = user.emp_name; // From auth middleware
-
-                const mailOptions = {
-                    from: process.env.EMAIL_USER,
-                    to: "srinivasan@pdmrindia.com",
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
-                    subject: `Query Raised by ${queryRaiserName} on Your MRF`,
-                    html: `
-                    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                        <p>Dear ${creator.emp_name},</p>
-                        <p>
-                            <b>${queryRaiserName}</b> has raised a query on your MRF. Please review the query and reply to this email with the required information so the hiring process can proceed further.
-                        </p>
-                        <p>
-                            You can view the MRF and the query here:
-                            <a href="${process.env.FRONTEND_URL}/manpower_requisition_view/${query_manpower_requisition_pid}">View MRF</a>
-                        </p>
-                        <br>
-                        <p style="color: #555;">
-                           Thanks & Regards,<br>
-                           Automated MRF System
-                        </p>
-                    </div>
-                `
-                };
-
-                try {
-                    await transporter.sendMail(mailOptions);
-                    console.log(`HR Query notification email sent.`);
-                } catch (emailError) {
-                    console.error('Failed to send HR query notification email:', emailError);
+                    console.error('Failed to send query notification email to FH:', emailError);
                 }
             }
         }
@@ -555,6 +521,71 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Server error processing query form.' });
     }
 });
+
+
+router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const { reply } = req.body;
+    const { user } = req;
+
+    if (!reply) {
+        return res.status(400).json({ message: 'Reply is required.' });
+    }
+
+    try {
+        await pool.execute(
+            'UPDATE manpower_requisition_query SET fh_reply = ? WHERE query_manpower_requisition_pid = ?',
+            [reply, id]
+        );
+
+        // Notify Rajesh and Selvi
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: "srinivasan@pdmrindia.com", // This should be Rajesh's and Selvi's email
+            cc: ["gomathi@pdmrindia.com"],
+            subject: 'FH has Replied to a Query',
+            html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <p>Dear Team,</p>
+                <p>
+                    A Functional Head has replied to a query on MRF ID: ${id}.
+                </p>
+                <p>
+                    You can view the MRF and the reply here:
+                    <a href="${process.env.FRONTEND_URL}/manpower_requisition_view/${id}">View MRF</a>
+                </p>
+                <br>
+                <p style="color: #555;">
+                   Thanks & Regards,<br>
+                   Automated MRF System
+                </p>
+            </div>
+        `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        emitManpowerRequisitionRefresh();
+        res.status(200).json({ message: 'Reply submitted successfully.' });
+    } catch (error) {
+        console.error('Error in /reply-to-query:', error);
+        res.status(500).json({ message: 'Server error processing reply.' });
+    }
+});
+router.get('/get-query/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [rows] = await pool.execute('SELECT * FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?', [id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Query not found.' });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
+
 
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {

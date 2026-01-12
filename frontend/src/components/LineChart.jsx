@@ -57,7 +57,7 @@ export const LineChart = ({ data }) => {
 
     return (
         <Box ref={chartContainerRef}> {/* Attach ref to the outer Box */}
-            <Box sx={{ position: 'relative', height: chartHeight, width: '100%' ,padding:"1%"}}>
+            <Box sx={{ position: 'relative', height: chartHeight, width: '100%' ,padding:"2.5%"}}>
                 <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
                     <defs>
                         <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">

@@ -27,6 +27,7 @@ import ManpowerRequisitionByStatus from "./components/ManPowerRequestionFormBySt
 import ManpowerRequisitionReport from "./components/ManpowerRequisitionReport.jsx";
 import ManpowerRequisitionEdit from "./components/ManpowerRequisionEdit.jsx";
 import Profile from "./components/Profile.jsx";
+import FHReply from "./components/FHReply.jsx";
 
 
 
@@ -36,7 +37,7 @@ function App() {
   const navigate = useNavigate();
   const { token, user } = useSelector((state) => state.auth);
 
-  const isLoginPage = location.pathname === "/login" || location.pathname === "/" || location.pathname === "/forgot-password" || location.pathname === "/reset-password";
+  const isLoginPage = location.pathname === "/login" || location.pathname === "/" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname === "/fh-reply";
 
   // This useEffect is now redundant and should be removed entirely
   // The logic is handled by the initial state of the authSlice.
@@ -81,6 +82,7 @@ function App() {
            <Route path="/mrf-list/:param_status" element={<ManpowerRequisitionByStatus />} />
 
            <Route path="/manpower_requisition_view/:id" element={<ManpowerRequisitionView/>} />
+           <Route path="/fh-reply/:id" element={<FHReply/>} />
            {/* <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionView/>} /> */}
             <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionEdit/>} />
             

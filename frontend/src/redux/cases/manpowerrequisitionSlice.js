@@ -483,6 +483,64 @@ export const updateManpowerRequisition = createAsyncThunk(
     }
   }
 );
+export const replyToQuery = createAsyncThunk(
+  'manpowerRequisition/replyToQuery',
+  async ({ id, reply }, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.post(
+        `${API_URL}/api/mrf/reply-to-query/${id}`,
+        { reply },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to submit reply.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const fetchQuery = createAsyncThunk(
+  'manpowerRequisition/fetchQuery',
+  async (id, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/mrf/get-query/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch query.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
 const manpowerrequisitionSlice = createSlice({
   name: 'manpowerRequisition',
   initialState: {
@@ -491,6 +549,7 @@ const manpowerrequisitionSlice = createSlice({
     mfrCounts: [],
     departments: [],
     managerList: [],
+    query: null,
     status: 'idle',
     error: null,
   },
@@ -718,6 +777,29 @@ const manpowerrequisitionSlice = createSlice({
         state.data = state.data.filter(item => item.id !== action.payload.manpowerId);
       })
       .addCase(withdrawManpowerRequisition.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(replyToQuery.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(replyToQuery.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+      })
+      .addCase(replyToQuery.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(fetchQuery.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchQuery.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.query = action.payload;
+      })
+      .addCase(fetchQuery.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       });

@@ -129,8 +129,7 @@ const Dashboard = () => {
   const baseCounts = {
     pending: parseInt(mfrCounts?.overall?.pending_count) || 0,
     approved: parseInt(mfrCounts?.overall?.approve_count) || 0,
-    hrApproved: parseInt(mfrCounts?.overall?.HR_Approve_count) || 0, // Already HR specific
-    approved: parseInt(mfrCounts?.overall?.approve_count) || 0, // This now includes both Director and HR Approved
+    hrApproved: parseInt(mfrCounts?.overall?.HR_Approve_count) || 0,
     rejected: parseInt(mfrCounts?.overall?.reject_count) || 0,
     directorRaiseQuery: parseInt(mfrCounts?.overall?.director_raise_query_count) || 0,
     hrRaiseQuery: parseInt(mfrCounts?.overall?.hr_raise_query_count) || 0,
@@ -143,7 +142,7 @@ const Dashboard = () => {
   // Recalculate counts based on the displayed (filtered) MRF list
   const counts = {
     pending: displayedMrfList.filter(m => m.status === 'Pending').length,
-    approved: displayedMrfList.filter(m => m.status === 'Approve').length,
+    
     hrApproved: displayedMrfList.filter(m => m.status === 'HR Approve').length,
     approved: displayedMrfList.filter(m => m.status === 'Approve' || m.status === 'HR Approve').length,
     rejected: displayedMrfList.filter(m => m.status === 'Reject').length,
@@ -299,30 +298,7 @@ const Dashboard = () => {
   const adminTotalPending = adminPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
   const totalApproved = counts.approved; // This is already combined Director + HR from the counts object
 
-  // --- Pie Chart Data ---
-  // For FH, use base counts. For Admin, use filtered counts.
-  const isFHDashboard = !(user?.emp_id === '1400' || user?.emp_id === '1722');
-  const pieChartTotalApproved = isFHDashboard ? baseCounts.approved : totalApproved;
-  const pieChartTotalPending = isFHDashboard ? fhTotalPending : adminTotalPending;
-  const pieChartTotalRejected = isFHDashboard ? baseCounts.rejected : counts.rejected;
-  const pieData = [
-    { id: 0, value: pieChartTotalApproved, label: 'Approved', color: theme.palette.success.main },
-    { id: 1, value: pieChartTotalPending, label: 'Pending', color: theme.palette.secondary.main },
-    { id: 2, value: pieChartTotalRejected, label: 'Rejected', color: theme.palette.error.main },
-  ];
 
-  const totalForPie = pieData.reduce((sum, item) => sum + item.value, 0);
-
-  const pieSeries = {
-    data: pieData,
-    innerRadius: 70,
-    outerRadius: 100,
-    paddingAngle: 2,
-    cornerRadius: 5,
-    startAngle: -90,
-    endAngle: 90,
-    cy: '80%',
-  };
 
   // Calculate Approval Rate
   // Combine all data for the new comprehensive chart
@@ -392,8 +368,6 @@ const Dashboard = () => {
       {user?.emp_id === '1400' || user?.emp_id === '1722' ? (
         <AdminDashboard
           counts={counts}
-          pieSeries={pieSeries}
-          totalForPie={totalForPie}
           pendingStatuses={adminPendingStatuses}
           totalPending={adminTotalPending}
           comprehensiveData={comprehensiveData}
@@ -405,8 +379,6 @@ const Dashboard = () => {
       ) : (
         <FHDashboard
           counts={counts}
-          pieSeries={pieSeries}
-          totalForPie={totalForPie}
           pendingStatuses={fhPendingStatuses}
           statusMetrics={statusMetrics}
           totalPending={fhTotalPending}

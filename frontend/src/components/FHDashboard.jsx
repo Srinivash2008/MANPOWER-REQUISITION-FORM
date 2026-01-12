@@ -1,28 +1,34 @@
 import React from 'react';
 import {
+  Grid,
   Box,
   Typography,
   Card,
   FormControl,
   Select,
+  CircularProgress,
   MenuItem,
   useTheme,
   InputLabel,
-} from '@mui/material';
-import { PieChart } from '@mui/x-charts/PieChart';
+  Icon,
+} from '@mui/material'; 
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 // --- Child Components (assuming they are in the same folder or imported) ---
 import DonutChart from './DonutChart';
-import LineChart from './LineChart';
-import BarChart from './BarChart';
+import LineChart from './LineChart'; // Assuming you still need this for other parts
 import RadialBarChart from './RadialBarChart';
 import StatRow from './StatRow';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const FHDashboard = ({
   counts,
-  pieSeries,
-  totalForPie,
   pendingStatuses,
   statusMetrics,
   totalPending,
@@ -35,30 +41,77 @@ const FHDashboard = ({
   const theme = useTheme();
   const navigate = useNavigate();
 
+  const overviewStats = [
+    {
+      label: 'Pending',
+      value: counts.pending,
+      icon: <PendingActionsIcon fontSize="large" />,
+      color: theme.palette.warning.main,
+    },
+    {
+      label: 'Approved',
+      value: counts.approved,
+      icon: <CheckCircleOutlineIcon fontSize="large" />,
+      color: theme.palette.success.main,
+    },
+    {
+      label: 'Rejected',
+      value: counts.rejected,
+      icon: <HighlightOffIcon fontSize="large" />,
+      color: theme.palette.error.main,
+    },
+  ];
+
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
       {/* --- Left Column (Main Content) --- */}
-      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
-          {/* Requisition Funnel Card */}
-          <Card sx={{ flex: 1, p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
-            <Typography variant="h6" fontWeight={700}>Requisition Funnel</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Breakdown of all {counts.total.toLocaleString()} requisitions.
-            </Typography>
-            <Box sx={{ mt: 0, minHeight: '200px', height: { xs: 200, sm: 200, lg: 150, md: 100 } }}>
-              <PieChart series={[pieSeries]} legend={{ direction: 'row', position: { vertical: 'bottom', horizontal: 'middle' }, padding: 0, itemMarkWidth: 10, itemMarkHeight: 10 }}>
-                <text x="50%" y="75%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                  {totalForPie}
-                </text>
-                <text x="50%" y="85%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '12px', fill: theme.palette.text.secondary }}>
-                  Total
-                </text>
-              </PieChart>
+      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}> 
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr', lg: '1fr 1.2fr' }, gap: { xs: 3, md: 4 } }}>
+          {/* Quick Actions Card */}
+          <Card sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)', border: `1px solid ${theme.palette.divider}` }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+              <FlashOnIcon sx={{ color: 'primary.main' }} />
+              <Typography
+                variant="h6"
+                fontWeight={700}
+                sx={{
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Quick Actions
+              </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', fontStyle: 'italic' }}>
-              *Pending includes On Hold and Raise Query statuses.
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3, ml: 4.5 }}>
+              Your essential shortcuts.
             </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Box
+                  onClick={() => navigate('/add-mrf')}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', background: `linear-gradient(135deg, ${theme.palette.primary.light}20, ${theme.palette.primary.main}20)`, '&:hover': { background: `linear-gradient(135deg, ${theme.palette.primary.light}40, ${theme.palette.primary.main}40)` } }}
+                >
+                  <AddCircleOutlineIcon color="primary" />
+                  <Typography fontWeight={600}>Create New MRF</Typography>
+                </Box>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Box
+                  onClick={() => navigate('/my-requisitions')}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', background: `linear-gradient(135deg, ${theme.palette.secondary.light}20, ${theme.palette.secondary.main}20)`, '&:hover': { background: `linear-gradient(135deg, ${theme.palette.secondary.light}40, ${theme.palette.secondary.main}40)` } }}
+                >
+                  <AssessmentOutlinedIcon color="secondary" />
+                  <Typography fontWeight={600}>My Requisitions</Typography>
+                </Box>
+              </motion.div>
+            </Box>
           </Card>
 
           {/* Pending Requisitions Focus Area */}
@@ -75,20 +128,32 @@ const FHDashboard = ({
                 {pendingStatuses.map((p) => {
                   const percentage = totalPending > 0 ? (p.count / totalPending) * 100 : 0;
                   return (
-                    <Box
+                    <motion.div
                       key={p.status}
-                      onClick={() => {
-                        const statusParam = p.status.toLowerCase().includes('query') ? 'Raise Query' : p.status;
-                        navigate(`/mrf-list?status=${statusParam}`);
-                      }}
-                      sx={{
-                        cursor: 'pointer',
-                        '&:hover': {
-                          backgroundColor: theme.palette.action.hover,
-                        },
-                        p: 0.5,
-                        borderRadius: 1,
-                      }}>
+                      whileHover={{ scale: 1.05, x: 5 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                    >
+                      <Box
+                        onClick={() => {
+                          const lowerStatus = p.status.toLowerCase();
+                          let statusParam = p.status;
+                          if (lowerStatus.includes('query')) {
+                            statusParam = 'Raise Query';
+                          } else if (lowerStatus.includes('on-hold') || lowerStatus.includes('on hold')) {
+                            statusParam = 'On Hold';
+                          }
+                          navigate(`/mrf-list?status=${statusParam}`);
+                        }}
+                        sx={{
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                          p: 0.5,
+                          borderRadius: 1,
+                        }}
+                      >
+
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                         <Typography variant="caption" fontWeight={600} color="text.secondary">{p.status}</Typography>
                         <Typography variant="caption" fontWeight={700}>{p.count.toLocaleString()}</Typography>
@@ -99,7 +164,8 @@ const FHDashboard = ({
                           backgroundColor: `${p.color}.main`, borderRadius: 4, transition: 'width 0.5s ease-in-out'
                         }} />
                       </Box>
-                    </Box>
+                      </Box>
+                    </motion.div>
                   );
                 })}
               </Box>

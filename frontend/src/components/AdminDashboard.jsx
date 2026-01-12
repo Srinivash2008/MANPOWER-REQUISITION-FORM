@@ -1,14 +1,23 @@
 import React from 'react';
 import {
+  Grid,
   Box,
   Typography,
   Card,
+  Tooltip,
   TextField,
   Autocomplete,
-  useTheme
+  useTheme,
 } from '@mui/material';
-import { PieChart } from '@mui/x-charts/PieChart';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 // --- Child Components (assuming they are in the same folder or imported) ---
 import { DonutChart } from './DonutChart';
@@ -16,8 +25,6 @@ import { LineChart } from './LineChart';
 
 const AdminDashboard = ({
   counts,
-  pieSeries,
-  totalForPie,
   pendingStatuses,
   totalPending,
   comprehensiveData,
@@ -29,30 +36,67 @@ const AdminDashboard = ({
   const theme = useTheme();
   const navigate = useNavigate();
 
+  const overviewStats = [
+    {
+      label: 'Pending',
+      value: counts.pending,
+      icon: <PendingActionsIcon fontSize="large" />,
+      color: theme.palette.warning.main,
+    },
+    {
+      label: 'Approved',
+      value: counts.approved,
+      icon: <CheckCircleOutlineIcon fontSize="large" />,
+      color: theme.palette.success.main,
+    },
+    {
+      label: 'Rejected',
+      value: counts.rejected,
+      icon: <HighlightOffIcon fontSize="large" />,
+      color: theme.palette.error.main,
+    },
+  ];
+
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
       {/* --- Left Column (Main Content) --- */}
-      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
-          {/* Requisition Funnel Card */}
-          <Card sx={{ flex: 1, p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
-            <Typography variant="h6" fontWeight={700}>Requisition Funnel</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Breakdown of all {counts.total.toLocaleString()} requisitions.
-            </Typography>
-            <Box sx={{ mt: 0, minHeight: '200px', height: { xs: 200, sm: 200, lg: 150, md: 100 } }}>
-              <PieChart series={[pieSeries]} legend={{ direction: 'row', position: { vertical: 'bottom', horizontal: 'middle' }, padding: 0, itemMarkWidth: 10, itemMarkHeight: 10 }}>
-                <text x="50%" y="75%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                  {totalForPie}
-                </text>
-                <text x="50%" y="85%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '12px', fill: theme.palette.text.secondary }}>
-                  Total
-                </text>
-              </PieChart>
+      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}> 
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr', lg: '1fr 1.2fr' }, gap: { xs: 3, md: 4 } }}>
+          {/* Quick Actions Card */}
+          <Card sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)', border: `1px solid ${theme.palette.divider}` }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+              <FlashOnIcon sx={{ color: 'primary.main' }} />
+              <Typography
+                variant="h6"
+                fontWeight={700}
+                sx={{
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Quick Actions
+              </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', fontStyle: 'italic' }}>
-              *Pending includes On Hold and Raise Query statuses.
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3, ml: 4.5 }}>
+              Your administrative shortcuts.
             </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box
+                onClick={() => navigate('/add-mrf')}
+                sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+              >
+                <AddCircleOutlineIcon color="primary" />
+                <Typography fontWeight={600}>Create New MRF</Typography>
+              </Box>
+              <Box
+                onClick={() => navigate('/reports')}
+                sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+              >
+                <AssessmentOutlinedIcon color="secondary" />
+                <Typography fontWeight={600}>View Reports</Typography>
+              </Box>
+            </Box>
           </Card>
 
           {/* Pending Requisitions Focus Area */}
@@ -69,18 +113,43 @@ const AdminDashboard = ({
                 {pendingStatuses.map((p) => {
                   const percentage = totalPending > 0 ? (p.count / totalPending) * 100 : 0;
                   return (
-                    <Box key={p.status}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                        <Typography variant="caption" fontWeight={600} color="text.secondary">{p.status}</Typography>
-                        <Typography variant="caption" fontWeight={700}>{p.count.toLocaleString()}</Typography>
+                    <motion.div
+                      key={p.status}
+                      whileHover={{ scale: 1.05, x: 5 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                    >
+                      <Box
+                        onClick={() => {
+                          const lowerStatus = p.status.toLowerCase();
+                          let statusParam = p.status;
+                          if (lowerStatus.includes('query')) {
+                            statusParam = 'Raise Query';
+                          } else if (lowerStatus.includes('on-hold') || lowerStatus.includes('on hold')) {
+                            statusParam = 'On Hold';
+                          }
+                          navigate(`/mrf-list?status=${statusParam}`);
+                        }}
+                        sx={{
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                          p: 0.5,
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                          <Typography variant="caption" fontWeight={600} color="text.secondary">{p.status}</Typography>
+                          <Typography variant="caption" fontWeight={700}>{p.count.toLocaleString()}</Typography>
+                        </Box>
+                        <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
+                          <Box sx={{
+                            height: '100%', width: `${percentage}%`,
+                            backgroundColor: `${p.color}.main`, borderRadius: 4, transition: 'width 0.5s ease-in-out'
+                          }} />
+                        </Box>
                       </Box>
-                      <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
-                        <Box sx={{
-                          height: '100%', width: `${percentage}%`,
-                          backgroundColor: `${p.color}.main`, borderRadius: 4, transition: 'width 0.5s ease-in-out'
-                        }} />
-                      </Box>
-                    </Box>
+                    </motion.div>
                   );
                 })}
               </Box>
