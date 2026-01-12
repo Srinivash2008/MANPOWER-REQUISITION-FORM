@@ -1,4 +1,4 @@
-import  { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -7,22 +7,20 @@ import {
   createTheme,
   useTheme,
   CssBaseline,
-  Tooltip,
 } from '@mui/material';
-// Icons - Direct imports for use in the component
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CloseIcon from '@mui/icons-material/Close';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import PendingIcon from '@mui/icons-material/Pending';
-// New icon for the summary section
 import DraftsIcon from '@mui/icons-material/Drafts';
 import UndoIcon from '@mui/icons-material/Undo';
-import { PieChart } from '@mui/x-charts/PieChart';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { getMFRCounts } from '../redux/cases/manpowerrequisitionSlice';
+import { getMFRCounts, fetchManpowerRequisitionByuserId, fetchManpowerRequisitionFH } from '../redux/cases/manpowerrequisitionSlice';
+
+import AdminDashboard from './AdminDashboard';
+import FHDashboard from './FHDashboard';
 
 // --- Custom Theme Definition for Aesthetic Light Mode ---
 const lightTheme = createTheme({
@@ -87,285 +85,82 @@ const lightTheme = createTheme({
   },
 });
 
-// --- Stat Row Component (New Vertical Design) ---
-const StatRow = ({ status, count, icon: Icon, color, total }) => {
-  const theme = useTheme();
-  const percentage = total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
-  const navigate = useNavigate();
-  const paletteColor = theme.palette[color];
-
-  return (
-    <Card sx={{
-      display: 'flex',
-      alignItems: 'center',
-      p: 2,
-      mb: 2,
-      borderRadius: 4,
-      boxShadow: 'none',
-      bgcolor: 'rgba(255, 255, 255, 0.8)',
-      border: `1px solid ${theme.palette.grey[200]}`,
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      '&:hover': {
-        transform: 'translateX(8px)',
-        boxShadow: `0 8px 20px -5px ${theme.palette.mode === 'light' ? '#2A7F66' : paletteColor.main}30`,
-        borderColor: theme.palette.mode === 'light' ? '#2A7F66' : paletteColor.main,
-      },
-
-
-    }}
-      onClick={() => {
-        navigate(`/mrf-list/${status}`);
-
-      }}
-    >
-      <Box sx={{
-        width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: `linear-gradient(135deg, ${paletteColor.light || paletteColor.main}, ${paletteColor.main})`,
-        color: 'white', flexShrink: 0, mr: 2,
-      }}>
-        <Icon sx={{ fontSize: 22 }} />
-      </Box>
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-          {status === 'Draft' ? 'My Drafts' : 
-           status === 'Withdraw' ? 'My Withdraws' : status}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">{percentage}% of total requisitions</Typography>
-      </Box>
-      <Typography variant="h5" fontWeight={800} color={paletteColor.main}>{count.toLocaleString()}</Typography>
-      <ArrowForwardIosIcon sx={{ color: 'text.secondary', ml: 1.5, fontSize: '1rem' }} />
-    </Card>
-  );
-};
-
-
-// --- Donut Chart for Pending Breakdown ---
-const DonutChart = ({ data, total, size = 200, strokeWidth = 25 }) => {
-  const theme = useTheme();
-  const radius = (size - strokeWidth) / 2; //NOSONAR
-  const circumference = 2 * Math.PI * radius;
-  // console.log("Donut Chart Data:", data, "Total:", total);
-  let accumulatedPercentage = 0;
-
-  return (
-    <Box sx={{ width: size, height: size, position: 'relative' }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
-        {/* Background Circle */}
-        <circle
-          stroke={theme.palette.grey[200]}
-          fill="transparent"
-          strokeWidth={strokeWidth}
-          r={radius}
-          cx={size / 2}
-          cy={size / 2}
-        />
-        {/* Data Segments */}
-
-       // --- Inside the DonutChart component's return statement ---
-        {data.map((item, mapIndex) => {
-          const percentage = total > 0 ? (item.count / total) * 100 : 0;
-          const segmentLength = (percentage / 100) * circumference;
-          const paletteColor = theme.palette[item.color];
-
-          // 1. Calculate the starting point (offset) based on the accumulated percentage *before* the current item.
-          // NOTE: This MUST be calculated using the previous accumulated value.
-          const startingOffset = (accumulatedPercentage / 100) * circumference;
-
-          // 2. The strokeDashoffset is used to *position* the beginning of the stroke array. 
-          // Since the SVG circle is rotated -90deg (to start at the top), we subtract the startingOffset from the circumference.
-          // This correctly positions the start of the current segment.
-          const strokeDashoffset = circumference - startingOffset;
-
-          // Update accumulated percentage for the next iteration
-          accumulatedPercentage += percentage;
-
-          // console.log("Donut Segment:", item.status, "Count:", item.count, "Percentage:", percentage, "Offset:", strokeDashoffset);
-
-          // Skip drawing segments with zero count to avoid rendering issues with 0 length
-          if (segmentLength <= 0) return null;
-
-          return (
-            <circle
-              key={item.status}
-              stroke={paletteColor.main}
-              fill="transparent"
-              strokeWidth={strokeWidth}
-
-              // CRITICAL CHANGE: Set the length of the stroke and the gap after it.
-              // [Segment Length] [Gap Length (Circumference - Segment Length)]
-              strokeDasharray={`${segmentLength} ${circumference - segmentLength}`}
-
-              // Use the calculated offset to position the start of the segment.
-              strokeDashoffset={strokeDashoffset}
-              r={radius}
-              cx={size / 2}
-              cy={size / 2}
-              style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
-            />
-          );
-        })}
-      </svg>
-      <Box
-        sx={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        }}
-      >
-        <Typography variant="h4" fontWeight={900} color="text.primary">{total.toLocaleString()}</Typography>
-        <Typography variant="body1" color="text.secondary" style={{ fontSize: "11px", fontWeight: "900" }}>Total</Typography>
-      </Box>
-    </Box>
-  );
-};
-
-
-// --- New Line Chart Component ---
-const LineChart = ({ data }) => {
-  const theme = useTheme();
-  if (!data || data.length === 0) {
-    return <Card sx={{ p: 3, textAlign: 'center' }}><Typography>No data available for chart.</Typography></Card>;
-  }
-
-  const maxValue = Math.max(...data.map(item => item.count), 1);
-  const chartHeight = 250;
-  const chartWidth = 950;
-  const padding = { top: 20, right: 40, bottom: 40, left: 40 }; // Increased side padding for better spacing
-  const drawingWidth = chartWidth - padding.left - padding.right;
-
-  // Calculate points with proper spacing from edges
-  const points = data.map((item, index) => {
-    const x = padding.left + (index / (data.length - 1 || 1)) * drawingWidth; // Handle single data point case
-    const y = padding.top + (1 - (item.count / maxValue)) * (chartHeight - padding.top - padding.bottom);
-    return { x, y, ...item };
-  });
-
-  // --- Path Generation ---
-  const createPath = (pts) => {
-    if (pts.length === 0) return "";
-    if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`; // Handle single point
-
-    let path = `M ${pts[0].x},${pts[0].y}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const x_mid = (pts[i].x + pts[i + 1].x) / 2;
-      const y_mid = (pts[i].y + pts[i + 1].y) / 2;
-      const cp_x1 = (x_mid + pts[i].x) / 2;
-      const cp_x2 = (x_mid + pts[i + 1].x) / 2;
-      path += ` Q ${cp_x1},${pts[i].y} ${x_mid},${y_mid}`;
-      path += ` Q ${cp_x2},${pts[i + 1].y} ${pts[i + 1].x},${pts[i + 1].y}`;
-    }
-    return path;
-  };
-
-  const linePath = createPath(points);
-
-  // Area path with proper closure
-  const areaPath = points.length > 0
-    ? `${linePath} L ${points[points.length - 1].x},${chartHeight - padding.bottom} L ${points[0].x},${chartHeight - padding.bottom} Z`
-    : "";
-
-  return (
-    <Card sx={{ p: { xs: 2, sm: 3 }, height: '100%', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
-      <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Overall Requisition Status</Typography>
-      <Box sx={{ position: 'relative', height: chartHeight, width: '100%' }}>
-        <svg width="100%" height="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-          <defs>
-            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
-              <stop offset="100%" stopColor={theme.palette.primary.main} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-
-          {/* Area Path */}
-          <path d={areaPath} fill="url(#areaGradient)" />
-
-          {/* Line Path */}
-          <path
-            d={linePath}
-            fill="none"
-            stroke={theme.palette.primary.main}
-            strokeWidth="3"
-            strokeLinecap="round"
-            sx={{
-              strokeDasharray: 1000,
-              strokeDashoffset: 1000,
-              animation: 'dash 1.5s ease-out forwards',
-              '@keyframes dash': { to: { strokeDashoffset: 0 } },
-            }}
-          />
-
-          {/* Data Points */}
-          {points.map((point) => (
-            <Tooltip title={`${point.status}: ${point.count.toLocaleString()}`} key={point.status} placement="top">
-              <g>
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r="6"
-                  fill={theme.palette.background.paper}
-                  stroke={theme.palette[point.color]?.main || theme.palette.primary.main}
-                  strokeWidth="3"
-                  style={{
-                    cursor: 'pointer',
-                    transition: 'r 0.2s ease, fill 0.2s ease',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.setAttribute('r', '8');
-                    e.currentTarget.style.fill = theme.palette[point.color]?.light || theme.palette.primary.light;
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.setAttribute('r', '6');
-                    e.currentTarget.style.fill = theme.palette.background.paper;
-                  }}
-                />
-              </g>
-            </Tooltip>
-          ))}
-
-          {/* X-Axis Labels (inside SVG for responsiveness) */}
-          {points.map(point => (
-            <text
-              key={`label-${point.status}`}
-              x={point.x}
-              y={chartHeight - padding.bottom + 15} // Position below the chart line
-              textAnchor="middle" // Center the text on the x-coordinate
-              fill={theme.palette.text.secondary}
-              style={{ fontSize: '10px', fontWeight: 600 }}
-            >
-              {point.status}
-            </text>
-          ))}
-        </svg>
-      </Box>
-    </Card>
-  );
-};
-
 // --- Main Dashboard Component ---
 const Dashboard = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { mfrCounts } = useSelector((state) => state.manpowerRequisition);
-
-  console.log("MFR Counts from Redux:", { ...mfrCounts });
-
+  const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data) || [];
+  const manpowerRequisitionFHList = useSelector((state) => state.manpowerRequisition.selectedRequisitionFH) || [];
+  const [managerFilter, setManagerFilter] = useState('');
+  const [fhChartFilter, setFhChartFilter] = useState('overall');
+  
+  console.log("MFR Counts from Redux:", mfrCounts);
+  
   useEffect(() => {
     if (user?.emp_id) {
       dispatch(getMFRCounts(user.emp_id));
+
+      if (user?.emp_id === '1400' || user?.emp_id === '1722') {
+        dispatch(fetchManpowerRequisitionByuserId(user.emp_id));
+        dispatch(fetchManpowerRequisitionFH());
+      }
     }
   }, [dispatch, user?.emp_id]);
 
+  // --- Data Filtering & Calculation ---
+
+  // Filter out "Je. Rajesh" from the list of managers
+  const activeFhList = manpowerRequisitionFHList.filter(fh => fh.ReportingManager !== 'Je. Rajesh');
+
+  // Determine the list of MRFs to be displayed based on the manager filter
+  const displayedMrfList = (() => {
+    if (managerFilter) {
+      const selectedManager = activeFhList.find(fh => fh.ReportingManager === managerFilter);
+      if (selectedManager) {
+        return manpowerRequisitionList.filter(mrf => String(mrf.created_by) === String(selectedManager.employee_id));
+      }
+    }
+    return manpowerRequisitionList; // Return all MRFs if no filter is active
+  })();
+
   // Convert string values to numbers and calculate dynamic values
+  const baseCounts = {
+    pending: parseInt(mfrCounts?.overall?.pending_count) || 0,
+    approved: parseInt(mfrCounts?.overall?.approve_count) || 0,
+    hrApproved: parseInt(mfrCounts?.overall?.HR_Approve_count) || 0, // Already HR specific
+    approved: parseInt(mfrCounts?.overall?.approve_count) || 0, // This now includes both Director and HR Approved
+    rejected: parseInt(mfrCounts?.overall?.reject_count) || 0,
+    directorRaiseQuery: parseInt(mfrCounts?.overall?.director_raise_query_count) || 0,
+    hrRaiseQuery: parseInt(mfrCounts?.overall?.hr_raise_query_count) || 0,
+    onHold: parseInt(mfrCounts?.overall?.on_hold_count) || 0,
+    draft: parseInt(mfrCounts?.overall?.draft_count) || 0,
+    withdraw: parseInt(mfrCounts?.overall?.withdraw_count) || 0,
+    total: parseInt(mfrCounts?.overall?.total_count) || 0
+  };
+
+  // Recalculate counts based on the displayed (filtered) MRF list
   const counts = {
-    pending: parseInt(mfrCounts?.pending_count) || 0,
-    approved: (parseInt(mfrCounts?.approve_count) || 0) + (parseInt(mfrCounts?.HR_Approve_count) || 0),
-    rejected: parseInt(mfrCounts?.reject_count) || 0,
-    raiseQuery: parseInt(mfrCounts?.raise_query_count) || 0,
-    onHold: parseInt(mfrCounts?.on_hold_count) || 0,
-    draft: parseInt(mfrCounts?.draft_count) || 0,
-    withdraw: parseInt(mfrCounts?.withdraw_count) || 0,
-    total: parseInt(mfrCounts?.total_count) || 0
+    pending: displayedMrfList.filter(m => m.status === 'Pending').length,
+    approved: displayedMrfList.filter(m => m.status === 'Approve').length,
+    hrApproved: displayedMrfList.filter(m => m.status === 'HR Approve').length,
+    approved: displayedMrfList.filter(m => m.status === 'Approve' || m.status === 'HR Approve').length,
+    rejected: displayedMrfList.filter(m => m.status === 'Reject').length,
+    onHold: displayedMrfList.filter(m => m.status === 'On Hold').length,
+    // For query counts, we fall back to the overall counts if no manager is selected, as this breakdown isn't per-MRF
+    directorRaiseQuery: managerFilter ? 0 : baseCounts.directorRaiseQuery,
+    hrRaiseQuery: managerFilter ? 0 : baseCounts.hrRaiseQuery,
+    draft: displayedMrfList.filter(m => m.status === 'Draft').length,
+    withdraw: displayedMrfList.filter(m => m.status === 'Withdraw').length,
+    total: displayedMrfList.length,
+  };
+  const dirCounts = {
+    pending: parseInt(mfrCounts?.director_status?.pending_count) || 0,
+    approved: parseInt(mfrCounts?.director_status?.approve_count) || 0,
+    rejected: parseInt(mfrCounts?.director_status?.reject_count) || 0,
+    raiseQuery: parseInt(mfrCounts?.director_status?.raise_query_count) || 0,
+    onHold: parseInt(mfrCounts?.director_status?.on_hold_count) || 0
   };
 
   // Dynamic status metrics based on API data - Now with 5 cards
@@ -379,21 +174,35 @@ const Dashboard = () => {
     },
     {
       status: 'Approved',
-      count: counts.approved,
+      count: counts.approved, // This will be the director approved
       icon: (props) => <TrendingUpIcon {...props} />,
       color: 'success',
       description: 'Requisitions ready for recruitment.',
     },
     {
-      status: 'On Hold',
+      status: 'HR Approved',
+      count: counts.hrApproved,
+      icon: (props) => <TrendingUpIcon {...props} />,
+      color: 'success',
+      description: 'Requisitions ready for recruitment.',
+    },
+    {
+      status: 'On-Hold',
       count: counts.onHold,
       icon: (props) => <AccessTimeIcon {...props} />,
       color: 'tertitary',
       description: 'Awaiting primary manager approval.',
     },
     {
-      status: 'Raise Query',
-      count: counts.raiseQuery,
+      status: 'Query by Director',
+      count: counts.directorRaiseQuery,
+      icon: (props) => <ErrorOutlineIcon {...props} />,
+      color: 'info',
+      description: 'Awaiting final HR/Budget sign-off.',
+    },
+    {
+      status: 'Query by HR',
+      count: counts.hrRaiseQuery,
       icon: (props) => <ErrorOutlineIcon {...props} />,
       color: 'info',
       description: 'Awaiting final HR/Budget sign-off.',
@@ -421,25 +230,123 @@ const Dashboard = () => {
     },
   ];
 
-  if (user?.emp_id === '1400' ) {
+  const dirStatusMetrics = [
+    { status: 'Approved by Rajesh', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'Rejected by Rajesh', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'Query by Rajesh', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
+    { status: 'On-Hold by Rajesh', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+  ];
+
+  const hrCounts = {
+    pending: parseInt(mfrCounts?.hr_status?.pending_count) || 0,
+    approved: parseInt(mfrCounts?.hr_status?.approve_count) || 0,
+    rejected: parseInt(mfrCounts?.hr_status?.reject_count) || 0,
+    raiseQuery: parseInt(mfrCounts?.hr_status?.raise_query_count) || 0,
+    onHold: parseInt(mfrCounts?.hr_status?.on_hold_count) || 0,
+  };
+
+  const hrStatusMetrics = [
+    { status: 'Approved by Selvi', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'Rejected by Selvi', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'Query by Selvi', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
+    { status: 'On-Hold by Selvi', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+  ];
+
+  const overallStatusMetrics = [
+    { status: 'Pending', count: baseCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'secondary' },
+    { status: 'Approved', count: baseCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'Rejected', count: baseCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'On Hold', count: baseCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+  ];
+
+
+  if (user?.emp_id === '1400' || user?.emp_id === '1722') {
     statusMetrics = statusMetrics.filter(metric => metric.status !== 'Withdraw' && metric.status !== 'Draft');
   }
 
-  // Calculate Pending Metrics dynamically - Now includes Pending, On Hold, and Raise Query
-  const pendingStatuses = statusMetrics.filter(m =>
-    m.status === 'Pending' || m.status === 'On Hold' || m.status === 'Raise Query'
-  );
-  const totalPending = pendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
-  const pendingPercentage = counts.total > 0 ? Number(((totalPending / counts.total) * 100).toFixed(1)) : 0;
+  const managerStatusCounts = activeFhList.map(fh => {
+    const managerMrfs = manpowerRequisitionList.filter(mrf => String(mrf.created_by) === String(fh.employee_id));
+
+    return {
+      name: fh.ReportingManager,
+      counts: {
+        Pending: managerMrfs.filter(m => m.status === 'Pending').length,
+        Approved: managerMrfs.filter(m => m.status === 'Approve').length,
+        HR_Approve: managerMrfs.filter(m => m.status === 'HR Approve').length,
+        Rejected: managerMrfs.filter(m => m.status === 'Reject').length,
+        On_Hold: managerMrfs.filter(m => m.status === 'On Hold').length,
+      },
+      total: managerMrfs.length
+    };
+  }).filter(manager => manager.name && manager.name.toLowerCase().includes(managerFilter.toLowerCase()));
+
+  const managerOptions = activeFhList.map(fh => fh.ReportingManager).filter(Boolean);
+
+  // --- Data for FHDashboard (using baseCounts) ---
+  const fhPendingStatuses = [
+    { status: 'Pending', count: baseCounts.pending, color: 'secondary' },
+    { status: 'On Hold', count: baseCounts.onHold, color: 'tertitary' },
+    { status: 'Query by Director', count: baseCounts.directorRaiseQuery, color: 'info' },
+    { status: 'Query by HR', count: baseCounts.hrRaiseQuery, color: 'info' },
+  ].filter(m => m.count > 0);
+  const fhTotalPending = fhPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
+
+  // --- Data for AdminDashboard (using filtered counts) ---
+  const adminPendingStatuses = statusMetrics.filter(m =>
+    m.status === 'Pending' || m.status === 'On-Hold' || m.status.startsWith('Query by'));
+  const adminTotalPending = adminPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
+  const totalApproved = counts.approved; // This is already combined Director + HR from the counts object
+
+  // --- Pie Chart Data ---
+  // For FH, use base counts. For Admin, use filtered counts.
+  const isFHDashboard = !(user?.emp_id === '1400' || user?.emp_id === '1722');
+  const pieChartTotalApproved = isFHDashboard ? baseCounts.approved : totalApproved;
+  const pieChartTotalPending = isFHDashboard ? fhTotalPending : adminTotalPending;
+  const pieChartTotalRejected = isFHDashboard ? baseCounts.rejected : counts.rejected;
+  const pieData = [
+    { id: 0, value: pieChartTotalApproved, label: 'Approved', color: theme.palette.success.main },
+    { id: 1, value: pieChartTotalPending, label: 'Pending', color: theme.palette.secondary.main },
+    { id: 2, value: pieChartTotalRejected, label: 'Rejected', color: theme.palette.error.main },
+  ];
+
+  const totalForPie = pieData.reduce((sum, item) => sum + item.value, 0);
+
+  const pieSeries = {
+    data: pieData,
+    innerRadius: 70,
+    outerRadius: 100,
+    paddingAngle: 2,
+    cornerRadius: 5,
+    startAngle: -90,
+    endAngle: 90,
+    cy: '80%',
+  };
 
   // Calculate Approval Rate
-  const totalFinalized = counts.approved + counts.rejected;
-  const approvalRate = totalFinalized > 0 ? Number(((counts.approved / totalFinalized) * 100).toFixed(1)) : 0;
-
   // Combine all data for the new comprehensive chart
-  const comprehensiveData = [
-    ...statusMetrics,
-  ].sort((a, b) => b.count - a.count); // Sort by count descending
+  const comprehensiveData = (() => {
+    if (user?.emp_id === '1400' || user?.emp_id === '1722') {
+      return [...statusMetrics].sort((a, b) => b.count - a.count);
+    }
+
+    switch (fhChartFilter) {
+      case 'director':
+        return [...dirStatusMetrics].sort((a, b) => b.count - a.count);
+      case 'hr':
+        return [...hrStatusMetrics].sort((a, b) => b.count - a.count);
+      case 'overall':
+        const pendingOverall = overallStatusMetrics.find(m => m.status === 'Pending');
+        let combinedData = [];
+        if (pendingOverall) {
+          combinedData.push({ ...pendingOverall, status: 'Overall Pending' });
+        }
+        combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status}` })));
+        combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status}` })));
+        return combinedData.sort((a, b) => b.count - a.count);
+      default: // 'overall'
+        return [...overallStatusMetrics].sort((a, b) => b.count - a.count);
+    }
+  })();
 
   return (
     <Box
@@ -480,138 +387,34 @@ const Dashboard = () => {
       </Box>
 
       {/* Main Grid Layout */}
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
-        {/* --- Left Column (Main Content) --- */}
-        <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}>
-
-
-          {/* New Row for Funnel and Pending Cards */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'column', lg:'row' }, gap: { xs: 3, md: 4 } }}>
-            {/* Requisition Funnel Card */}
-            <Card sx={{ flex: 1, p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
-              <Typography variant="h6" fontWeight={700}>Requisition Funnel</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Breakdown of all {counts.total.toLocaleString()} requisitions.
-              </Typography>
-              <Box sx={{ mt: 0,minHeight:'200px', height: { xs: 200, sm: 200,lg:150,md:100 }}}>
-                <PieChart
-                  sx={{ '--Charts-legend-itemWidth': '500px' }}
-                  series={[
-                    {
-                      data: [
-                        { id: 0, value: counts.approved, label: 'Approved', color: theme.palette.success.main },
-                        { id: 1, value: totalPending, label: 'Pending', color: theme.palette.secondary.main },
-                        { id: 2, value: counts.rejected, label: 'Rejected', color: theme.palette.error.main },
-                      ],
-                      innerRadius: 70,
-                      outerRadius: 100,
-                      paddingAngle: 2,
-                      cornerRadius: 5,
-                      startAngle: -90,
-                      endAngle: 90,
-                      cy: '80%', 
-                    },
-                  ]}
-                  legend={{
-                    direction: 'row',
-                    position: { vertical: 'bottom', horizontal: 'middle' },
-                    padding: 0,
-                    itemMarkWidth: 10,
-                    itemMarkHeight: 10,
-                  }}
-                >
-
-                </PieChart>
-              </Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center',  fontStyle: 'italic' }}>
-                *Pending includes On Hold and Raise Query statuses.
-              </Typography>
-            </Card>
-
-            {/* Pending Requisitions Focus Area */}
-            <Card sx={{
-              flex: 1.2, // Give this card slightly more space
-              p: { xs: 2, sm: 3, md: 4 },
-              borderRadius: 4,
-              backdropFilter: 'blur(10px)',
-              bgcolor: 'rgba(255, 255, 255, 0.7)',
-              display: 'grid',
-              borderLeft: `4px solid ${theme.palette.secondary.main}`,
-              gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr' },
-              gap: { xs: 3, sm: 4, md: 5 },
-              alignItems: 'center',
-            }}>
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <DonutChart data={pendingStatuses} total={totalPending} size={120} strokeWidth={13} />
-              </Box>
-              <Box>
-                <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 0.5 }}>Action Required</Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
-                  {totalPending.toLocaleString()} forms require attention.
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {pendingStatuses.map(metric => {
-                    const itemPercentage = totalPending > 0 ? (metric.count / totalPending) * 100 : 0;
-                    const paletteColor = theme.palette[metric.color];
-                    return (
-                      <Tooltip title={`${metric.status}: ${metric.count.toLocaleString()} (${itemPercentage.toFixed(1)}%)`} key={metric.status} placement="right">
-                        <Box sx={{
-                          transition: 'transform 0.2s ease-in-out',
-                          '&:hover': { transform: 'translateX(4px)' }
-                        }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                            <Typography variant="subtitle2" fontWeight={600} color="text.secondary">{metric.status}</Typography>
-                            <Typography variant="body2" fontWeight={700} color={paletteColor.main}>{metric.count.toLocaleString()}</Typography>
-                          </Box>
-                          <Box sx={{
-                            height: '8px',
-                            width: '100%',
-                            bgcolor: theme.palette.grey[200],
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                          }}>
-                            <Box sx={{
-                              height: '100%',
-                              width: `${itemPercentage}%`,
-                              bgcolor: paletteColor.main,
-                              borderRadius: '4px',
-                              transition: 'width 0.5s ease-out',
-                            }} />
-                          </Box>
-                        </Box>
-                      </Tooltip>
-                    );
-                  })}
-                </Box>
-              </Box>
-            </Card>
-          </Box>
-
-          {/* --- Bottom Row for Key Metrics --- */}
-          <Box sx={{ mt: 1 }}>
-            <Card sx={{ borderLeft: `4px solid ${theme.palette.primary.main}` }}>
-              <LineChart data={comprehensiveData} />
-            </Card>
-          </Box>
-        </Box>
-
-        {/* --- Right Column (Status Overview) --- */}
-        <Box sx={{ flex: { lg: 4 } }}>
-          <Card sx={{ p: { xs: 2, sm: 3 }, height: 'fit-content', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Status Overview</Typography>
-            {statusMetrics.map((metric) => (
-              <StatRow
-                key={metric.status}
-                status={metric.status}
-                count={metric.count}
-                icon={metric.icon}
-                color={metric.color}
-                total={counts.total}
-              />
-            ))}
-          </Card>
-        </Box>
-      </Box>
+      {user?.emp_id === '1400' || user?.emp_id === '1722' ? (
+        <AdminDashboard
+          counts={counts}
+          pieSeries={pieSeries}
+          totalForPie={totalForPie}
+          pendingStatuses={adminPendingStatuses}
+          totalPending={adminTotalPending}
+          comprehensiveData={comprehensiveData}
+          managerStatusCounts={managerStatusCounts}
+          managerOptions={managerOptions}
+          managerFilter={managerFilter}
+          setManagerFilter={setManagerFilter}
+        />
+      ) : (
+        <FHDashboard
+          counts={counts}
+          pieSeries={pieSeries}
+          totalForPie={totalForPie}
+          pendingStatuses={fhPendingStatuses}
+          statusMetrics={statusMetrics}
+          totalPending={fhTotalPending}
+          comprehensiveData={comprehensiveData}
+          fhChartFilter={fhChartFilter}
+          setFhChartFilter={setFhChartFilter}
+          dirStatusMetrics={dirStatusMetrics}
+          hrStatusMetrics={hrStatusMetrics}
+        />
+      )}
     </Box>
   );
 };

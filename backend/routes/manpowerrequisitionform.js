@@ -951,47 +951,100 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
         let query;
         let params = [];
 
-        if (numericId === 1722) {
-            query = `
-                SELECT
-                    COALESCE(SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END), 0) AS pending_count,
-                    COALESCE(SUM(CASE WHEN status = 'Approve' THEN 1 ELSE 0 END), 0) AS approve_count,
-                    COALESCE(SUM(CASE WHEN status = 'Reject' THEN 1 ELSE 0 END), 0) AS reject_count,
-                    COALESCE(SUM(CASE WHEN status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS raise_query_count,
-                    COALESCE(SUM(CASE WHEN status = 'On Hold' THEN 1 ELSE 0 END), 0) AS on_hold_count,
-                    COALESCE(SUM(CASE WHEN status = 'Draft' AND created_by = ? THEN 1 ELSE 0 END), 0) AS draft_count,
-                    COALESCE(SUM(CASE WHEN status = 'Withdraw' AND created_by = ? THEN 1 ELSE 0 END), 0) AS withdraw_count,
-                    COALESCE(SUM(CASE WHEN status = 'HR Approve' THEN 1 ELSE 0 END), 0) AS HR_Approve_count,
-                    COALESCE(SUM(CASE WHEN status NOT IN ('Draft', 'Withdraw') THEN 1 WHEN status IN ('Draft', 'Withdraw') AND created_by = ? THEN 1 ELSE 0 END), 0) AS total_count
-                FROM manpower_requisition
-                WHERE isdelete = 'Active'
-            `;
+        const isHr = numericId === 1722;
+        const isSpecialManager = specialManagers.includes(numericId);
+
+        const overallSelect = isHr ? `
+            COALESCE(SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END), 0) AS pending_count,
+            COALESCE(SUM(CASE WHEN status IN ('Approve', 'HR Approve') THEN 1 ELSE 0 END), 0) AS approve_count,
+            COALESCE(SUM(CASE WHEN status = 'Reject' AND (director_status = 'Reject' OR hr_status = 'Reject') THEN 1 ELSE 0 END), 0) AS reject_count,
+            COALESCE(SUM(CASE WHEN status = 'Raise Query' AND director_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS director_raise_query_count,
+            COALESCE(SUM(CASE WHEN status = 'Raise Query' AND hr_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS hr_raise_query_count,
+            COALESCE(SUM(CASE WHEN status = 'On Hold' AND (director_status = 'On Hold' OR hr_status = 'On Hold') THEN 1 ELSE 0 END), 0) AS on_hold_count,
+            COALESCE(SUM(CASE WHEN status = 'Draft' AND created_by = ? THEN 1 ELSE 0 END), 0) AS draft_count,
+            COALESCE(SUM(CASE WHEN status = 'Withdraw' AND created_by = ? THEN 1 ELSE 0 END), 0) AS withdraw_count,
+            COALESCE(SUM(CASE WHEN status = 'HR Approve' THEN 1 ELSE 0 END), 0) AS HR_Approve_count,
+            COALESCE(SUM(CASE WHEN status NOT IN ('Draft', 'Withdraw') THEN 1 WHEN status IN ('Draft', 'Withdraw') AND created_by = ? THEN 1 ELSE 0 END), 0) AS total_count
+        ` : `
+            COALESCE(SUM(status = 'Pending'), 0) AS pending_count,
+            COALESCE(SUM(status IN ('Approve', 'HR Approve')), 0) AS approve_count,
+            COALESCE(SUM(status = 'Reject'), 0) AS reject_count,
+            COALESCE(SUM(status = 'On Hold'), 0) AS on_hold_count,
+            COALESCE(SUM(CASE WHEN status = 'Raise Query' AND director_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS director_raise_query_count,
+            COALESCE(SUM(CASE WHEN status = 'Raise Query' AND hr_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS hr_raise_query_count,
+            COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
+            COALESCE(SUM(status = 'Withdraw'), 0) AS withdraw_count,
+            COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
+            COALESCE(COUNT(*), 0) AS total_count
+        `;
+
+        const directorStatusSelect = `
+            COALESCE(SUM(CASE WHEN director_status = 'Pending' THEN 1 ELSE 0 END), 0) AS director_pending_count,
+            COALESCE(SUM(CASE WHEN director_status = 'Approve' THEN 1 ELSE 0 END), 0) AS director_approve_count,
+            COALESCE(SUM(CASE WHEN director_status = 'Reject' THEN 1 ELSE 0 END), 0) AS director_reject_count,
+            COALESCE(SUM(CASE WHEN director_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS director_raise_query_count,
+            COALESCE(SUM(CASE WHEN director_status = 'On Hold' THEN 1 ELSE 0 END), 0) AS director_on_hold_count
+        `;
+
+        const hrStatusSelect = `
+            COALESCE(SUM(CASE WHEN hr_status = 'Pending' THEN 1 ELSE 0 END), 0) AS hr_pending_count,
+            COALESCE(SUM(CASE WHEN hr_status = 'Approve' THEN 1 ELSE 0 END), 0) AS hr_approve_count,
+            COALESCE(SUM(CASE WHEN hr_status = 'Reject' THEN 1 ELSE 0 END), 0) AS hr_reject_count,
+            COALESCE(SUM(CASE WHEN hr_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS hr_raise_query_count,
+            COALESCE(SUM(CASE WHEN hr_status = 'On Hold' THEN 1 ELSE 0 END), 0) AS hr_on_hold_count
+        `;
+
+        query = `
+            SELECT
+                ${overallSelect},
+                ${directorStatusSelect},
+                ${hrStatusSelect}
+            FROM manpower_requisition
+            WHERE isdelete = 'Active'
+        `;
+
+        if (isHr) {
             params = [numericId, numericId, numericId];
-        } else {
-            query = `
-                SELECT
-                    COALESCE(SUM(status = 'Pending'), 0) AS pending_count,
-                    COALESCE(SUM(status = 'Approve'), 0) AS approve_count,
-                    COALESCE(SUM(status = 'Reject'), 0) AS reject_count,
-                    COALESCE(SUM(status = 'Raise Query'), 0) AS raise_query_count,
-                    COALESCE(SUM(status = 'On Hold'), 0) AS on_hold_count,
-                    COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
-                    COALESCE(SUM(status = 'Withdraw'), 0) AS withdraw_count,
-                    COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
-                    COALESCE(COUNT(*), 0) AS total_count
-                FROM manpower_requisition
-                WHERE isdelete = 'Active'
-            `;
         }
 
-        if (!specialManagers.includes(numericId)) {
-            query += ` AND created_by = ?`;
+        if (!isSpecialManager) {
+            query += ` AND created_by = ?`; // This applies the filter for the overall counts
             params.push(id);
         }
 
         const [rows] = await pool.execute(query, params);
+        const counts = rows[0];
 
-        res.json(rows[0]);
+        const response = {
+            overall: {
+                pending_count: counts.pending_count,
+                approve_count: counts.approve_count,
+                reject_count: counts.reject_count,
+                director_raise_query_count: counts.director_raise_query_count,
+                hr_raise_query_count: counts.hr_raise_query_count,
+                on_hold_count: counts.on_hold_count,
+                draft_count: counts.draft_count,
+                withdraw_count: counts.withdraw_count,
+                HR_Approve_count: counts.HR_Approve_count,
+                total_count: counts.total_count,
+            },
+            director_status: {
+                pending_count: counts.director_pending_count,
+                approve_count: counts.director_approve_count,
+                reject_count: counts.director_reject_count,
+                raise_query_count: counts.director_raise_query_count,
+                on_hold_count: counts.director_on_hold_count,
+            },
+            hr_status: {
+                pending_count: counts.hr_pending_count,
+                approve_count: counts.hr_approve_count,
+                reject_count: counts.hr_reject_count,
+                raise_query_count: counts.hr_raise_query_count,
+                on_hold_count: counts.hr_on_hold_count,
+            }
+        };
+
+        res.json(response);
 
     } catch (error) {
         console.error(error);
