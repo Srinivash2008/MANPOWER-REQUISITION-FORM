@@ -90,7 +90,12 @@ const AdminDashboard = ({
 
         <Box sx={{ mt: 1 }}>
           <Card sx={{ borderLeft: `4px solid ${theme.palette.primary.main}` }}>
+             <Box sx={{ display: 'flex',flexDirection: 'column',justifyContent: 'space-between', alignItems: 'center',mt: 2,mb: 2 }}>
+                          <Typography variant="h6" fontWeight={700}>
+                            Requisition Status Graph
+                          </Typography>
             <LineChart data={comprehensiveData} />
+            </Box>
           </Card>
         </Box>
       </Box>
