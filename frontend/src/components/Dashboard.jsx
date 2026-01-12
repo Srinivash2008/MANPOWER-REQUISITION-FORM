@@ -269,6 +269,7 @@ const Dashboard = () => {
 
     return {
       name: fh.ReportingManager,
+      employee_id: fh.employee_id,
       counts: {
         Pending: managerMrfs.filter(m => m.status === 'Pending').length,
         Approved: managerMrfs.filter(m => m.status === 'Approve').length,

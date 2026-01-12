@@ -11,7 +11,7 @@ import EventIcon from '@mui/icons-material/Event';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import { fetchManpowerRequisition, fetchManpowerRequisitionByuserId, fetchManpowerRequisitionFH } from '../redux/cases/manpowerrequisitionSlice';
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import "react-quill-new/dist/quill.snow.css";
+import "react-quill-new/dist/quill.snow.css"; //NOSONAR
 import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
@@ -148,6 +148,15 @@ const ManpowerRequisitionReport = () => {
   const [requirementTypeFilter, setRequirementTypeFilter] = useState("");
   const [tatRequestFilter, setTatRequestFilter] = useState("");
   const today = new Date().toISOString().split("T")[0];
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const functionalHeadId = params.get('functional_head');
+    if (functionalHeadId) {
+      setFunctionalHeadFilter(functionalHeadId);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (status === 'idle' && user) {

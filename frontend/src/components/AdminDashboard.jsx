@@ -8,6 +8,7 @@ import {
   useTheme
 } from '@mui/material';
 import { PieChart } from '@mui/x-charts/PieChart';
+import { useNavigate } from 'react-router-dom';
 
 // --- Child Components (assuming they are in the same folder or imported) ---
 import { DonutChart } from './DonutChart';
@@ -26,6 +27,7 @@ const AdminDashboard = ({
   setManagerFilter,
 }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
@@ -114,7 +116,17 @@ const AdminDashboard = ({
             <Box sx={{ maxHeight: '450px', overflowY: 'auto', pr: 1 }}>
               {managerStatusCounts && managerStatusCounts.length > 0 ? (
                 managerStatusCounts.map(manager => (
-                  <Box key={manager.name} sx={{ mb: 2.5, p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
+                  <Box
+                    key={manager.name}
+                    onClick={() => navigate(`/reports?functional_head=${manager.employee_id}`)}
+                    sx={{
+                      mb: 2.5, p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'scale(1.02)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      }
+                    }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                       <Typography variant="subtitle1" fontWeight={600}>{manager.name}</Typography>
                       <Typography variant="h6" fontWeight={700} color="primary">{manager.total}</Typography>
