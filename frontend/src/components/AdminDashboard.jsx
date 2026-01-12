@@ -63,7 +63,25 @@ const AdminDashboard = ({
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
                 {totalPending.toLocaleString()} forms require attention.
               </Typography>
-              {/* ... Progress bars for pending statuses ... */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {pendingStatuses.map((p) => {
+                  const percentage = totalPending > 0 ? (p.count / totalPending) * 100 : 0;
+                  return (
+                    <Box key={p.status}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                        <Typography variant="caption" fontWeight={600} color="text.secondary">{p.status}</Typography>
+                        <Typography variant="caption" fontWeight={700}>{p.count.toLocaleString()}</Typography>
+                      </Box>
+                      <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
+                        <Box sx={{
+                          height: '100%', width: `${percentage}%`,
+                          backgroundColor: `${p.color}.main`, borderRadius: 4, transition: 'width 0.5s ease-in-out'
+                        }} />
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
             </Box>
           </Card>
         </Box>
