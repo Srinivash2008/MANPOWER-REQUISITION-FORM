@@ -37,7 +37,7 @@ function App() {
   const navigate = useNavigate();
   const { token, user } = useSelector((state) => state.auth);
 
-  const isLoginPage = location.pathname === "/login" || location.pathname === "/" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname === "/fh-reply";
+  const isLoginPage = location.pathname === "/login" || location.pathname === "/" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname.startsWith("/fh-reply/");
 
   // This useEffect is now redundant and should be removed entirely
   // The logic is handled by the initial state of the authSlice.
