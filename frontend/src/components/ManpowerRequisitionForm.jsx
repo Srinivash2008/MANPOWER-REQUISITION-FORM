@@ -338,6 +338,17 @@ const ManpowerRequisition = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const directorStatus = params.get('director_status');
+    const hrStatus = params.get('hr_status');
+
+    if (directorStatus) {
+      setDirectorStatusFilter(directorStatus);
+    }
+    if (hrStatus) {
+      setHrStatusFilter(hrStatus);
+    }
+
     if (token) {
       dispatch(fetchManagerList());
     }

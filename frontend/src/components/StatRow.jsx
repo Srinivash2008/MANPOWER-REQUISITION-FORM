@@ -9,6 +9,24 @@ export const StatRow = ({ status, count, icon: Icon, color, total }) => {
     const navigate = useNavigate();
     const paletteColor = theme.palette[color];
 
+    const handleNavigation = () => {
+        let filterQuery = '';
+        const lowerStatus = status.toLowerCase();
+
+        if (lowerStatus.includes('director') || lowerStatus.includes('rajesh')) {
+            if (lowerStatus.includes('query')) filterQuery = 'director_status=Raise Query';
+            else if (lowerStatus.includes('approved')) filterQuery = 'director_status=Approve';
+            else if (lowerStatus.includes('rejected')) filterQuery = 'director_status=Reject';
+            else if (lowerStatus.includes('on-hold')) filterQuery = 'director_status=On Hold';
+        } else if (lowerStatus.includes('hr') || lowerStatus.includes('selvi')) {
+            if (lowerStatus.includes('query')) filterQuery = 'hr_status=Raise Query';
+            else if (lowerStatus.includes('approved')) filterQuery = 'hr_status=HR Approve';
+            else if (lowerStatus.includes('rejected')) filterQuery = 'hr_status=Reject';
+            else if (lowerStatus.includes('on-hold')) filterQuery = 'hr_status=On Hold';
+        }
+        navigate(`/mrf-list?${filterQuery}`);
+    };
+
     return (
         <Card sx={{
             display: 'flex',
@@ -27,7 +45,7 @@ export const StatRow = ({ status, count, icon: Icon, color, total }) => {
                 borderColor: theme.palette.mode === 'light' ? '#2A7F66' : paletteColor.main,
             },
         }}
-            onClick={() => navigate(`/mrf-list/`)}
+            onClick={handleNavigation}
         >
             <Box sx={{
                 width: 42, height: 42, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
