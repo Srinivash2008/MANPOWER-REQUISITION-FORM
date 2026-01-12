@@ -21,7 +21,7 @@ router.get('/get-user-by-empid/:emp_id', authMiddleware, async (req, res) => {
         const [rows] = await pool.execute('SELECT * FROM employee_personal WHERE employee_id = ?', [emp_id]);
         if (rows.length === 0) {
             return res.status(404).json({ message: 'User not found.' });
-            }
+        }
         const user = rows[0];
         res.json(user);
     } catch (error) {
@@ -35,10 +35,10 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
     try {
         const { userId } = req.params;
 
-        let query = "SELECT mr.*,ep.*,ed.depart AS department_name,CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))>7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id=mr.created_by JOIN employee_depart AS ed ON ed.id=mr.department WHERE mr.isdelete='Active'";
+        let query = "SELECT mr.*,ep.*,ed.depart AS department_name,CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at)) <= 7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id=mr.created_by JOIN employee_depart AS ed ON ed.id=mr.department WHERE mr.isdelete='Active'";
         let params = [];
 
-        if (['12345', '1400', '1722'].includes(userId)){
+        if (['12345', '1400', '1722'].includes(userId)) {
             query += " AND mr.status != 'Draft' AND mr.status != 'Withdraw'";
         }
         if (!['12345', '1400', '1722'].includes(userId)) {
@@ -240,7 +240,7 @@ router.post(
                     res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
                 }
 
-                
+
             }
 
             res.status(201).json({
@@ -530,8 +530,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
                     let nextMrfNum = 1;
                     if (lastMrf.length > 0 && lastMrf[0].mrf_number) {
-                          const lastNum = parseInt(lastMrf[0].mrf_number.split('-')[1], 10);
-                      
+                        const lastNum = parseInt(lastMrf[0].mrf_number.split('-')[1], 10);
+
                         if (!isNaN(lastNum)) {
                             nextMrfNum = lastNum + 1;
                         }
@@ -560,8 +560,13 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             params.push(manpowerId);
 
             await connection.execute(query, params);
+console.log(status, "statusstatusstatusstatusstatus")
+            const isDraftSubmission = data?.status === 'Draft';
+            const canSendEmail = isDraftSubmission
+                ? user?.emp_id !== '1400'
+                : user?.emp_id !== '1400' && user?.emp_id !== '1722';
 
-            if (status === 'Pending' && user?.emp_id !== '1400' && user?.emp_id !== '1722') {
+            if (status === 'Pending' && canSendEmail) {
                 const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 console.log(user_data[0], "user_datauser_datauser_datauser_data")
                 const user_info = user_data[0];
@@ -878,8 +883,7 @@ router.get('/getmanpowerrequisitionFH', authMiddleware, async (req, res) => {
 router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, async (req, res) => {
     try {
         const { status, emp_id } = req.params;
-        console.log(status, emp_id, "status, emp_id");
-        let query = 'SELECT mr.*, ep.emp_name, ed.depart AS department_name, CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at))>7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE ';
+        let query = 'SELECT mr.*, ep.emp_name, ed.depart AS department_name, CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at)) <= 7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id = mr.created_by JOIN employee_depart AS ed ON ed.id = mr.department WHERE ';
         const params = [];
 
         if (status === 'Approve') {
@@ -889,7 +893,14 @@ router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, as
             query += 'mr.status = ? AND mr.isdelete = "Active"';
             params.push(status);
         }
-        const specialAccessIds = ['12345', '1400', '1722'];
+        let specialAccessIds = '';
+        if (status == 'Draft') {
+            specialAccessIds = ['12345', '1400'];
+        } else if (status == 'Withdraw') {
+            specialAccessIds = ['12345', '1400'];
+        } else {
+            specialAccessIds = ['12345', '1400', '1722'];
+        }
 
         if (!specialAccessIds.includes(emp_id)) {
             query += ' AND mr.created_by = ?';
@@ -934,27 +945,46 @@ router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, as
 router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
+        const numericId = Number(id);
         const specialManagers = [12345, 1400, 1722];
 
-        let query = `
-            SELECT
-                COALESCE(SUM(status = 'Pending'), 0) AS pending_count,
-                COALESCE(SUM(status = 'Approve'), 0) AS approve_count,
-                COALESCE(SUM(status = 'Reject'), 0) AS reject_count,
-                COALESCE(SUM(status = 'Raise Query'), 0) AS raise_query_count,
-                COALESCE(SUM(status = 'On Hold'), 0) AS on_hold_count,
-                COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
-                COALESCE(SUM(status = 'Withdraw'), 0) AS withdraw_count,
-                COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
-                COALESCE(COUNT(*), 0) AS total_count
-            FROM manpower_requisition
-            WHERE isdelete = 'Active'
-        `;
-
+        let query;
         let params = [];
 
-        // Apply created_by filter only if NOT special manager
-        if (!specialManagers.includes(Number(id))) {
+        if (numericId === 1722) {
+            query = `
+                SELECT
+                    COALESCE(SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END), 0) AS pending_count,
+                    COALESCE(SUM(CASE WHEN status = 'Approve' THEN 1 ELSE 0 END), 0) AS approve_count,
+                    COALESCE(SUM(CASE WHEN status = 'Reject' THEN 1 ELSE 0 END), 0) AS reject_count,
+                    COALESCE(SUM(CASE WHEN status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS raise_query_count,
+                    COALESCE(SUM(CASE WHEN status = 'On Hold' THEN 1 ELSE 0 END), 0) AS on_hold_count,
+                    COALESCE(SUM(CASE WHEN status = 'Draft' AND created_by = ? THEN 1 ELSE 0 END), 0) AS draft_count,
+                    COALESCE(SUM(CASE WHEN status = 'Withdraw' AND created_by = ? THEN 1 ELSE 0 END), 0) AS withdraw_count,
+                    COALESCE(SUM(CASE WHEN status = 'HR Approve' THEN 1 ELSE 0 END), 0) AS HR_Approve_count,
+                    COALESCE(SUM(CASE WHEN status NOT IN ('Draft', 'Withdraw') THEN 1 WHEN status IN ('Draft', 'Withdraw') AND created_by = ? THEN 1 ELSE 0 END), 0) AS total_count
+                FROM manpower_requisition
+                WHERE isdelete = 'Active'
+            `;
+            params = [numericId, numericId, numericId];
+        } else {
+            query = `
+                SELECT
+                    COALESCE(SUM(status = 'Pending'), 0) AS pending_count,
+                    COALESCE(SUM(status = 'Approve'), 0) AS approve_count,
+                    COALESCE(SUM(status = 'Reject'), 0) AS reject_count,
+                    COALESCE(SUM(status = 'Raise Query'), 0) AS raise_query_count,
+                    COALESCE(SUM(status = 'On Hold'), 0) AS on_hold_count,
+                    COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
+                    COALESCE(SUM(status = 'Withdraw'), 0) AS withdraw_count,
+                    COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
+                    COALESCE(COUNT(*), 0) AS total_count
+                FROM manpower_requisition
+                WHERE isdelete = 'Active'
+            `;
+        }
+
+        if (!specialManagers.includes(numericId)) {
             query += ` AND created_by = ?`;
             params.push(id);
         }

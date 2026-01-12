@@ -16,6 +16,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import PendingIcon from '@mui/icons-material/Pending';
 // New icon for the summary section
+import DraftsIcon from '@mui/icons-material/Drafts';
 import UndoIcon from '@mui/icons-material/Undo';
 import { PieChart } from '@mui/x-charts/PieChart';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -126,7 +127,10 @@ const StatRow = ({ status, count, icon: Icon, color, total }) => {
         <Icon sx={{ fontSize: 22 }} />
       </Box>
       <Box sx={{ flex: 1 }}>
-        <Typography variant="subtitle1" fontWeight={700} color="text.primary">{status}</Typography>
+        <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+          {status === 'Draft' ? 'My Drafts' : 
+           status === 'Withdraw' ? 'My Withdraws' : status}
+        </Typography>
         <Typography variant="caption" color="text.secondary">{percentage}% of total requisitions</Typography>
       </Box>
       <Typography variant="h5" fontWeight={800} color={paletteColor.main}>{count.toLocaleString()}</Typography>
@@ -408,10 +412,17 @@ const Dashboard = () => {
       color: 'warning',
       description: 'Requisitions withdrawn by the user.',
     },
+    {
+      status: 'Draft',
+      count: counts.draft,
+      icon: (props) => <DraftsIcon {...props} />,
+      color: 'info',
+      description: 'Requisitions saved as draft.',
+    },
   ];
 
-  if (user?.emp_id === '1400' || user?.emp_id === '1722') {
-    statusMetrics = statusMetrics.filter(metric => metric.status !== 'Withdraw');
+  if (user?.emp_id === '1400' ) {
+    statusMetrics = statusMetrics.filter(metric => metric.status !== 'Withdraw' && metric.status !== 'Draft');
   }
 
   // Calculate Pending Metrics dynamically - Now includes Pending, On Hold, and Raise Query
@@ -475,16 +486,16 @@ const Dashboard = () => {
 
 
           {/* New Row for Funnel and Pending Cards */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 3, md: 4 } }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'column', lg:'row' }, gap: { xs: 3, md: 4 } }}>
             {/* Requisition Funnel Card */}
             <Card sx={{ flex: 1, p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
               <Typography variant="h6" fontWeight={700}>Requisition Funnel</Typography>
               <Typography variant="body2" color="text.secondary">
                 Breakdown of all {counts.total.toLocaleString()} requisitions.
               </Typography>
-              <Box sx={{ mt: 0, height: { xs: 200, sm: 220,lg:150,md:200 } }}>
+              <Box sx={{ mt: 0,minHeight:'200px', height: { xs: 200, sm: 200,lg:150,md:100 }}}>
                 <PieChart
-                  sx={{ '--Charts-legend-itemWidth': '100px' }}
+                  sx={{ '--Charts-legend-itemWidth': '500px' }}
                   series={[
                     {
                       data: [
@@ -492,13 +503,13 @@ const Dashboard = () => {
                         { id: 1, value: totalPending, label: 'Pending', color: theme.palette.secondary.main },
                         { id: 2, value: counts.rejected, label: 'Rejected', color: theme.palette.error.main },
                       ],
-                      innerRadius: 65,
+                      innerRadius: 70,
                       outerRadius: 100,
                       paddingAngle: 2,
                       cornerRadius: 5,
                       startAngle: -90,
                       endAngle: 90,
-                      cy: '75%', // Adjust center to fit the new size
+                      cy: '80%', 
                     },
                   ]}
                   legend={{

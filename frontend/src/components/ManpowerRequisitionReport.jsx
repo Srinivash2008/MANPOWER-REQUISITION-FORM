@@ -4,7 +4,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Box, Typography, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Tooltip, Chip,
   MenuItem, FormControl, InputLabel, Select, Input
-} from "@mui/material"; 
+} from "@mui/material";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import EventIcon from '@mui/icons-material/Event';
@@ -77,48 +77,55 @@ const StatusBadge = ({ status }) => {
   }
 
   const statusStyles = {
-    'Approve': {
-      backgroundColor: '#28a745', // A vibrant green
-      color: '#fff',
-    },
-    'HR Approve': {
-      backgroundColor: '#20c997', // A slightly different, teal-like green
-      color: '#fff',
-    },
-    'Pending': {
-      backgroundColor: '#ffc107', // A warm amber/yellow
-      color: '#212529', // Dark text for better contrast on yellow
-    },
-    'Reject': {
-      backgroundColor: '#dc3545', // A strong red
-      color: '#fff',
-    },
-    'Raise Query': {
-      backgroundColor: '#0dcaf0', // A bright cyan/info blue
-      color: '#fff',
-    },
-    'On Hold': {
-      backgroundColor: '#6c757d', // A neutral, secondary grey
-      color: '#fff',
-    },
-    'Draft': {
-      backgroundColor: '#f8f9fa', // A very light grey
-      color: '#6c757d',
-      border: `1px solid #dee2e6`
-    },
-    default: {
-      backgroundColor: theme.palette.grey[500],
-      color: 'white',
-    }
-  };
+          'Approve': {
+            backgroundColor: '#28a745', // A vibrant green
+            color: '#fff',
+          },
+          'HR Approve': {
+            backgroundColor: '#20c997', // A slightly different, teal-like green
+            color: '#fff',
+          },
+          'Pending': {
+            backgroundColor: '#b29b58ff', // A warm amber/yellow
+            color: '#212529', // Dark text for better contrast on yellow
+          },
+          'Reject': {
+            backgroundColor: '#dc3545', // A strong red
+            color: '#fff',
+          },
+          'Raise Query': {
+            backgroundColor: '#0dcaf0', // A bright cyan/info blue
+            color: '#fff',
+          },
+          'On Hold': {
+            backgroundColor: '#6c757d', // A neutral, secondary grey
+            color: '#fff',
+          },
+          'Draft': {
+             backgroundColor: '#060606ff', // A very light grey
+            color: '#6c757d',
+            border: `1px solid #dee2e6`
+          },
+          'Withdrawn': {
+            backgroundColor: '#ff8800', // Orange color
+            color: '#fff',
+            border: `1px solid #ff8800`
+          },
+          default: {
+            backgroundColor: "#9bebebff", // Default grey
+            color: 'white',
+          }
+        };
 
   const style = statusStyles[displayStatus] || statusStyles[status] || statusStyles.default;
 
   const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
 
-  return <Chip label={displayStatus} size="small" sx={{...sx, '& .MuiChip-label': {
-          color: 'white'
-        }}} />;
+  return <Chip label={displayStatus} size="small" sx={{
+    ...sx, '& .MuiChip-label': {
+      color: 'white'
+    }
+  }} />;
 };
 
 const ManpowerRequisitionReport = () => {
@@ -137,6 +144,9 @@ const ManpowerRequisitionReport = () => {
   const [directorStatusFilter, setDirectorStatusFilter] = useState("");
   const [hrStatusFilter, setHrStatusFilter] = useState("");
   const [functionalheadfilter, setFunctionalHeadFilter] = useState("");
+  const [employmentStatusFilter, setEmploymentStatusFilter] = useState("");
+  const [requirementTypeFilter, setRequirementTypeFilter] = useState("");
+  const [tatRequestFilter, setTatRequestFilter] = useState("");
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
@@ -173,9 +183,15 @@ const ManpowerRequisitionReport = () => {
         String(manpower.created_by) === String(functionalheadfilter));
 
     const matchesDirectorStatus = directorStatusFilter === "" || manpower?.director_status === directorStatusFilter;
-    
+
     const matchesHrStatus = hrStatusFilter === "" || manpower?.hr_status === hrStatusFilter;
-    
+
+    const matchesEmploymentStatus = !employmentStatusFilter || manpower.employment_status === employmentStatusFilter;
+
+    const matchesRequirementType = !requirementTypeFilter || manpower.requirement_type === requirementTypeFilter;
+
+    const matchesTatRequest = !tatRequestFilter || manpower.hiring_tat === tatRequestFilter;
+
     const matchesStartDate = !startdatefilter ||
       (manpower?.created_at && manpower.created_at.split('T')[0] >= startdatefilter);
 
@@ -193,7 +209,7 @@ const ManpowerRequisitionReport = () => {
       || (manpower?.director_status && manpower.director_status.toLowerCase().includes(lowerSearchTerm))
       || (manpower?.hr_status && manpower.hr_status.toLowerCase().includes(lowerSearchTerm));
 
-    return matchesFunctionalHead && matchesDirectorStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesSearchTerm;
+    return matchesFunctionalHead && matchesDirectorStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesSearchTerm && matchesEmploymentStatus && matchesRequirementType && matchesTatRequest;
   });
 
   const paginatedManpower =
@@ -292,6 +308,12 @@ const ManpowerRequisitionReport = () => {
       setHrStatusFilter(value);
     } else if (name === "functionalheadfilter") {
       setFunctionalHeadFilter(value);
+    } else if (name === "employmentStatusFilter") {
+      setEmploymentStatusFilter(value);
+    } else if (name === "requirementTypeFilter") {
+      setRequirementTypeFilter(value);
+    } else if (name === "tatRequestFilter") {
+      setTatRequestFilter(value);
     }
   };
 
@@ -412,7 +434,7 @@ const ManpowerRequisitionReport = () => {
         m.mrf_number,
         m.status,
         m.hr_status === 'HR Approve' ? 'HR Approved' : m.hr_status,
-        m.hr_comments, 
+        m.hr_comments,
         m.director_status === 'Approve' ? 'Approved' : m.director_status,
         m.director_comments,
         m.created_at?.split("T")[0] ?? ""
@@ -456,110 +478,162 @@ const ManpowerRequisitionReport = () => {
               bgcolor: 'rgba(42, 127, 102, 0.05)',
               border: '1px solid rgba(42, 127, 102, 0.1)',
             }}>
-                {(user.emp_id == "1722" || user.emp_id == "1400") && (
-                    <FormControl variant="standard" fullWidth>
-                        <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Functional Head</InputLabel>
-                        <Select
-                            name="functionalheadfilter"
-                            value={functionalheadfilter}
-                            onChange={handleChange}
-                            displayEmpty
-                            MenuProps={{
-                                PaperProps: {
-                                    style: {
-                                        maxHeight: 240, // Approx 5 items
-                                    },
-                                },
-                            }}
-                        >
-                            <MenuItem value=""><em>All Functional Heads</em></MenuItem>
-                            {manpowerRequisitionFHList?.filter(fh => fh.employee_id != 1400).map((fh) => (
-                                <MenuItem key={fh.employee_id} value={fh.employee_id}>
-                                    {fh.ReportingManager}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                )}
-
-                 <FormControl variant="standard" fullWidth>
-                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Director Status</InputLabel>
-                    <Select
-                        name="directorStatusFilter"
-                        value={directorStatusFilter}
-                        onChange={handleChange}
-                        displayEmpty
-                        MenuProps={{
-                            PaperProps: {
-                                style: {
-                                    maxHeight: 240,
-                                },
-                            },
-                        }}
-                    >
-                        <MenuItem value=""><em>All Director Statuses</em></MenuItem>
-                        {directorStatuses?.map((status) => (
-                            <MenuItem key={status.value} value={status.value}>
-                                {status.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
+              {(user.emp_id == "1722" || user.emp_id == "1400") && (
                 <FormControl variant="standard" fullWidth>
-                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>HR Status</InputLabel>
-                    <Select
-                        name="hrStatusFilter"
-                        value={hrStatusFilter}
-                        onChange={handleChange}
-                        displayEmpty
-                        MenuProps={{
-                            PaperProps: {
-                                style: {
-                                    maxHeight: 240,
-                                },
-                            },
-                        }}
-                    >
-                        <MenuItem value=""><em>All HR Statuses</em></MenuItem>
-                        {hrStatuses?.map((status) => (
-                            <MenuItem key={status.value} value={status.value}>
-                                {status.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                  <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Functional Head</InputLabel>
+                  <Select
+                    name="functionalheadfilter"
+                    value={functionalheadfilter}
+                    onChange={handleChange}
+                    displayEmpty
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: 240, // Approx 5 items
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value=""><em>All Functional Heads</em></MenuItem>
+                    {manpowerRequisitionFHList?.filter(fh => fh.employee_id != 1400).map((fh) => (
+                      <MenuItem key={fh.employee_id} value={fh.employee_id}>
+                        {fh.ReportingManager}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </FormControl>
+              )}
 
-                <FormControl variant="standard" fullWidth>
-                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Start Date</InputLabel>
-                    <Input
-                        type="date"
-                        name="startdatefilter"
-                        value={startdatefilter}
-                        onChange={handleChange}
-                        max={enddatefilter || today}
-                        sx={{
-                            '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
-                            '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
-                        }}
-                    />
-                </FormControl>
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Employment Status</InputLabel>
+                <Select
+                  name="employmentStatusFilter"
+                  value={employmentStatusFilter}
+                  onChange={handleChange}
+                  displayEmpty
+                >
+                  <MenuItem value=""><em>All</em></MenuItem>
+                  {[...new Set(manpowerArray?.map(item => item.employment_status)?.filter(Boolean))].map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                </Select>
+              </FormControl>
 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Requirement Type</InputLabel>
+                <Select
+                  name="requirementTypeFilter"
+                  value={requirementTypeFilter}
+                  onChange={handleChange}
+                  displayEmpty
+                >
+                  <MenuItem value=""><em>All</em></MenuItem>
+                  {[...new Set(manpowerArray?.map(item => item.requirement_type)?.filter(Boolean))].map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
+                </Select>
+              </FormControl>
+
+              {/* {(user.emp_id == "1722" || user.emp_id == "1400") && (
                 <FormControl variant="standard" fullWidth>
-                    <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>End Date</InputLabel>
-                    <Input
-                        type="date"
-                        name="enddatefilter"
-                        value={enddatefilter}
-                        onChange={handleChange}
-                        min={startdatefilter}
-                        max={today}
-                        sx={{
-                            '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
-                            '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
-                        }}
-                    />
+                  <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Functional Head</InputLabel>
+                  <Select
+                    name="functionalheadfilter"
+                    value={functionalheadfilter}
+                    onChange={handleChange}
+                    displayEmpty
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: 240, // Approx 5 items
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value=""><em>All Functional Heads</em></MenuItem>
+                    {manpowerRequisitionFHList?.filter(fh => fh.employee_id != 1400).map((fh) => (
+                      <MenuItem key={fh.employee_id} value={fh.employee_id}>
+                        {fh.ReportingManager}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </FormControl>
+              )} */}
+
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Director Status</InputLabel>
+                <Select
+                  name="directorStatusFilter"
+                  value={directorStatusFilter}
+                  onChange={handleChange}
+                  displayEmpty
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 240,
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value=""><em>All Director Statuses</em></MenuItem>
+                  {directorStatuses?.map((status) => (
+                    <MenuItem key={status.value} value={status.value}>
+                      {status.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>HR Status</InputLabel>
+                <Select
+                  name="hrStatusFilter"
+                  value={hrStatusFilter}
+                  onChange={handleChange}
+                  displayEmpty
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 240,
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value=""><em>All HR Statuses</em></MenuItem>
+                  {hrStatuses?.map((status) => (
+                    <MenuItem key={status.value} value={status.value}>
+                      {status.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Start Date</InputLabel>
+                <Input
+                  type="date"
+                  name="startdatefilter"
+                  value={startdatefilter}
+                  onChange={handleChange}
+                  max={enddatefilter || today}
+                  sx={{
+                    '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
+                    '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
+                  }}
+                />
+              </FormControl>
+
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>End Date</InputLabel>
+                <Input
+                  type="date"
+                  name="enddatefilter"
+                  value={enddatefilter}
+                  onChange={handleChange}
+                  min={startdatefilter}
+                  max={today}
+                  sx={{
+                    '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
+                    '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
+                  }}
+                />
+              </FormControl>
 
               <Button
                 variant="contained"
@@ -568,10 +642,12 @@ const ManpowerRequisitionReport = () => {
                   setDirectorStatusFilter("");
                   setHrStatusFilter("");
                   setStartDateFilter("");
+                  setEmploymentStatusFilter("");
+                  setRequirementTypeFilter("");
                   setEndDateFilter("");
                   setSearchTerm("");
                 }}
-                startIcon={<FilterListIcon sx={{color:"#fff"}}/>}
+                startIcon={<FilterListIcon sx={{ color: "#fff" }} />}
                 sx={{
                   height: '36px',
                   width: '100px',
@@ -656,11 +732,11 @@ const ManpowerRequisitionReport = () => {
                       <StyledTableCell>CTC Range</StyledTableCell>
                       <StyledTableCell>Specific Info</StyledTableCell>
                       <StyledTableCell>MRF Number</StyledTableCell> */}
-                       <StyledTableCell>Created Date</StyledTableCell>
-             
+                    <StyledTableCell>Created Date</StyledTableCell>
+                    <StyledTableCell>Current Status</StyledTableCell>
                     <StyledTableCell>Director Status</StyledTableCell>
                     <StyledTableCell>HR Status</StyledTableCell>
-                   
+
                     <StyledTableCell>
                       Action
                     </StyledTableCell>
@@ -687,9 +763,10 @@ const ManpowerRequisitionReport = () => {
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
                         <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
+                        <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
                         <StyledTableCell><StatusBadge status={manpower.director_status == "Pending" ? "-" : manpower.director_status} /></StyledTableCell>
                         <StyledTableCell><StatusBadge status={manpower.hr_status == "Pending" ? "-" : manpower.hr_status} /></StyledTableCell>
-                       
+
                         <StyledTableCell>
                           <Tooltip title="View Manpower" arrow placement="top">
                             <IconButton

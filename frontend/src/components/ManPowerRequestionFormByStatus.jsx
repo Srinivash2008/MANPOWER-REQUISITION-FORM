@@ -70,7 +70,9 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     },
 }));
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
+const StyledTableRow = styled(TableRow, {
+    shouldForwardProp: (prop) => prop !== 'status',
+})(({ theme, status }) => ({
     '&:nth-of-type(even)': {
         backgroundColor: '#F3FAF8', // lightGreenBg
     },
@@ -107,39 +109,45 @@ const StatusBadge = ({ status }) => {
 
     const statusStyles = {
         'Approve': {
-            backgroundColor: '#28a745', // A vibrant green
-            // color: '#fff',
+          backgroundColor: '#28a745', // A vibrant green
+          color: '#fff',
         },
         'HR Approve': {
-            backgroundColor: '#20c997', // A slightly different, teal-like green
-            // color: '#fff',
+          backgroundColor: '#20c997', // A slightly different, teal-like green
+          color: '#fff',
         },
         'Pending': {
-            backgroundColor: '#ffc107', // A warm amber/yellow
-            // color: '#212529', // Dark text for better contrast on yellow
+          backgroundColor: '#b29b58ff', // A warm amber/yellow
+          color: '#212529', // Dark text for better contrast on yellow
         },
         'Reject': {
-            backgroundColor: '#dc3545', // A strong red
-            // color: '#fff',
+          backgroundColor: '#dc3545', // A strong red
+          color: '#fff',
         },
         'Raise Query': {
-            backgroundColor: '#0dcaf0', // A bright cyan/info blue
-            // color: '#fff',
+          backgroundColor: '#0dcaf0', // A bright cyan/info blue
+          color: '#fff',
         },
         'On Hold': {
-            backgroundColor: '#6c757d', // A neutral, secondary grey
-            // color: '#fff',
+          backgroundColor: '#6c757d', // A neutral, secondary grey
+          color: '#fff',
         },
         'Draft': {
-            backgroundColor: '#f8f9fa', // A very light grey
-            // color: '#6c757d',
-            border: `1px solid #dee2e6`
+           backgroundColor: '#060606ff', // A very light grey
+          color: '#6c757d',
+          border: `1px solid #dee2e6`
+        },
+        'Withdrawn': {
+          backgroundColor: '#ff8800', // Orange color
+          color: '#fff',
+          border: `1px solid #ff8800`
         },
         default: {
-            backgroundColor: theme.palette.grey[500],
-            color: 'white',
+          backgroundColor: "#9bebebff", // Default grey
+          color: 'white',
         }
-    };
+      };
+    
 
     const style = statusStyles[displayStatus] || statusStyles[status] || statusStyles.default;
 
@@ -316,7 +324,7 @@ const ManpowerRequisitionByStatus = () => {
 
     const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
-    const filteredManpower = manpowerArray.filter(manpower => {
+    const filteredManpower = manpowerArray.filter(manpower => { //NOSONAR
         const lowerSearchTerm = searchTerm.toLowerCase();
         return (manpower?.emp_name && manpower.emp_name.toLowerCase().includes(lowerSearchTerm)) ||
             (manpower?.department_name && manpower.department_name.toLowerCase().includes(lowerSearchTerm)) ||
@@ -482,8 +490,9 @@ const ManpowerRequisitionByStatus = () => {
                       <StyledTableCell>CTC Range</StyledTableCell>
                       <StyledTableCell>Specific Info</StyledTableCell>
                       <StyledTableCell>MRF Number</StyledTableCell> */}
-                                        {/* <StyledTableCell>Status</StyledTableCell> */}
+                                        
                                         <StyledTableCell>Created Date</StyledTableCell>
+                                        <StyledTableCell>Current Status</StyledTableCell>
                                         <StyledTableCell>Director Status</StyledTableCell>
                                         <StyledTableCell>HR Status</StyledTableCell>
                                         
@@ -495,7 +504,7 @@ const ManpowerRequisitionByStatus = () => {
                                 <TableBody>
                                     {paginatedManpower.length > 0 ? (
                                         paginatedManpower.map((manpower, index) => (
-                                            <StyledTableRow key={manpower.id}>
+                                            <StyledTableRow key={manpower.id} status={manpower.status}>
                                                 <StyledTableCell component="th" scope="row">
                                                     {page * rowsPerPage + index + 1}
                                                 </StyledTableCell>
@@ -513,8 +522,10 @@ const ManpowerRequisitionByStatus = () => {
                         <StyledTableCell>{manpower.ctc_range}</StyledTableCell>
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
-                                                {/* <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell> */}
+                                               
+                                                
                                                 <StyledTableCell>{new Date(manpower.created_at).toLocaleDateString()}</StyledTableCell>
+                                                 <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
                                                 <StyledTableCell><StatusBadge status={manpower.director_status !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
                                                 <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
 

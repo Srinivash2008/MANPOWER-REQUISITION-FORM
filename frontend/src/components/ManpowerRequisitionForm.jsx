@@ -3,7 +3,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
-  Avatar,
+  Avatar, InputLabel, Input,
   Divider
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
@@ -21,6 +21,7 @@ import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import CloseIcon from '@mui/icons-material/Close';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import EditSquareIcon from '@mui/icons-material/EditSquare';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditDocumentIcon from '@mui/icons-material/EditDocument';
@@ -75,13 +76,21 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   },
 }));
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:nth-of-type(even)': {
-    backgroundColor: '#F3FAF8', // lightGreenBg
-  },
-  '&:hover': {
-    backgroundColor: '#E9F5F2', // A slightly darker green for hover
-  },
+const StyledTableRow = styled(TableRow, {
+    shouldForwardProp: (prop) => prop !== 'status',
+})(({ theme, status }) => ({
+    '&:nth-of-type(even)': {
+        backgroundColor: '#F3FAF8', // lightGreenBg
+    },
+    '&:hover': {
+        backgroundColor: '#E9F5F2', // A slightly darker green for hover
+    },
+    // ...(status === 'Draft' && {
+    //     backgroundColor: '#5096f842 !important', // A light grey for Draft
+    // }),
+    // ...(status === 'Withdraw' && {
+    //     backgroundColor: '#fbbe2455  !important', // A light orange for Withdraw
+    // }),
 }));
 
 const modalVariants = {
@@ -131,7 +140,7 @@ const StatusBadge = ({ status }) => {
       color: '#fff',
     },
     'Pending': {
-      backgroundColor: '#ffc107', // A warm amber/yellow
+      backgroundColor: '#b29b58ff', // A warm amber/yellow
       color: '#212529', // Dark text for better contrast on yellow
     },
     'Reject': {
@@ -147,11 +156,11 @@ const StatusBadge = ({ status }) => {
       color: '#fff',
     },
     'Draft': {
-      backgroundColor: '#f8f9fa', // A very light grey
+       backgroundColor: '#060606ff', // A very light grey
       color: '#6c757d',
       border: `1px solid #dee2e6`
     },
-    'withdraw': {
+    'Withdrawn': {
       backgroundColor: '#ff8800', // Orange color
       color: '#fff',
       border: `1px solid #ff8800`
@@ -312,6 +321,20 @@ const ManpowerRequisition = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentManpowerId, setCurrentManpowerId] = useState(null);
   const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
+
+  // Filter States
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [employmentStatusFilter, setEmploymentStatusFilter] = useState("");
+  const [designationFilter, setDesignationFilter] = useState("");
+  const [requirementTypeFilter, setRequirementTypeFilter] = useState("");
+  const [tatRequestFilter, setTatRequestFilter] = useState("");
+  const [directorStatusFilter, setDirectorStatusFilter] = useState("");
+  const [hrStatusFilter, setHrStatusFilter] = useState("");
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -330,19 +353,19 @@ const ManpowerRequisition = () => {
 
 
 
-  useEffect(() => {
-    if (status === 'idle' && user) {
-      //  dispatch(fetchManpowerRequisition());
-      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-    }
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const socket = io(API_URL);
-    socket.on('manpowerrequisition-refresh', () => {
-      // dispatch(fetchManpowerRequisition());
-      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+  // useEffect(() => {
+  //   if (status === 'idle' && user) {
+  //     //  dispatch(fetchManpowerRequisition());
+  //     dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+  //   }
+  //   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  //   const socket = io(API_URL);
+  //   socket.on('manpowerrequisition-refresh', () => {
+  //     // dispatch(fetchManpowerRequisition());
+  //     dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
 
-    });
-  }, [status, user, dispatch]);
+  //   });
+  // }, [status, user, dispatch]);
 
   useEffect(() => {
     //  dispatch(fetchManpowerRequisition());
@@ -359,11 +382,25 @@ const ManpowerRequisition = () => {
     }
   }, [open, manpowerId]);
 
-  const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
+  // const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
-  const filteredManpower = manpowerArray.filter(manpower => {
+  const clearFilters = () => {
+    setSearchTerm("");
+    setDepartmentFilter("");
+    setEmploymentStatusFilter("");
+    setDesignationFilter("");
+    setRequirementTypeFilter("");
+    setTatRequestFilter("");
+    setDirectorStatusFilter("");
+    setHrStatusFilter("");
+    setStartDateFilter("");
+    setEndDateFilter("");
+    setPage(0);
+  };
+
+  const filteredManpower = manpowerRequisitionList?.filter(manpower => {
     const lowerSearchTerm = searchTerm.toLowerCase();
-    return (manpower?.emp_name && manpower.emp_name.toLowerCase().includes(lowerSearchTerm)) ||
+    const matchesSearchTerm = (manpower?.emp_name && manpower.emp_name.toLowerCase().includes(lowerSearchTerm)) ||
       (manpower?.department_name && manpower.department_name.toLowerCase().includes(lowerSearchTerm)) ||
       (manpower?.employment_status && manpower.employment_status.toLowerCase().includes(lowerSearchTerm)) ||
       (manpower?.designation && manpower.designation.toLowerCase().includes(lowerSearchTerm)) ||
@@ -372,6 +409,18 @@ const ManpowerRequisition = () => {
       (manpower?.director_status && manpower.director_status.toLowerCase().includes(lowerSearchTerm)) ||
       (manpower?.hr_status && manpower.hr_status.toLowerCase().includes(lowerSearchTerm)) ||
       (manpower?.created_at && new Date(manpower.created_at).toLocaleDateString().toLowerCase().includes(lowerSearchTerm));
+
+    const matchesDepartment = !departmentFilter || manpower.department_name === departmentFilter;
+    const matchesEmploymentStatus = !employmentStatusFilter || manpower.employment_status === employmentStatusFilter;
+    const matchesDesignation = !designationFilter || manpower.designation === designationFilter;
+    const matchesRequirementType = !requirementTypeFilter || manpower.requirement_type === requirementTypeFilter;
+    const matchesTatRequest = !tatRequestFilter || manpower.hiring_tat === tatRequestFilter;
+    const matchesDirectorStatus = !directorStatusFilter || manpower.director_status === directorStatusFilter;
+    const matchesHrStatus = !hrStatusFilter || manpower.hr_status === hrStatusFilter;
+    const matchesStartDate = !startDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] >= startDateFilter);
+    const matchesEndDate = !endDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] <= endDateFilter);
+
+    return matchesSearchTerm && matchesDepartment && matchesEmploymentStatus && matchesDesignation && matchesRequirementType && matchesTatRequest && matchesDirectorStatus && matchesHrStatus && matchesStartDate && matchesEndDate;
   });
 
   const paginatedManpower =
@@ -387,6 +436,33 @@ const ManpowerRequisition = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0); // Reset to first page
   };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setPage(0);
+    switch (name) {
+      case "departmentFilter": setDepartmentFilter(value); break;
+      case "employmentStatusFilter": setEmploymentStatusFilter(value); break;
+      case "designationFilter": setDesignationFilter(value); break;
+      case "requirementTypeFilter": setRequirementTypeFilter(value); break;
+      case "tatRequestFilter": setTatRequestFilter(value); break;
+      case "directorStatusFilter": setDirectorStatusFilter(value); break;
+      case "hrStatusFilter": setHrStatusFilter(value); break;
+      case "startDateFilter":
+        if (endDateFilter && value > endDateFilter) setEndDateFilter("");
+        setStartDateFilter(value);
+        break;
+      case "endDateFilter":
+        if (!startDateFilter || value >= startDateFilter) setEndDateFilter(value);
+        break;
+      default: break;
+    }
+  };
+
+  const getUniqueValues = (key) => [...new Set(manpowerRequisitionList?.filter(Boolean).map(item => item[key])?.filter(Boolean))];
+  const directorStatuses = [{ value: "Pending", label: "Pending" }, { value: "Approve", label: "Approved" }, { value: "Reject", label: "Rejected" }, { value: "Raise Query", label: "Raise Query" }, { value: "On Hold", label: "On Hold" }];
+  const hrStatuses = [{ value: "Pending", label: "Pending" }, { value: "HR Approve", label: "HR Approved" }, { value: "Reject", label: "Rejected" }, { value: "Raise Query", label: "Raise Query" }, { value: "On Hold", label: "On Hold" }];
+
 
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
@@ -580,6 +656,119 @@ const ManpowerRequisition = () => {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 12 }}>
           <Paper sx={{ p: 2, borderRadius: '8px', marginTop: '12vh' }}>
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(auto-fit, minmax(200px, 1fr))' },
+              gap: 2.5,
+              p: 2.5,
+              borderRadius: '12px',
+              bgcolor: 'rgba(42, 127, 102, 0.05)',
+              border: '1px solid rgba(42, 127, 102, 0.1)',
+              mb: 3
+            }}>
+              <FormControl variant="standard" fullWidth>
+                <InputLabel>Department</InputLabel>
+                <Select name="departmentFilter" value={departmentFilter} onChange={handleFilterChange}>
+                  
+                  {getUniqueValues('department_name').map(dept => <MenuItem key={dept} value={dept}>{dept}</MenuItem>)}
+                </Select>
+              </FormControl>
+ 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel>Employment Status</InputLabel>
+                <Select name="employmentStatusFilter" value={employmentStatusFilter} onChange={handleFilterChange}>
+                  
+                  {getUniqueValues('employment_status').map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                </Select>
+              </FormControl>
+ 
+              {/* <FormControl variant="standard" fullWidth>
+                <InputLabel>Designation</InputLabel>
+                <Select name="designationFilter" value={designationFilter} onChange={handleFilterChange}>
+                  
+                  {getUniqueValues('designation').map(desg => <MenuItem key={desg} value={desg}>{desg}</MenuItem>)}
+                </Select>
+              </FormControl> */}
+ 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel>Requirement Type</InputLabel>
+                <Select name="requirementTypeFilter" value={requirementTypeFilter} onChange={handleFilterChange}>
+                  
+                  {getUniqueValues('requirement_type').map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
+                </Select>
+              </FormControl>
+ 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel>TAT Request</InputLabel>
+                <Select name="tatRequestFilter" value={tatRequestFilter} onChange={handleFilterChange}>
+                  
+                  {getUniqueValues('hiring_tat').map(tat => <MenuItem key={tat} value={tat}>{tat}</MenuItem>)}
+                </Select>
+              </FormControl>
+ 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel>Director Status</InputLabel>
+                <Select name="directorStatusFilter" value={directorStatusFilter} onChange={handleFilterChange}>
+                  
+                  {directorStatuses.map(status => <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>)}
+                </Select>
+              </FormControl>
+ 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel>HR Status</InputLabel>
+                <Select name="hrStatusFilter" value={hrStatusFilter} onChange={handleFilterChange}>
+                  
+                  {hrStatuses.map(status => <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>)}
+                </Select>
+              </FormControl>
+ 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Start Date</InputLabel>
+                <Input
+                  type="date"
+                  name="startDateFilter"
+                  value={startDateFilter}
+                  onChange={handleFilterChange}
+                  max={endDateFilter || today}
+                  sx={{
+                    '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
+                    '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
+                  }}
+                />
+              </FormControl>
+ 
+              <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>End Date</InputLabel>
+                <Input
+                  type="date"
+                  name="endDateFilter"
+                  value={endDateFilter}
+                  onChange={handleFilterChange}
+                  min={startDateFilter}
+                  max={today}
+                  sx={{
+                    '&:before': { borderBottom: '1px solid rgba(0, 0, 0, 0.42)' },
+                    '&:hover:not(.Mui-disabled):before': { borderBottom: '2px solid black' },
+                  }}
+                />
+              </FormControl>
+
+              <Button
+                variant="contained"
+                onClick={clearFilters}
+                startIcon={<FilterListIcon sx={{ color: "#fff" }} />}
+                sx={{
+                  height: '36px',
+                  bgcolor: 'primary.main',
+                  '&:hover': { bgcolor: 'primary.dark' },
+                  alignSelf: 'end'
+                }}
+              >
+                Clear
+              </Button>
+
+            </Box>
+
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant='h6' sx={{
                 flexGrow: 1,
@@ -600,18 +789,7 @@ const ManpowerRequisition = () => {
                 Manpower Requisition List
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <TextField
-                  label="Search"
-                  variant="outlined"
-                  size="small"
-                  value={searchTerm}
-                  onChange={(e) => { //NOSONAR
-                    setSearchTerm(e.target.value);
-                    setPage(0); // Reset to first page when searching
-                  }}
-                  sx={{ width: '280px' }}
-                />
-                
+
               </Box>
             </Box>
             {view === 'table' ? (
@@ -635,6 +813,7 @@ const ManpowerRequisition = () => {
                       <StyledTableCell>Requirement Type</StyledTableCell>
                       <StyledTableCell>TAT Request</StyledTableCell>
                       <StyledTableCell>Created Date</StyledTableCell>
+                      <StyledTableCell>Current Status</StyledTableCell>
                       <StyledTableCell>Director Status</StyledTableCell>
                       <StyledTableCell>HR Status</StyledTableCell>
                       <StyledTableCell>Action</StyledTableCell>
@@ -643,7 +822,7 @@ const ManpowerRequisition = () => {
                   <TableBody>
                     {paginatedManpower.length > 0 ? (
                       paginatedManpower.map((manpower, index) => (
-                        <StyledTableRow key={manpower.id}>
+                        <StyledTableRow key={manpower.id} status={manpower.status}>
                           <StyledTableCell component="th" scope="row">{page * rowsPerPage + index + 1}</StyledTableCell>
                           <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
                           <StyledTableCell>{manpower.department_name}</StyledTableCell>
@@ -652,9 +831,10 @@ const ManpowerRequisition = () => {
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                           <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
+                          <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.director_status !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
-                          {/* <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell> */}
+                          
                           <StyledTableCell>
                             <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
                               <MoreVertIcon />
@@ -681,7 +861,7 @@ const ManpowerRequisition = () => {
                               {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
                                 && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
                               }
-                              {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve"
+                              {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
                                 && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
                               }
 
