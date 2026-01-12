@@ -61,6 +61,34 @@ export const fetchManpowerRequisitionByuserId = createAsyncThunk(
   }
 );
 
+// Async thunk to fetch email Template data
+export const my_requisitions = createAsyncThunk(
+  'manpowerRequisition/fetchManpowerRequisitionByuserId',
+  async (userId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(`${API_URL}/api/cases/my-requisitions/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch manpower requisition by user ID.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 
 export const fetchManpowerRequisition = createAsyncThunk(
   'manpowerRequisition/fetchManpowerRequisition',

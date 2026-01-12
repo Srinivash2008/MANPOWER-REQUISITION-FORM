@@ -17,6 +17,7 @@ import LineChart from './LineChart';
 import BarChart from './BarChart';
 import RadialBarChart from './RadialBarChart';
 import StatRow from './StatRow';
+import { useNavigate } from 'react-router-dom';
 
 const FHDashboard = ({
   counts,
@@ -32,6 +33,7 @@ const FHDashboard = ({
   hrStatusMetrics,
 }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
@@ -73,7 +75,20 @@ const FHDashboard = ({
                 {pendingStatuses.map((p) => {
                   const percentage = totalPending > 0 ? (p.count / totalPending) * 100 : 0;
                   return (
-                    <Box key={p.status}>
+                    <Box
+                      key={p.status}
+                      onClick={() => {
+                        const statusParam = p.status.toLowerCase().includes('query') ? 'Raise Query' : p.status;
+                        navigate(`/mrf-list?status=${statusParam}`);
+                      }}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: theme.palette.action.hover,
+                        },
+                        p: 0.5,
+                        borderRadius: 1,
+                      }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                         <Typography variant="caption" fontWeight={600} color="text.secondary">{p.status}</Typography>
                         <Typography variant="caption" fontWeight={700}>{p.count.toLocaleString()}</Typography>

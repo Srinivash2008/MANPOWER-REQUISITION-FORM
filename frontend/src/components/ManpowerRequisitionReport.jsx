@@ -143,6 +143,7 @@ const ManpowerRequisitionReport = () => {
   const [enddatefilter, setEndDateFilter] = useState("");
   const [directorStatusFilter, setDirectorStatusFilter] = useState("");
   const [hrStatusFilter, setHrStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [functionalheadfilter, setFunctionalHeadFilter] = useState("");
   const [employmentStatusFilter, setEmploymentStatusFilter] = useState("");
   const [requirementTypeFilter, setRequirementTypeFilter] = useState("");
@@ -193,6 +194,8 @@ const ManpowerRequisitionReport = () => {
 
     const matchesDirectorStatus = directorStatusFilter === "" || manpower?.director_status === directorStatusFilter;
 
+    const matchesStatus = statusFilter === "" || manpower?.status === statusFilter;
+
     const matchesHrStatus = hrStatusFilter === "" || manpower?.hr_status === hrStatusFilter;
 
     const matchesEmploymentStatus = !employmentStatusFilter || manpower.employment_status === employmentStatusFilter;
@@ -218,7 +221,7 @@ const ManpowerRequisitionReport = () => {
       || (manpower?.director_status && manpower.director_status.toLowerCase().includes(lowerSearchTerm))
       || (manpower?.hr_status && manpower.hr_status.toLowerCase().includes(lowerSearchTerm));
 
-    return matchesFunctionalHead && matchesDirectorStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesSearchTerm && matchesEmploymentStatus && matchesRequirementType && matchesTatRequest;
+    return matchesFunctionalHead && matchesDirectorStatus && matchesStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesSearchTerm && matchesEmploymentStatus && matchesRequirementType && matchesTatRequest;
   });
 
   const paginatedManpower =
@@ -315,6 +318,8 @@ const ManpowerRequisitionReport = () => {
       setDirectorStatusFilter(value);
     } else if (name === "hrStatusFilter") {
       setHrStatusFilter(value);
+    } else if (name === "statusFilter") {
+      setStatusFilter(value);
     } else if (name === "functionalheadfilter") {
       setFunctionalHeadFilter(value);
     } else if (name === "employmentStatusFilter") {
@@ -590,6 +595,26 @@ const ManpowerRequisitionReport = () => {
               </FormControl>
 
               <FormControl variant="standard" fullWidth>
+                <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Current Status</InputLabel>
+                <Select
+                  name="statusFilter"
+                  value={statusFilter}
+                  onChange={handleChange}
+                  displayEmpty
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 240,
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value=""><em>All Statuses</em></MenuItem>
+                  {[...new Set(manpowerArray?.map(item => item.status)?.filter(Boolean))].map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                </Select>
+              </FormControl>
+
+              <FormControl variant="standard" fullWidth>
                 <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>HR Status</InputLabel>
                 <Select
                   name="hrStatusFilter"
@@ -649,6 +674,7 @@ const ManpowerRequisitionReport = () => {
                 onClick={() => {
                   setFunctionalHeadFilter("");
                   setDirectorStatusFilter("");
+                  setStatusFilter("");
                   setHrStatusFilter("");
                   setStartDateFilter("");
                   setEmploymentStatusFilter("");

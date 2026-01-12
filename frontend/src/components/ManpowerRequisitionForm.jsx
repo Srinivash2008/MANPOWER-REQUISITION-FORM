@@ -7,7 +7,7 @@ import {
   Divider
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList,my_requisitions } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import { withdrawManpowerRequisition } from '../redux/cases/manpowerrequisitionSlice';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -329,6 +329,7 @@ const ManpowerRequisition = () => {
   const [requirementTypeFilter, setRequirementTypeFilter] = useState("");
   const [tatRequestFilter, setTatRequestFilter] = useState("");
   const [directorStatusFilter, setDirectorStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [hrStatusFilter, setHrStatusFilter] = useState("");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
@@ -340,10 +341,15 @@ const ManpowerRequisition = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const directorStatus = params.get('director_status');
+    const currentStatus = params.get('status');
     const hrStatus = params.get('hr_status');
 
     if (directorStatus) {
       setDirectorStatusFilter(directorStatus);
+    }
+
+    if (currentStatus) {
+      setStatusFilter(currentStatus);
     }
     if (hrStatus) {
       setHrStatusFilter(hrStatus);
@@ -380,8 +386,13 @@ const ManpowerRequisition = () => {
 
   useEffect(() => {
     //  dispatch(fetchManpowerRequisition());
-    dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-  }, [dispatch]);
+    if (location.pathname === '/my-requisitions') {
+      dispatch(my_requisitions(user?.emp_id));
+    }
+    else {
+      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+    }
+  }, [dispatch, user?.emp_id, location.pathname]);
 
   const currentUserId = user?.emp_id || null;
   const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -403,6 +414,7 @@ const ManpowerRequisition = () => {
     setRequirementTypeFilter("");
     setTatRequestFilter("");
     setDirectorStatusFilter("");
+    setStatusFilter("");
     setHrStatusFilter("");
     setStartDateFilter("");
     setEndDateFilter("");
@@ -427,11 +439,12 @@ const ManpowerRequisition = () => {
     const matchesRequirementType = !requirementTypeFilter || manpower.requirement_type === requirementTypeFilter;
     const matchesTatRequest = !tatRequestFilter || manpower.hiring_tat === tatRequestFilter;
     const matchesDirectorStatus = !directorStatusFilter || manpower.director_status === directorStatusFilter;
+    const matchesStatus = !statusFilter || manpower.status === statusFilter;
     const matchesHrStatus = !hrStatusFilter || manpower.hr_status === hrStatusFilter;
     const matchesStartDate = !startDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] >= startDateFilter);
     const matchesEndDate = !endDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] <= endDateFilter);
 
-    return matchesSearchTerm && matchesDepartment && matchesEmploymentStatus && matchesDesignation && matchesRequirementType && matchesTatRequest && matchesDirectorStatus && matchesHrStatus && matchesStartDate && matchesEndDate;
+    return matchesSearchTerm && matchesDepartment && matchesEmploymentStatus && matchesDesignation && matchesRequirementType && matchesTatRequest && matchesDirectorStatus && matchesStatus && matchesHrStatus && matchesStartDate && matchesEndDate;
   });
 
   const paginatedManpower =
@@ -458,6 +471,7 @@ const ManpowerRequisition = () => {
       case "requirementTypeFilter": setRequirementTypeFilter(value); break;
       case "tatRequestFilter": setTatRequestFilter(value); break;
       case "directorStatusFilter": setDirectorStatusFilter(value); break;
+      case "statusFilter": setStatusFilter(value); break;
       case "hrStatusFilter": setHrStatusFilter(value); break;
       case "startDateFilter":
         if (endDateFilter && value > endDateFilter) setEndDateFilter("");
@@ -725,6 +739,14 @@ const ManpowerRequisition = () => {
                 </Select>
               </FormControl>
  
+              <FormControl variant="standard" fullWidth>
+                <InputLabel>Current Status</InputLabel>
+                <Select name="statusFilter" value={statusFilter} onChange={handleFilterChange}>
+                  <MenuItem value=""><em>All</em></MenuItem>
+                  {getUniqueValues('status').map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                </Select>
+              </FormControl>
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel>HR Status</InputLabel>
                 <Select name="hrStatusFilter" value={hrStatusFilter} onChange={handleFilterChange}>

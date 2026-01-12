@@ -289,6 +289,7 @@ const Dashboard = () => {
     { status: 'On Hold', count: baseCounts.onHold, color: 'tertitary' },
     { status: 'Query by Director', count: baseCounts.directorRaiseQuery, color: 'info' },
     { status: 'Query by HR', count: baseCounts.hrRaiseQuery, color: 'info' },
+    { status: 'Draft', count: baseCounts.draft, color: 'default' }
   ].filter(m => m.count > 0);
   const fhTotalPending = fhPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
 

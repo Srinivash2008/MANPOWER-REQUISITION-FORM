@@ -77,6 +77,7 @@ function App() {
            <Route path="/add-mrf" element={<Add_Form />} />
 
            <Route path="/mrf-list" element={<ManpowerRequisition />} />
+           <Route path="/my-requisitions" element={<ManpowerRequisition />} />
            <Route path="/mrf-list/:param_status" element={<ManpowerRequisitionByStatus />} />
 
            <Route path="/manpower_requisition_view/:id" element={<ManpowerRequisitionView/>} />

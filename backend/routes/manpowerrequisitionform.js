@@ -75,6 +75,60 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             isWithdrawOpen: row.isWithdrawOpen,
 
         }));
+        console.log(fetchManpowerRequisitionByUser, "fetchManpowerRequisitionByUserfetchManpowerRequisitionByUserfetchManpowerRequisitionByUser")
+        res.json(fetchManpowerRequisitionByUser);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
+
+
+router.get('/my-requisitions/:userId', authMiddleware, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        let query = "SELECT mr.*,ep.*,ed.depart AS department_name,CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at)) <= 7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id=mr.created_by JOIN employee_depart AS ed ON ed.id=mr.department WHERE mr.isdelete='Active'";
+        let params = [];
+
+        if (['12345', '1400', ].includes(userId)) {
+            query += " AND mr.status != 'Draft' AND mr.status != 'Withdraw'";
+        }
+        if (!['12345', '1400',].includes(userId)) {
+            query += " AND mr.created_by = ?";
+            params.push(userId);
+        }
+        query += ' ORDER BY mr.id DESC';
+        const [rows] = await pool.execute(query, params);
+        const fetchManpowerRequisitionByUser = rows.map((row, index) => ({
+            id: row.id,
+            s_no: index + 1,
+            department: row.department,
+            department_name: row.department_name,
+            hiring_tat: row.hiring_tat_fastag == 1 ? "Fastag Hiring (60 Days)" : (row.hiring_tat_normal_cat1 == 1 ? "Normal Hiring – Cat 1 (90 Days)" : (row.hiring_tat_normal_cat2 == 1 ? "Normal Hiring – Cat 2 (120 Days)" : "")),
+            employment_status: row.employment_status,
+            designation: row.designation,
+            num_resources: row.num_resources,
+            requirement_type: row.requirement_type,
+            replacement_detail: row.replacement_detail,
+            ramp_up_reason: row.ramp_up_reason,
+            job_description: row.job_description,
+            education: row.education,
+            experience: row.experience,
+            ctc_range: row.ctc_range,
+            specific_info: row.specific_info,
+            mrf_number: row.mrf_number,
+            status: row.status,
+            created_by: row.created_by,
+            created_at: row.created_at,
+            isdelete: row.isdelete,
+            emp_name: row.emp_name,
+            hr_status: row.hr_status,
+            director_status: row.director_status,
+            isWithdrawOpen: row.isWithdrawOpen,
+
+        }));
+        console.log(fetchManpowerRequisitionByUser, "fetchManpowerRequisitionByUserfetchManpowerRequisitionByUserfetchManpowerRequisitionByUser")
         res.json(fetchManpowerRequisitionByUser);
 
     } catch (error) {
