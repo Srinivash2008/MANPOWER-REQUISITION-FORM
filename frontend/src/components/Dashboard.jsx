@@ -246,6 +246,8 @@ const Dashboard = () => {
     onHold: parseInt(mfrCounts?.hr_status?.on_hold_count) || 0,
   };
 
+  console.log(hrCounts,"hrCounts")
+
   const hrStatusMetrics = [
     { status: 'Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
     { status: 'Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },

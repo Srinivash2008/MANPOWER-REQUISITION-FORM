@@ -1143,7 +1143,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
 
         const hrStatusSelect = `
             COALESCE(SUM(CASE WHEN hr_status = 'Pending' THEN 1 ELSE 0 END), 0) AS hr_pending_count,
-            COALESCE(SUM(CASE WHEN hr_status = 'Approve' THEN 1 ELSE 0 END), 0) AS hr_approve_count,
+            COALESCE(SUM(CASE WHEN hr_status = 'HR Approve' THEN 1 ELSE 0 END), 0) AS hr_approve_count,
             COALESCE(SUM(CASE WHEN hr_status = 'Reject' THEN 1 ELSE 0 END), 0) AS hr_reject_count,
             COALESCE(SUM(CASE WHEN hr_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS hr_raise_query_count,
             COALESCE(SUM(CASE WHEN hr_status = 'On Hold' THEN 1 ELSE 0 END), 0) AS hr_on_hold_count
