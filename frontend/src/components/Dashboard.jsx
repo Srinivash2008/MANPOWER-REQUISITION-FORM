@@ -260,6 +260,8 @@ const Dashboard = () => {
     { status: 'Approved', count: baseCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
     { status: 'Rejected', count: baseCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
     { status: 'On Hold', count: baseCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+    { status: 'Withdraw', count: baseCounts.withdraw, icon: (props) => <UndoIcon {...props} />, color: 'warning' },
+
   ];
 
 
@@ -365,9 +367,11 @@ const Dashboard = () => {
           'HR Approved',
           'HR Rejected',
           'HR Query',
-          'HR On-Hold'
+          'HR On-Hold',
+          'Overall Withdraw',
         ];
 
+        const withdrawOverall = overallStatusMetrics.find(m => m.status === 'Withdraw');
         const pendingOverall = overallStatusMetrics.find(m => m.status === 'Pending');
         let combinedData = [];
         if (pendingOverall) {
@@ -375,6 +379,9 @@ const Dashboard = () => {
         }
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status}` })));
         combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status}` })));
+        if (withdrawOverall) {
+          combinedData.push({ ...withdrawOverall, status: 'Overall Withdraw' });
+        }
 
         // Sort based on the predefined statusOrder
         return combinedData.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));

@@ -495,12 +495,12 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
                     from: process.env.EMAIL_USER,
                     cc: ["srinivasan@pdmrindia.com"],
                     to: "srinivasan@pdmrindia.com",
-                    subject: 'Query Raised on MRF',
+                    subject: 'Query Raised on Your MRF',
                     html: `
                     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                        <p>Dear ${fhUser.emp_name},</p>
+                        <p>Dear ${creator.emp_name},</p>
                         <p>
-                            <b>${queryRaiserName}</b> has raised a query on an MRF submitted by <b>${creator.emp_name}</b>. Please review the query and provide your reply.
+                            <b>${queryRaiserName}</b> has raised a query on an MRF</b>. Please review the query and provide your reply.
                         </p>
                         <p>
                             You can view the MRF and reply to the query here:
@@ -589,7 +589,7 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
             <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                 <p>Dear Team,</p>
                 <p>
-                    A Functional Head has replied to a query on MRF ID: ${id}.
+                    A Functional Head has replied to a query on MRF.
                 </p>
                 <p>
                     You can view the MRF and the reply here:
