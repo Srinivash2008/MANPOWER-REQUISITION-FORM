@@ -95,9 +95,9 @@ const Dashboard = () => {
   const manpowerRequisitionFHList = useSelector((state) => state.manpowerRequisition.selectedRequisitionFH) || [];
   const [managerFilter, setManagerFilter] = useState('');
   const [fhChartFilter, setFhChartFilter] = useState('overall');
-  
+
   console.log("MFR Counts from Redux:", mfrCounts);
-  
+
   useEffect(() => {
     if (user?.emp_id) {
       dispatch(getMFRCounts(user.emp_id));
@@ -142,9 +142,10 @@ const Dashboard = () => {
   // Recalculate counts based on the displayed (filtered) MRF list
   const counts = {
     pending: displayedMrfList.filter(m => m.status === 'Pending').length,
-    
+
     hrApproved: displayedMrfList.filter(m => m.status === 'HR Approve').length,
     approved: displayedMrfList.filter(m => m.status === 'Approve' || m.status === 'HR Approve').length,
+    approved_HR: displayedMrfList.filter(m => m.status === 'Approve').length,
     rejected: displayedMrfList.filter(m => m.status === 'Reject').length,
     onHold: displayedMrfList.filter(m => m.status === 'On Hold').length,
     // For query counts, we fall back to the overall counts if no manager is selected, as this breakdown isn't per-MRF
@@ -230,10 +231,10 @@ const Dashboard = () => {
   ];
 
   const dirStatusMetrics = [
-    { status: 'Approved by Rajesh', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
-    { status: 'Rejected by Rajesh', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'Query by Rajesh', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
-    { status: 'On-Hold by Rajesh', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+    { status: 'Approved', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'Rejected', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'Query', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
+    { status: 'On-Hold', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
   const hrCounts = {
@@ -245,10 +246,10 @@ const Dashboard = () => {
   };
 
   const hrStatusMetrics = [
-    { status: 'Approved by Selvi', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
-    { status: 'Rejected by Selvi', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'Query by Selvi', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
-    { status: 'On-Hold by Selvi', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+    { status: 'Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'Query', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
+    { status: 'On-Hold', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
   const overallStatusMetrics = [
@@ -296,16 +297,16 @@ const Dashboard = () => {
   const adminPendingStatuses =
     user?.emp_id === '1722'
       ? [
-          {
-            status: 'Approved',
-            count: counts.approved,
-            color: 'success',
-          },
-        ]
+        {
+          status: 'Approved',
+          count: counts.approved_HR,
+          color: 'success',
+        },
+      ]
       : statusMetrics.filter(
-          (m) =>
-            m.status === 'Pending' || m.status === 'On-Hold' || m.status.startsWith('Query by')
-        );
+        (m) =>
+          m.status === 'Pending' || m.status === 'On-Hold' || m.status.startsWith('Query by')
+      );
   const adminTotalPending = adminPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
 
   const totalApproved = counts.approved;
