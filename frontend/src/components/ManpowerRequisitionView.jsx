@@ -13,7 +13,7 @@ const ManpowerRequisitionView = () => {
     const { id } = useParams();
     const { token, user } = useSelector((state) => state.auth);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
- const navigate = useNavigate();
+    const navigate = useNavigate();
     useEffect(() => {
         if (token) {
             dispatch(fetchManagerList());
@@ -72,7 +72,7 @@ const ManpowerRequisitionView = () => {
     }, [dispatch, id]);
 
     const { selectedRequisition } = useSelector((state) => state.manpowerRequisition);
-console.log(selectedRequisition,"selectedRequisition")
+    console.log(selectedRequisition, "selectedRequisition")
     useEffect(() => {
         if (selectedRequisition) {
             let tatValue = "";
@@ -111,7 +111,9 @@ console.log(selectedRequisition,"selectedRequisition")
                 hr_comments: selectedRequisition.hr_comments || "-",
                 director_comments: selectedRequisition.director_comments || "-",
                 status: selectedRequisition.status || "",
-                created_at: selectedRequisition.created_at || "-"
+                created_at: selectedRequisition.created_at || "-",
+                Director_Query_Answer: selectedRequisition.Director_Query_Answer || "",
+                HR_Query_Answer: selectedRequisition.HR_Query_Answer || ""
             });
         }
     }, [selectedRequisition]);
@@ -160,52 +162,52 @@ console.log(selectedRequisition,"selectedRequisition")
         const correctedFilePath = filePath.replace(/\\/g, '/');
         console.log(`${API_URL}/${correctedFilePath}`, "url")
 
-    try {
-        const response = await fetch(`${API_URL}/${correctedFilePath}`, {
-            method: "GET"
-        });
+        try {
+            const response = await fetch(`${API_URL}/${correctedFilePath}`, {
+                method: "GET"
+            });
 
-        if (!response.ok) {
-            throw new Error(`File not found. Status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`File not found. Status: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            // Extract filename
+            let fileName = correctedFilePath.split(/[\\/]/).pop();
+
+            // If filename has no extension, detect based on MIME
+            if (!fileName.includes(".")) {
+                const mime = blob.type;
+
+                if (mime.includes("pdf")) fileName += ".pdf";
+                else if (mime.includes("word")) fileName += ".docx";
+                else if (mime.includes("spreadsheet") || mime.includes("excel"))
+                    fileName += ".xlsx";
+                else fileName += ".file";
+            }
+
+            // Create a temporary link for download
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            // Release memory
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error("Download failed:", error);
+            setNotification({
+                open: true,
+                message: 'Download failed.',
+                severity: 'error'
+            });
         }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-
-        // Extract filename
-        let fileName = correctedFilePath.split(/[\\/]/).pop();
-
-        // If filename has no extension, detect based on MIME
-        if (!fileName.includes(".")) {
-            const mime = blob.type;
-
-            if (mime.includes("pdf")) fileName += ".pdf";
-            else if (mime.includes("word")) fileName += ".docx";
-            else if (mime.includes("spreadsheet") || mime.includes("excel"))
-                fileName += ".xlsx";
-            else fileName += ".file";
-        }
-
-        // Create a temporary link for download
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        // Release memory
-        window.URL.revokeObjectURL(url);
-
-    } catch (error) {
-        console.error("Download failed:", error);
-        setNotification({
-            open: true,
-            message: 'Download failed.',
-            severity: 'error'
-        });
-    }
-};
+    };
 
 
     const DisplayField = ({ label, value }) => (
@@ -225,8 +227,8 @@ console.log(selectedRequisition,"selectedRequisition")
     return (
         <div className="page-wrapper">
             <div className="form-panel">
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2,mt:5, flexDirection: "row-reverse" }}>
-                     <Button
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, mt: 5, flexDirection: "row-reverse" }}>
+                    <Button
                         variant="outlined"
                         onClick={() => navigate(-1)}
                         startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
@@ -372,8 +374,20 @@ console.log(selectedRequisition,"selectedRequisition")
                                     <DisplayTextarea label="Director Query" value={formData.query_name_director} />
                                 </div>
                             ) : (
+                                <>
+                                    {
+                                        (formData.directorstatus !== "Raise Query" && formData.directorstatus !== "FH Replied") && (
+                                            <div style={{ marginTop: '1rem' }}>
+                                                <DisplayTextarea label="Director Comments" value={formData.director_comments} />
+                                            </div>
+                                        )
+                                    }
+                                </>
+                            )}
+                            {formData.directorstatus === 'FH Replied' && (
                                 <div style={{ marginTop: '1rem' }}>
-                                    <DisplayTextarea label="Director Comments" value={formData.director_comments} />
+                                    <DisplayTextarea label="Director Query" value={formData.query_name_director} />
+                                    <DisplayTextarea label="Director Query Answer" value={formData.Director_Query_Answer} />
                                 </div>
                             )}
                         </div>
@@ -388,12 +402,23 @@ console.log(selectedRequisition,"selectedRequisition")
                                     <DisplayTextarea label="HR Query" value={formData.query_name_hr} />
                                 </div>
                             ) : (
+                                <>
+                                    {
+                                        (formData.hrstatus !== "Raise Query" && formData.hrstatus !== "FH Replied") && (
+                                            <div style={{ marginTop: '1rem' }}>
+                                                <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
+                                            </div>
+                                        )
+                                    }</>
+                            )}
+                            {formData.hrstatus === 'FH Replied' && (
                                 <div style={{ marginTop: '1rem' }}>
-                                    <DisplayTextarea label="HR Comments" value={formData.hr_comments} />
+                                    <DisplayTextarea label="HR Query" value={formData.query_name_hr} />
+                                    <DisplayTextarea label="HR Query Answer" value={formData.HR_Query_Answer} />
                                 </div>
                             )}
                         </div>
-                        
+
                     </div>
                 </form>
             </div>
