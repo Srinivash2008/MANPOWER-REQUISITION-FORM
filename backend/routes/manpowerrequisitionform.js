@@ -228,9 +228,9 @@ router.post(
                     from: process.env.EMAIL_USER,
                     // The 'to' email should be the submitter's email address (emp_email)
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
-                    to: "nikita@pdmrindia.com",
+                    to: "srinivasan@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    cc: ["srinivasan@pdmrindia.com"],
                     subject: `A New Manpower requisition Form submitted for your approval`,
                     html: `
                         <div style="
@@ -257,7 +257,7 @@ router.post(
                 const directorMailOptions = {
                     from: process.env.EMAIL_USER,
                     to: "srinivasan@pdmrindia.com",
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    cc: ["srinivasan@pdmrindia.com"],
                     subject: 'New MRF Submitted – Notification for Your Review',
                     html: `
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -468,23 +468,24 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
             'SELECT ep.mail_id, ep.emp_name, mr.created_by FROM manpower_requisition mr JOIN employee_personal ep ON mr.created_by = ep.employee_id WHERE mr.id = ?',
             [query_manpower_requisition_pid]
         );
-
         if (mrfCreator.length > 0) {
             const creator = mrfCreator[0];
             const queryRaiserName = user.emp_name; // From auth middleware
 
             // Fetch the Functional Head (FH) of the creator
             const [fh] = await pool.execute(
-                'SELECT mail_id, emp_name FROM employee_personal WHERE employee_id = (SELECT ReportingManager FROM employee_personal WHERE employee_id = ?)',
+                'SELECT employee_id, mail_id, emp_name FROM employee_personal WHERE employee_id = (SELECT ReportingManager FROM employee_personal WHERE employee_id = ?)',
                 [creator.created_by]
             );
 
             if (fh.length > 0) {
                 const fhUser = fh[0];
+                const dataToEncode = JSON.stringify({ pid: query_manpower_requisition_pid, user: mrfCreator[0] });
+                const encodedData = Buffer.from(dataToEncode).toString('base64');
                 const mailOptions = {
                     from: process.env.EMAIL_USER,
-                    to: fhUser.mail_id, // FH's email
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    cc: ["srinivasan@pdmrindia.com"],
+                    to: "srinivasan@pdmrindia.com",
                     subject: 'Query Raised on MRF',
                     html: `
                     <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -494,7 +495,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
                         </p>
                         <p>
                             You can view the MRF and reply to the query here:
-                            <a href="${process.env.FRONTEND_URL}/fh-reply/${query_manpower_requisition_pid}">View and Reply to MRF</a>
+                            <a href="${process.env.FRONTEND_URL}fh-reply/${encodedData}">View and Reply to MRF</a>
                         </p>
                         <br>
                         <p style="color: #555;">
@@ -541,8 +542,8 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
         // Notify Rajesh and Selvi
         const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: "srinivasan@pdmrindia.com", // This should be Rajesh's and Selvi's email
-            cc: ["gomathi@pdmrindia.com"],
+            to: "srinivasan@pdmrindia.com",
+            cc: [],
             subject: 'FH has Replied to a Query',
             html: `
             <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -662,9 +663,9 @@ console.log(status, "statusstatusstatusstatusstatus")
                     from: process.env.EMAIL_USER,
                     // The 'to' email should be the submitter's email address (emp_email)
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
-                    to: "nikita@pdmrindia.com",
+                    to: "srinivasan@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    cc: [ "srinivasan@pdmrindia.com"],
                     subject: `A New Manpower requisition Form submitted for your approval`,
                     html: `
                         <div style="
@@ -691,7 +692,7 @@ console.log(status, "statusstatusstatusstatusstatus")
                 const directorMailOptions = {
                     from: process.env.EMAIL_USER,
                     to: "srinivasan@pdmrindia.com",
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    cc: ["srinivasan@pdmrindia.com"],
                     subject: 'New MRF Submitted – Notification for Your Review',
                     html: `
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -734,7 +735,7 @@ console.log(status, "statusstatusstatusstatusstatus")
                     from: process.env.EMAIL_USER,
                     // cc: hiringManager?.mail_id,
                     to: "srinivasan@pdmrindia.com",
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    cc: [ "srinivasan@pdmrindia.com"],
                     subject: 'MRF Approval Confirmation – Ready for Next Steps',
                     html: `
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -777,9 +778,9 @@ console.log(status, "statusstatusstatusstatusstatus")
                     from: process.env.EMAIL_USER,
                     // The 'to' email should be the submitter's email address (emp_email)
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
-                    to: "nikita@pdmrindia.com",
+                    to: "srinivasan@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: ["gomathi@pdmrindia.com", "srinivasan@pdmrindia.com"],
+                    cc: ["srinivasan@pdmrindia.com"],
                     subject: `MRF Approval Confirmation`,
                     html: `
                         <div style="

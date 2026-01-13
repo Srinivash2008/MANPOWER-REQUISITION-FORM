@@ -120,7 +120,7 @@ router.post('/forgot-password', async (req, res) => {
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: mail_id,
+            to: "srinivasan@pdmrindia.com",
             subject: 'Password Reset OTP',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;">

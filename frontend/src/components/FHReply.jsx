@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload, FiHelpCircle, FiMessageSquare } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField } from "@mui/material";
+import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchQuery, replyToQuery } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,6 +11,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 const FHReply = () => {
     const dispatch = useDispatch();
     const { id } = useParams();
+    const [decodedId, setDecodedId] = useState(null);
+    const [decodedUserId, setDecodedUserId] = useState(null);
+
+    console.log(id, "id");
     const { token, user } = useSelector((state) => state.auth);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const navigate = useNavigate();
@@ -50,6 +54,7 @@ const FHReply = () => {
     });
 
     const [reply, setReply] = useState("");
+    const [error, setError] = useState(null);
     const [notification, setNotification] = useState({
         open: false,
         message: "",
@@ -57,8 +62,18 @@ const FHReply = () => {
     });
 
     useEffect(() => {
-        dispatch(fetchManpowerRequisitionById(id));
-        dispatch(fetchQuery(id));
+        try {
+            const decodedString = atob(id);
+            const decodedData = JSON.parse(decodedString);
+            console.log(decodedData, "decodedData");
+            setDecodedId(decodedData.pid);
+            setDecodedUserId(decodedData.userId);
+            dispatch(fetchManpowerRequisitionById(decodedData.pid));
+            dispatch(fetchQuery(decodedData.pid));
+        } catch (e) {
+            console.error("Failed to decode or parse ID:", e);
+            setError("Invalid identifier provided.");
+        }
     }, [dispatch, id]);
 
     const { selectedRequisition, query } = useSelector((state) => state.manpowerRequisition);
@@ -184,7 +199,7 @@ const FHReply = () => {
             return;
         }
         try {
-            await dispatch(replyToQuery({ id, reply })).unwrap();
+            await dispatch(replyToQuery({ id: decodedId, reply })).unwrap();
             setNotification({
                 open: true,
                 message: 'Reply submitted successfully!',
@@ -200,6 +215,17 @@ const FHReply = () => {
         }
     };
 
+    if (error) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Typography color="error" variant="h6">{error}</Typography>
+            </Box>
+        );
+    }
+
+    if (!selectedRequisition) {
+        return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Typography>Loading...</Typography></Box>;
+    }
 
     const DisplayField = ({ label, value }) => (
         <div>
@@ -273,60 +299,6 @@ const FHReply = () => {
                                 Submit Reply
                             </Button>
                         </div>
-
-
-                        {/* Requirement Details Section */}
-                        <div className="form-section">
-                            <h3 className="section-title"><FiBriefcase /> Requirement Details</h3>
-                            <div className="section-grid multi-col">
-                                <DisplayField label="Department" value={formData.department} />
-                                <DisplayField label="Status of Employment" value={formData.employmentStatus} />
-                                <DisplayField label="Proposed Designation" value={formData.designation} />
-                                <DisplayField label="No. of Resources" value={formData.numResources} />
-                                <DisplayField label="Requirement Type" value={formData.requirementType} />
-
-                                {formData.requirementType === "Ramp up" && (
-                                    <>
-                                        <DisplayField label="Project Name" value={formData.projectName} />
-                                        <DisplayField label="Projection Plan" value={formData.projectionPlan} />
-                                        <div className="full-width">
-                                            <label className="form-label">Uploaded File</label>
-                                            {formData.rampUpFile ? (
-                                                <div className="professional-file-display">
-                                                    <div className="file-info">
-                                                        <FiFile className="file-info-icon" />
-                                                        <Tooltip title={formData.rampUpFile.split(/[\/]/).pop()} placement="top">
-                                                            <span className="file-info-name">{formData.rampUpFile.split(/[\/]/).pop()}</span>
-                                                        </Tooltip>
-                                                    </div>
-                                                    <Button
-                                                        variant="outlined"
-                                                        onClick={(e) => { e.preventDefault(); handleDownload(formData.rampUpFile); }}
-                                                        startIcon={<FiDownload />}
-                                                        size="small">
-                                                        Download
-                                                    </Button>
-                                                </div>
-                                            ) : (<p className="form-display-text">No file uploaded.</p>)}
-                                        </div>
-                                    </>
-                                )}
-
-                                {formData.requirementType === "New Requirement" && (
-                                    <>
-                                        <div className="full-width">
-                                            <DisplayField label="Project Name" value={formData.projectName} />
-                                            <DisplayField label="Reason for Additional Resources" value={formData.rampUpReason} />
-                                        </div>
-                                    </>
-                                )}
-
-                                {formData.requirementType === "Replacement" && (
-                                    <DisplayField label="Resigned Employee (Name + ID)" value={formData.replacementDetail} />
-                                )}
-                            </div>
-                        </div>
-
                     </div>
                 </form>
             </div>

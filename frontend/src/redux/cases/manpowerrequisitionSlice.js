@@ -63,7 +63,7 @@ export const fetchManpowerRequisitionByuserId = createAsyncThunk(
 
 // Async thunk to fetch email Template data
 export const my_requisitions = createAsyncThunk(
-  'manpowerRequisition/fetchManpowerRequisitionByuserId',
+  'manpowerRequisition/my-requisitions',
   async (userId, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
@@ -609,6 +609,19 @@ const manpowerrequisitionSlice = createSlice({
         state.error = action.payload;
         state.data = [];
       })
+       .addCase(my_requisitions.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(my_requisitions.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = action.payload;
+      })
+      .addCase(my_requisitions.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.data = [];
+      })
       .addCase(fetchManpowerRequisitionByStatus.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -747,11 +760,11 @@ const manpowerrequisitionSlice = createSlice({
       })
       .addCase(updateManpowerStatus.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.data = action.payload;
+        // state.data = action.payload;
       })
       .addCase(updateManpowerStatus.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        // state.error = action.payload;
         state.data = [];
       })
       //delete email function

@@ -293,6 +293,7 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
 
 const ManpowerRequisition = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { user, token } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
   console.log(manpowerRequisitionList, "manpowerRequisitionList")
@@ -339,6 +340,12 @@ const ManpowerRequisition = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (token) {
+      dispatch(fetchManagerList());
+    }
+  }, [token, dispatch]);
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const directorStatus = params.get('director_status');
     const currentStatus = params.get('status');
@@ -347,18 +354,13 @@ const ManpowerRequisition = () => {
     if (directorStatus) {
       setDirectorStatusFilter(directorStatus);
     }
-
     if (currentStatus) {
       setStatusFilter(currentStatus);
     }
     if (hrStatus) {
       setHrStatusFilter(hrStatus);
     }
-
-    if (token) {
-      dispatch(fetchManagerList());
-    }
-  }, [token, dispatch]);
+  }, [location.search]);
 
 
   const { managerList } = useSelector((state) => state.manpowerRequisition);
@@ -385,14 +387,17 @@ const ManpowerRequisition = () => {
   // }, [status, user, dispatch]);
 
   useEffect(() => {
-    //  dispatch(fetchManpowerRequisition());
-    if (location.pathname === '/my-requisitions') {
+   
+      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+    
+  }, [dispatch, user?.emp_id]);
+
+  useEffect(() => {
+     if (location.pathname === '/my-requisitions') {
       dispatch(my_requisitions(user?.emp_id));
     }
-    else {
-      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-    }
-  }, [dispatch, user?.emp_id, location.pathname]);
+  }, [dispatch, location.pathname, user?.emp_id]);
+
 
   const currentUserId = user?.emp_id || null;
   const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
