@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload, FiHelpCircle, FiMessageSquare } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography, AppBar, Toolbar, Avatar, Menu, MenuItem, Divider } from "@mui/material";
+import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography, AppBar, Toolbar, Avatar, Menu, MenuItem, Divider, Backdrop, CircularProgress } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchQuery, replyToQuery } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
@@ -59,6 +59,7 @@ const FHReply = () => {
 
     const [reply, setReply] = useState("");
     const [error, setError] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [notification, setNotification] = useState({
         open: false,
         message: "",
@@ -202,19 +203,22 @@ const FHReply = () => {
         } 
         const decodedData = jwtDecode(id);
         try {
+            setIsSubmitting(true);
             await dispatch(replyToQuery({ id: decodedData.pid, reply })).unwrap();
             setNotification({
                 open: true, 
                 message: 'Reply submitted successfully!',
                 severity: 'success'
             });
-            navigate('/dashboard');
+            setTimeout(() => navigate('/dashboard'), 1500);
         } catch (error) {
             setNotification({
                 open: true,
                 message: `Failed to submit reply: ${error}`,
                 severity: 'error'
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -242,7 +246,11 @@ const FHReply = () => {
     }
 
     if (loading || !selectedRequisition) {
-        return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Typography>Loading...</Typography></Box>;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     const DisplayField = ({ label, value }) => (
@@ -367,6 +375,12 @@ const FHReply = () => {
                     {notification.message}
                 </MuiAlert>
             </Snackbar>
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={isSubmitting}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
         </div>
     );
 };
