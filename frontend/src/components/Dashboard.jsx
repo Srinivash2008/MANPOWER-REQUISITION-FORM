@@ -293,10 +293,22 @@ const Dashboard = () => {
   const fhTotalPending = fhPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
 
   // --- Data for AdminDashboard (using filtered counts) ---
-  const adminPendingStatuses = statusMetrics.filter(m =>
-    m.status === 'Pending' || m.status === 'On-Hold' || m.status.startsWith('Query by'));
+  const adminPendingStatuses =
+    user?.emp_id === '1722'
+      ? [
+          {
+            status: 'Approved',
+            count: counts.approved,
+            color: 'success',
+          },
+        ]
+      : statusMetrics.filter(
+          (m) =>
+            m.status === 'Pending' || m.status === 'On-Hold' || m.status.startsWith('Query by')
+        );
   const adminTotalPending = adminPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
-  const totalApproved = counts.approved; // This is already combined Director + HR from the counts object
+
+  const totalApproved = counts.approved;
 
 
 
@@ -367,6 +379,7 @@ const Dashboard = () => {
       {/* Main Grid Layout */}
       {user?.emp_id === '1400' || user?.emp_id === '1722' ? (
         <AdminDashboard
+          user={user}
           counts={counts}
           pendingStatuses={adminPendingStatuses}
           totalPending={adminTotalPending}

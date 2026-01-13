@@ -24,6 +24,7 @@ import { DonutChart } from './DonutChart';
 import { LineChart } from './LineChart';
 
 const AdminDashboard = ({
+  user,
   counts,
   pendingStatuses,
   totalPending,
@@ -36,26 +37,30 @@ const AdminDashboard = ({
   const theme = useTheme();
   const navigate = useNavigate();
 
-  const overviewStats = [
-    {
-      label: 'Pending',
-      value: counts.pending,
-      icon: <PendingActionsIcon fontSize="large" />,
-      color: theme.palette.warning.main,
-    },
-    {
-      label: 'Approved',
-      value: counts.approved,
-      icon: <CheckCircleOutlineIcon fontSize="large" />,
-      color: theme.palette.success.main,
-    },
-    {
-      label: 'Rejected',
-      value: counts.rejected,
-      icon: <HighlightOffIcon fontSize="large" />,
-      color: theme.palette.error.main,
-    },
-  ];
+  const overviewStats =
+    user?.emp_id === '1722'
+      ? [
+          {
+            label: 'Approved',
+            value: counts.approved,
+            icon: <CheckCircleOutlineIcon fontSize="large" />,
+            color: theme.palette.success.main,
+          },
+          {
+            label: 'Rejected',
+            value: counts.rejected,
+            icon: <HighlightOffIcon fontSize="large" />,
+            color: theme.palette.error.main,
+          },
+        ]
+      : [
+          {
+            label: 'Pending',
+            value: counts.pending,
+            icon: <PendingActionsIcon fontSize="large" />,
+            color: theme.palette.warning.main,
+          },
+        ];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
@@ -105,11 +110,15 @@ const AdminDashboard = ({
               <DonutChart data={pendingStatuses} total={totalPending} size={120} strokeWidth={13} />
             </Box>
             <Box>
-              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 0.5 }}>Action Required</Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
-                {totalPending.toLocaleString()} forms require attention.
+              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 0.5 }}>
+                {user?.emp_id === '1722' ? 'Approved Forms' : 'Action Required'}
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
+                {user?.emp_id === '1722'
+                  ? `${totalPending.toLocaleString()} forms have been approved.`
+                  : `${totalPending.toLocaleString()} forms require attention.`}
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minHeight: '50px' }}>
                 {pendingStatuses.map((p) => {
                   const percentage = totalPending > 0 ? (p.count / totalPending) * 100 : 0;
                   return (
@@ -124,6 +133,8 @@ const AdminDashboard = ({
                           let statusParam = p.status;
                           if (lowerStatus.includes('query')) {
                             statusParam = 'Raise Query';
+                          } else if (lowerStatus.includes('approved')) {
+                            statusParam = 'Approve';
                           } else if (lowerStatus.includes('on-hold') || lowerStatus.includes('on hold')) {
                             statusParam = 'On Hold';
                           }
@@ -152,6 +163,11 @@ const AdminDashboard = ({
                     </motion.div>
                   );
                 })}
+                {pendingStatuses.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 1 }}>
+                    No items to show.
+                  </Typography>
+                )}
               </Box>
             </Box>
           </Card>
