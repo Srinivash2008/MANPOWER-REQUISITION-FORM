@@ -4,15 +4,19 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-export const StatRow = ({ status, count, icon: Icon, color, total }) => {
+export const StatRow = ({ filterType,status, count, icon: Icon, color, total }) => {
+    console.log(filterType,"filterType")
     const theme = useTheme();
     const percentage = total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0;
     const navigate = useNavigate();
     const paletteColor = theme.palette[color];
 
     const handleNavigation = () => {
+        let complete_status = status + ' ' + filterType.toLowerCase();
+
         let filterQuery = '';
-        const lowerStatus = status.toLowerCase();
+        const lowerStatus = complete_status.toLowerCase();
+        console.log(lowerStatus,"lowerStatus")
 
         if (lowerStatus.includes('director') || lowerStatus.includes('rajesh')) {
             if (lowerStatus.includes('query')) filterQuery = 'director_status=Raise Query';
@@ -25,7 +29,9 @@ export const StatRow = ({ status, count, icon: Icon, color, total }) => {
             else if (lowerStatus.includes('rejected')) filterQuery = 'hr_status=Reject';
             else if (lowerStatus.includes('on-hold') || lowerStatus.includes('on hold')) filterQuery = 'hr_status=On Hold';
         }
+        console.log(filterQuery,"filterQuery")
         navigate(`/mrf-list?${filterQuery}`);
+        // navigate(`/mrf-list?${filterQuery}`);
     };
 
     return ( 

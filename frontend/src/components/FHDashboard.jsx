@@ -209,13 +209,13 @@ const FHDashboard = ({
           <Card sx={{ p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
             <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Director Status (Rajesh)</Typography>
             {dirStatusMetrics.map((metric) => (
-              <StatRow key={metric.status} {...metric} total={dirStatusMetrics.reduce((acc, m) => acc + m.count, 0)} />
+              <StatRow filterType="rajesh" key={metric.status} {...metric} total={dirStatusMetrics.reduce((acc, m) => acc + m.count, 0)} />
             ))}
           </Card>
           <Card sx={{ p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
             <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>HR Status (Selvi)</Typography>
             {hrStatusMetrics.map((metric) => (
-              <StatRow key={metric.status} {...metric} total={hrStatusMetrics.reduce((acc, m) => acc + m.count, 0)} />
+              <StatRow filterType="selvi" key={metric.status} {...metric} total={hrStatusMetrics.reduce((acc, m) => acc + m.count, 0)} />
             ))}
           </Card>
         </Box>
