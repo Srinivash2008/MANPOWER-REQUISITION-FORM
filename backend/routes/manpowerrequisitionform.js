@@ -728,6 +728,19 @@ console.log(status, "statusstatusstatusstatusstatus")
             }
 
             if (status === "Approve") {
+                // Check if a query exists for this manpower requisition
+                const [existingQuery] = await connection.execute(
+                    'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                    [manpowerId]
+                );
+
+                // If a query exists, delete it
+                if (existingQuery.length > 0) {
+                    await connection.execute(
+                        'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                        [manpowerId]
+                    );
+                }
                 const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 const hiringManager = user_data[0];
 
@@ -768,6 +781,22 @@ console.log(status, "statusstatusstatusstatusstatus")
             }
 
             if (status == "HR Approve") {
+
+                 // Check if a query exists for this manpower requisition
+                const [existingQuery] = await connection.execute(
+                    'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                    [manpowerId]
+                );
+
+                // If a query exists, delete it
+                if (existingQuery.length > 0) {
+                    await connection.execute(
+                        'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                        [manpowerId]
+                    );
+                }
+
+                
                 const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 console.log(user_data[0], "user_datauser_datauser_datauser_data")
                 const user_info = user_data[0];

@@ -2,19 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload, FiHelpCircle, FiMessageSquare } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography } from "@mui/material";
+import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography, AppBar, Toolbar, Avatar } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchQuery, replyToQuery } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { fetchUserByEmpId } from '../redux/cases/manpowerrequisitionSlice';
+import Logo from '../assets/images/logo_MRF_new.png';
 
 const FHReply = () => {
     const dispatch = useDispatch();
     const { id } = useParams();
     const [decodedId, setDecodedId] = useState(null);
     const [decodedUserId, setDecodedUserId] = useState(null);
+    const [creatorName, setCreatorName] = useState('');
 
-    console.log(id, "id");
+    const { userByEmpId } = useSelector((state) => state.manpowerRequisition);
     const { token, user } = useSelector((state) => state.auth);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const navigate = useNavigate();
@@ -65,10 +68,11 @@ const FHReply = () => {
         try {
             const decodedString = atob(id);
             const decodedData = JSON.parse(decodedString);
-            console.log(decodedData, "decodedData");
+            setCreatorName(decodedData.user.emp_name);
             setDecodedId(decodedData.pid);
-            setDecodedUserId(decodedData.userId);
+            setDecodedUserId(decodedData.user.created_by);
             dispatch(fetchManpowerRequisitionById(decodedData.pid));
+            dispatch(fetchUserByEmpId(decodedData.user.created_by));
             dispatch(fetchQuery(decodedData.pid));
         } catch (e) {
             console.error("Failed to decode or parse ID:", e);
@@ -77,6 +81,8 @@ const FHReply = () => {
     }, [dispatch, id]);
 
     const { selectedRequisition, query } = useSelector((state) => state.manpowerRequisition);
+    console.log(selectedRequisition, "selectedRequisition")
+    console.log(query, "query");
 
     useEffect(() => {
         if (selectedRequisition) {
@@ -243,19 +249,35 @@ const FHReply = () => {
 
     return (
         <div className="page-wrapper">
-            <div className="form-panel">
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2,mt:5, flexDirection: "row-reverse" }}>
-                     <Button
-                        variant="outlined"
-                        onClick={() => navigate(-1)}
-                        startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
-                        sx={{
-                            backgroundColor: 'success.main',
-                            color: 'white',
-                            '&:hover': { backgroundColor: 'success.dark' },
-                        }}
-                    >Back</Button>
-                </Box>
+            <AppBar position="fixed" sx={{
+                backgroundColor: 'white',
+                color: '#2A7F66',
+                boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06), 0 4px 5px 0 rgba(0,0,0,0.04), 0 1px 10px 0 rgba(0,0,0,0.08)',
+                zIndex: (theme) => theme.zIndex.drawer + 1
+            }}>
+                <Toolbar>
+                    <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                        <img
+                            src={Logo}
+                            alt="MRF Logo"
+                            style={{ height: '40px', marginRight: '16px', cursor: 'pointer' }}
+                            onClick={() => navigate('/dashboard')}
+                        />
+                       
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Typography variant="subtitle1" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            {creatorName}
+                        </Typography>
+                        <Avatar sx={{ bgcolor: '#2A7F66', width: 40, height: 40 }}>
+                            {creatorName ? creatorName.charAt(0).toUpperCase() : '?'}
+                        </Avatar>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+
+            <div className="form-panel"style={{marginTop:'3%'}}>
+               
                 <div className="form-header">
                     <h1 className="info-title">
                         Reply to Query
@@ -270,12 +292,16 @@ const FHReply = () => {
                         {/* Query Section */}
                         <div className="form-section">
                             <h3 className="section-title"><FiHelpCircle /> Query Details</h3>
-                             <div style={{ marginTop: '1rem' }}>
-                                <DisplayTextarea label="Director Query" value={formData.query_name_director} />
-                            </div>
-                            <div style={{ marginTop: '1rem' }}>
-                                <DisplayTextarea label="HR Query" value={formData.query_name_hr} />
-                            </div>
+                             {formData.query_name_director && (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="Director Query" value={formData.query_name_director} />
+                                </div>
+                            )}
+                            {formData.query_name_hr && (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <DisplayTextarea label="HR Query" value={formData.query_name_hr} />
+                                </div>
+                            )}
                         </div>
 
                         {/* Reply Section */}
