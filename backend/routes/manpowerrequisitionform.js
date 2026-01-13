@@ -285,18 +285,18 @@ router.post(
                     await transporter.sendMail(requestorMailOptions);
                     await transporter.sendMail(directorMailOptions);
 
-                    res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+                    return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
 
                 } catch (error) {
                     console.error('Error sending email:', error);
                     // You might want to send a different status if the form was saved but email failed
-                    res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
+                    return res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
                 }
 
 
             }
 
-            res.status(201).json({
+            return res.status(201).json({
                 message: 'Manpower requisition form submitted successfully!',
                 mrfId: result.insertId
             });
