@@ -413,17 +413,22 @@ const ManpowerRequisitionEdit = () => {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
         }
-        //  if (isHr && formData.status == "Pending") {
-        //     setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
-        //     return;
-        // }
 
-        if (isHr && formData.status === 'HR Approve') {
+         if (isHr && formData.status == "FH Replied") {
+            setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
+            return;
+        }
+        if (isHr && formData.status == "Pending") {
+            setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
+            return;
+        }
+
+        if (isHr && formData.status === 'HR Approve' || formData.status === 'FH Replied') {
             const hrFieldsToValidate = {
                 // tatAgreed: 'TAT Agreed is required for HR Approval.',
                 // deliveryPhase: 'Phase of Delivery is required for HR Approval.',
                 // hrReview: 'HR - Head Review is required for HR Approval.',
-                hr_comments: 'HR Comments are required for HR Approval.'
+                hr_comments: 'HR Comments are required.'
             };
             let hasHrErrors = false;
             Object.entries(hrFieldsToValidate).forEach(([field, message]) => {
@@ -909,7 +914,7 @@ const ManpowerRequisitionEdit = () => {
                                 <div className="section-grid multi-col">
                                     <FormControl fullWidth size="small">
                                         <Select
-                                            value={formData.status}
+                                            value={['Pending', 'Approve','FH Replied'].includes(formData.status) ? 'Pending' : formData.status}
                                             displayEmpty
                                             onChange={(e) => handleStatusChange(e, formData.id)}
                                             size="small"
@@ -917,7 +922,7 @@ const ManpowerRequisitionEdit = () => {
                                         >
 
                                             {isDirector && !isHr && [
-                                                <MenuItem value="Pending">Select the Status</MenuItem>,
+                                                <MenuItem value="Pending" key="pending">Select the Status</MenuItem>,
                                                 <MenuItem key="Approve" value="Approve">Approved</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Rejected</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
@@ -926,7 +931,7 @@ const ManpowerRequisitionEdit = () => {
                                             
                                             {isHr && [
                                                 //  <MenuItem value="Pending">Select the Status</MenuItem>,
-                                                <MenuItem value="Approve">Select the Status</MenuItem>,
+                                                <MenuItem value="Pending"  key="pending">Select the Status</MenuItem>,
                                                 <MenuItem key="HR Approve" value="HR Approve">HR Approved</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Rejected</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
