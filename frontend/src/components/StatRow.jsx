@@ -31,7 +31,6 @@ export const StatRow = ({ filterType,status, count, icon: Icon, color, total }) 
         }
         console.log(filterQuery,"filterQuery")
         navigate(`/mrf-list?${filterQuery}`);
-        // navigate(`/mrf-list?${filterQuery}`);
     };
 
     return ( 

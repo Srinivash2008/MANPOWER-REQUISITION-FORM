@@ -354,6 +354,18 @@ const Dashboard = () => {
       case 'hr':
         return [...hrStatusMetrics].sort((a, b) => b.count - a.count);
       case 'overall':
+        const statusOrder = [
+          'Overall Pending',
+          'Director Approved',
+          'Director Rejected',
+          'Director Query',
+          'Director On-Hold',
+          'HR Approved',
+          'HR Rejected',
+          'HR Query',
+          'HR On-Hold'
+        ];
+
         const pendingOverall = overallStatusMetrics.find(m => m.status === 'Pending');
         let combinedData = [];
         if (pendingOverall) {
@@ -361,7 +373,9 @@ const Dashboard = () => {
         }
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status}` })));
         combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status}` })));
-        return combinedData.sort((a, b) => b.count - a.count);
+
+        // Sort based on the predefined statusOrder
+        return combinedData.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
       default: // 'overall'
         return [...overallStatusMetrics].sort((a, b) => b.count - a.count);
     }
