@@ -2,23 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload, FiHelpCircle, FiMessageSquare } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography, AppBar, Toolbar, Avatar } from "@mui/material";
+import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography, AppBar, Toolbar, Avatar, Menu, MenuItem, Divider } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchQuery, replyToQuery } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { jwtDecode } from 'jwt-decode';
 import { fetchUserByEmpId } from '../redux/cases/manpowerrequisitionSlice';
+import LogoutIcon from '@mui/icons-material/Logout';
 import Logo from '../assets/images/logo_MRF_new.png';
+import { login, logout } from '../redux/auth/authSlice';
 
 const FHReply = () => {
     const dispatch = useDispatch();
     const { id } = useParams();
-    const [decodedId, setDecodedId] = useState(null);
-    const [decodedUserId, setDecodedUserId] = useState(null);
-    const [creatorName, setCreatorName] = useState('');
+    const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
 
-    const { userByEmpId } = useSelector((state) => state.manpowerRequisition);
-    const { token, user } = useSelector((state) => state.auth);
+    const { selectedRequisition, query, loading } = useSelector((state) => state.manpowerRequisition);
+    const { user } = useSelector((state) => state.auth);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const navigate = useNavigate();
 
@@ -65,24 +66,19 @@ const FHReply = () => {
     });
 
     useEffect(() => {
-        try {
-            const decodedString = atob(id);
-            const decodedData = JSON.parse(decodedString);
-            setCreatorName(decodedData.user.emp_name);
-            setDecodedId(decodedData.pid);
-            setDecodedUserId(decodedData.user.created_by);
-            dispatch(fetchManpowerRequisitionById(decodedData.pid));
-            dispatch(fetchUserByEmpId(decodedData.user.created_by));
-            dispatch(fetchQuery(decodedData.pid));
-        } catch (e) {
-            console.error("Failed to decode or parse ID:", e);
-            setError("Invalid identifier provided.");
+        if (user && id) {
+            try {
+                const decodedData = jwtDecode(id);
+                dispatch(fetchManpowerRequisitionById(decodedData.pid));
+                dispatch(fetchQuery(decodedData.pid));
+            } catch (e) {
+                console.error("Failed to decode or parse ID:", e);
+                setError("Invalid identifier provided.");
+            }
         }
-    }, [dispatch, id]);
+    }, [dispatch, id, user]);
 
-    const { selectedRequisition, query } = useSelector((state) => state.manpowerRequisition);
-    console.log(selectedRequisition, "selectedRequisition")
-    console.log(query, "query");
+
 
     useEffect(() => {
         if (selectedRequisition) {
@@ -149,7 +145,7 @@ const FHReply = () => {
             });
             return;
         }
-        // const correctedFilePath = filePath.replace(/\\/g, '/');
+        const correctedFilePath = filePath.replace(/\\/g, '/');
         console.log(`${API_URL}/${correctedFilePath}`, "url")
 
         try {
@@ -203,11 +199,12 @@ const FHReply = () => {
                 severity: 'error'
             });
             return;
-        }
+        } 
+        const decodedData = jwtDecode(id);
         try {
-            await dispatch(replyToQuery({ id: decodedId, reply })).unwrap();
+            await dispatch(replyToQuery({ id: decodedData.pid, reply })).unwrap();
             setNotification({
-                open: true,
+                open: true, 
                 message: 'Reply submitted successfully!',
                 severity: 'success'
             });
@@ -221,6 +218,21 @@ const FHReply = () => {
         }
     };
 
+    const handleUserMenuClick = (event) => {
+        setUserMenuAnchorEl(event.currentTarget);
+    };
+
+    const handleUserMenuClose = () => {
+        setUserMenuAnchorEl(null);
+    };
+
+    const handleLogout = () => {
+        dispatch(logout());
+        handleUserMenuClose();
+        navigate("/login");
+    };
+
+
     if (error) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -229,7 +241,7 @@ const FHReply = () => {
         );
     }
 
-    if (!selectedRequisition) {
+    if (loading || !selectedRequisition) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Typography>Loading...</Typography></Box>;
     }
 
@@ -264,15 +276,37 @@ const FHReply = () => {
                             onClick={() => navigate('/dashboard')}
                         />
                        
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    </Box> 
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer' }} onClick={handleUserMenuClick}>
                         <Typography variant="subtitle1" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                            {creatorName}
+                            {user?.emp_name}
                         </Typography>
                         <Avatar sx={{ bgcolor: '#2A7F66', width: 40, height: 40 }}>
-                            {creatorName ? creatorName.charAt(0).toUpperCase() : '?'}
+                            {user?.emp_name ? user.emp_name.charAt(0).toUpperCase() : '?'}
                         </Avatar>
                     </Box>
+                    <Menu
+                        anchorEl={userMenuAnchorEl}
+                        open={Boolean(userMenuAnchorEl)}
+                        onClose={handleUserMenuClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        PaperProps={{ sx: { mt: 1 } }}
+                    >
+                        <MenuItem
+                            onClick={handleLogout}
+                            sx={{ color: 'error.main', '&:hover': { backgroundColor: 'error.main', color: 'white' } }}
+                        >
+                            <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
+                            Logout
+                        </MenuItem>
+                    </Menu>
                 </Toolbar>
             </AppBar>
 

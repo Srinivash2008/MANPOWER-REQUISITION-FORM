@@ -134,45 +134,45 @@ app.get('/api/dashboard-data', authMiddleware, async (req, res) => {
 // ===== Daily Ticket Quality Automation Cron Job =====
 
 
-cron.schedule(
-  '30 3 * * *', // 03:30 UTC
-  async () => {
-    console.log("Running Daily Ticket Quality Automation at UTC 03:30:", new Date().toISOString());
+// cron.schedule(
+//   '30 3 * * *', // 03:30 UTC
+//   async () => {
+//     console.log("Running Daily Ticket Quality Automation at UTC 03:30:", new Date().toISOString());
 
-    try {
-      const query = `
-        UPDATE hd_add_entry AS t
-        JOIN (
-            SELECT id
-            FROM (
-                SELECT id,
-                       employee_id,
-                       ROW_NUMBER() OVER (PARTITION BY employee_id ORDER BY RAND()) AS rn
-                FROM hd_add_entry
-                WHERE received_date = CURDATE() - INTERVAL 1 DAY
-                  AND status = 'Resolved'
-                  AND ticket_mode IN ('Email', 'chat')
-                  AND quality = 'No'
-            ) ranked
-            WHERE rn <= 2
-        ) selected
-        ON t.id = selected.id
-        SET t.quality = 'Yes',
-            t.quality_created_date = NOW();
-      `;
-      const [result] = await pool.execute(query);
+//     try {
+//       const query = `
+//         UPDATE hd_add_entry AS t
+//         JOIN (
+//             SELECT id
+//             FROM (
+//                 SELECT id,
+//                        employee_id,
+//                        ROW_NUMBER() OVER (PARTITION BY employee_id ORDER BY RAND()) AS rn
+//                 FROM hd_add_entry
+//                 WHERE received_date = CURDATE() - INTERVAL 1 DAY
+//                   AND status = 'Resolved'
+//                   AND ticket_mode IN ('Email', 'chat')
+//                   AND quality = 'No'
+//             ) ranked
+//             WHERE rn <= 2
+//         ) selected
+//         ON t.id = selected.id
+//         SET t.quality = 'Yes',
+//             t.quality_created_date = NOW();
+//       `;
+//       const [result] = await pool.execute(query);
 
-      if (result.affectedRows > 0) {
-        console.log(`Daily Quality Automation: ${result.affectedRows} tickets updated successfully.`);
-      } else {
-        console.log("No eligible tickets found for yesterday.");
-      }
-    } catch (err) {
-      console.error("Error running daily ticket quality job:", err.message);
-    }
-  },
-  { timezone: "UTC" } // explicitly run in UTC
-);
+//       if (result.affectedRows > 0) {
+//         console.log(`Daily Quality Automation: ${result.affectedRows} tickets updated successfully.`);
+//       } else {
+//         console.log("No eligible tickets found for yesterday.");
+//       }
+//     } catch (err) {
+//       console.error("Error running daily ticket quality job:", err.message);
+//     }
+//   },
+//   { timezone: "UTC" } // explicitly run in UTC
+// );
 
 
 

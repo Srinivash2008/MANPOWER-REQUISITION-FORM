@@ -13,6 +13,7 @@ import themeArgon from'./themeArgon';
 
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { jwtDecode } from 'jwt-decode';
 
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
@@ -28,6 +29,7 @@ import ManpowerRequisitionReport from "./components/ManpowerRequisitionReport.js
 import ManpowerRequisitionEdit from "./components/ManpowerRequisionEdit.jsx";
 import Profile from "./components/Profile.jsx";
 import FHReply from "./components/FHReply.jsx";
+import { login } from "./redux/auth/authSlice.js";
 
 
 
@@ -39,27 +41,19 @@ function App() {
 
   const isLoginPage = location.pathname === "/login" || location.pathname === "/" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname.startsWith("/fh-reply/");
 
-  // This useEffect is now redundant and should be removed entirely
-  // The logic is handled by the initial state of the authSlice.
   useEffect(() => {
-    if (token && !user) {
+    if (location.pathname.startsWith('/fh-reply/')) {
+      const token = location.pathname.split('/fh-reply/')[1];
+      if (token) {
       try {
-        const decodedToken = jwtDecode(token);
-        dispatch(
-          setUserFromToken({
-            emp_id: decodedToken.emp_id,
-            emp_pos: decodedToken.emp_pos,
-            emp_name: decodedToken.emp_name,
-            emp_dept: decodedToken.emp_dept,
-          })
-        );
-      } catch (error) {
-        dispatch(logout());
-        navigate("/login");
+        const decodedData = jwtDecode(token);
+        dispatch(login({ emp_id: String(decodedData.user.created_by), emp_pass: decodedData.user.emp_pass }));
+        navigate(`/fh-reply/${token}`);
+      } catch (e) {
+        console.error("Failed to decode or parse token from URL:", e);
       }
     }
-  }, [token, user, dispatch, navigate]);
-
+  }}, []);
 
   return (
     <ThemeProvider theme={themeBlue}>

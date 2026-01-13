@@ -1,6 +1,7 @@
 // backend/routes/manpowerrequisition.js
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middleware/auth');
 const pool = require('../config/database');
 const mrfUpload = require('../middleware/mrfUpload');
@@ -90,7 +91,7 @@ router.get('/my-requisitions/:userId', authMiddleware, async (req, res) => {
         let query = "SELECT mr.*,ep.*,ed.depart AS department_name,CASE WHEN DATEDIFF(CURDATE(),DATE(mr.created_at)) <= 7 THEN TRUE ELSE FALSE END AS isWithdrawOpen FROM manpower_requisition AS mr JOIN employee_personal AS ep ON ep.employee_id=mr.created_by JOIN employee_depart AS ed ON ed.id=mr.department WHERE mr.isdelete='Active'";
         let params = [];
 
-        if (['12345', '1400', ].includes(userId)) {
+        if (['12345', '1400',].includes(userId)) {
             query += " AND mr.status != 'Draft' AND mr.status != 'Withdraw'";
         }
         if (!['12345', '1400',].includes(userId)) {
@@ -465,7 +466,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
         // Fetch creator of the MRF to send an email
         const [mrfCreator] = await pool.execute(
-            'SELECT ep.mail_id, ep.emp_name, mr.created_by FROM manpower_requisition mr JOIN employee_personal ep ON mr.created_by = ep.employee_id WHERE mr.id = ?',
+            'SELECT ep.mail_id, ep.emp_name,emp_pass, mr.created_by FROM manpower_requisition mr JOIN employee_personal ep ON mr.created_by = ep.employee_id WHERE mr.id = ?',
             [query_manpower_requisition_pid]
         );
         if (mrfCreator.length > 0) {
@@ -480,8 +481,14 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
             if (fh.length > 0) {
                 const fhUser = fh[0];
-                const dataToEncode = JSON.stringify({ pid: query_manpower_requisition_pid, user: mrfCreator[0] });
-                const encodedData = Buffer.from(dataToEncode).toString('base64');
+                // const dataToEncode = JSON.stringify({ pid: query_manpower_requisition_pid, user: mrfCreator[0] });
+                // const encodedData = bcrypt.hashSync(dataToEncode, 10);
+                const encodedData = jwt.sign(
+                    { pid: query_manpower_requisition_pid, user: mrfCreator[0] },
+                    process.env.JWT_SECRET,
+                    { expiresIn: 7200 }
+                );
+
                 const mailOptions = {
                     from: process.env.EMAIL_USER,
                     cc: ["srinivasan@pdmrindia.com"],
@@ -533,11 +540,42 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
         return res.status(400).json({ message: 'Reply is required.' });
     }
 
+    // Determine which column to update based on who asked the query
+    let replyColumn;
     try {
-        await pool.execute(
-            'UPDATE manpower_requisition_query SET fh_reply = ? WHERE query_manpower_requisition_pid = ?',
-            [reply, id]
+        const [queryRows] = await pool.execute(
+            'SELECT query_name_hr, query_name_director FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+            [id]
         );
+
+        if (queryRows.length > 0) {
+            if (queryRows[0].query_name_director) {
+                replyColumn = 'Director_Query_Answer';
+            } else if (queryRows[0].query_name_hr) {
+                replyColumn = 'HR_Query_Answer';
+            }
+        }
+
+
+        if (replyColumn) {
+            await pool.execute(
+                `UPDATE manpower_requisition_query SET ${replyColumn} = ? WHERE query_manpower_requisition_pid = ?`,
+                [reply, id]
+            );
+        }
+
+        // Update the main MRF status based on who raised the query
+        if (replyColumn === 'Director_Query_Answer') {
+            await pool.execute(
+                "UPDATE manpower_requisition SET status = 'FH Replied', director_status = 'FH Replied' WHERE id = ?",
+                [id]
+            );
+        } else if (replyColumn === 'HR_Query_Answer') {
+            await pool.execute(
+                "UPDATE manpower_requisition SET status = 'FH Replied', hr_status = 'FH Replied' WHERE id = ?",
+                [id]
+            );
+        }
 
         // Notify Rajesh and Selvi
         const mailOptions = {
@@ -646,7 +684,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             params.push(manpowerId);
 
             await connection.execute(query, params);
-console.log(status, "statusstatusstatusstatusstatus")
+            console.log(status, "statusstatusstatusstatusstatus")
             const isDraftSubmission = data?.status === 'Draft';
             const canSendEmail = isDraftSubmission
                 ? user?.emp_id !== '1400'
@@ -665,7 +703,7 @@ console.log(status, "statusstatusstatusstatusstatus")
                     // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
                     to: "srinivasan@pdmrindia.com",
                     // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: [ "srinivasan@pdmrindia.com"],
+                    cc: ["srinivasan@pdmrindia.com"],
                     subject: `A New Manpower requisition Form submitted for your approval`,
                     html: `
                         <div style="
@@ -748,7 +786,7 @@ console.log(status, "statusstatusstatusstatusstatus")
                     from: process.env.EMAIL_USER,
                     // cc: hiringManager?.mail_id,
                     to: "srinivasan@pdmrindia.com",
-                    cc: [ "srinivasan@pdmrindia.com"],
+                    cc: ["srinivasan@pdmrindia.com"],
                     subject: 'MRF Approval Confirmation – Ready for Next Steps',
                     html: `
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -782,7 +820,7 @@ console.log(status, "statusstatusstatusstatusstatus")
 
             if (status == "HR Approve") {
 
-                 // Check if a query exists for this manpower requisition
+                // Check if a query exists for this manpower requisition
                 const [existingQuery] = await connection.execute(
                     'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
                     [manpowerId]
@@ -796,7 +834,7 @@ console.log(status, "statusstatusstatusstatusstatus")
                     );
                 }
 
-                
+
                 const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 console.log(user_data[0], "user_datauser_datauser_datauser_data")
                 const user_info = user_data[0];
