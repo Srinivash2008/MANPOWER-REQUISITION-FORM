@@ -165,6 +165,11 @@ const StatusBadge = ({ status }) => {
       color: '#fff',
       border: `1px solid #ff8800`
     },
+    'FH Replied': {
+      backgroundColor: '#ff006a', // Orange color
+      color: '#fff',
+      border: `1px solid #ff006a`
+    },
     default: {
       backgroundColor: "#9bebebff", // Default grey
       color: 'white',
