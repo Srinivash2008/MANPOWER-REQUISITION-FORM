@@ -142,6 +142,7 @@ const Dashboard = () => {
   // Recalculate counts based on the displayed (filtered) MRF list
   const counts = {
     pending: displayedMrfList.filter(m => m.status === 'Pending').length,
+    fhReplied: displayedMrfList.filter(m => m.status === 'FH Replied').length,
 
     hrApproved: displayedMrfList.filter(m => m.status === 'HR Approve').length,
     approved: displayedMrfList.filter(m => m.status === 'Approve' || m.status === 'HR Approve').length,
@@ -294,19 +295,46 @@ const Dashboard = () => {
   const fhTotalPending = fhPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
 
   // --- Data for AdminDashboard (using filtered counts) ---
-  const adminPendingStatuses =
-    user?.emp_id === '1722'
-      ? [
+  let adminPendingStatuses;
+  switch (user?.emp_id) {
+    case '1722':
+      adminPendingStatuses = [
         {
           status: 'Approved',
           count: counts.approved_HR,
           color: 'success',
         },
-      ]
-      : statusMetrics.filter(
+        {
+          status: 'FH Replied',
+          count: counts.fhReplied,
+          color: 'info',
+        },
+      ];
+       break;
+    case '1400':
+      adminPendingStatuses = [
+         {
+          status: 'Pending',
+          count: counts.pending,
+          color: 'success',
+        },
+        {
+          status: 'FH Replied',
+          count: counts.fhReplied,
+          color: 'info',
+        },
+      ];
+      break;
+    default:
+      adminPendingStatuses = statusMetrics.filter(
         (m) =>
-          m.status === 'Pending' || m.status === 'On-Hold' || m.status.startsWith('Query by')
+          m.status === 'Pending' ||
+          m.status === 'On-Hold' ||
+          m.status.startsWith('Query by') ||
+          m.status === 'FH Replied'
       );
+      break;
+  }
   const adminTotalPending = adminPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
 
   const totalApproved = counts.approved;

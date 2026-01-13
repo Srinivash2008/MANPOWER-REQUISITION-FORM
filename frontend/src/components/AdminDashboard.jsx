@@ -115,7 +115,7 @@ const AdminDashboard = ({
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
                 {user?.emp_id === '1722'
-                  ? `${totalPending.toLocaleString()} forms have been approved.`
+                  ? `${totalPending.toLocaleString()} forms require attention.`
                   : `${totalPending.toLocaleString()} forms require attention.`}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minHeight: '50px' }}>
