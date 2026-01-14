@@ -365,6 +365,7 @@ const ManpowerRequisitionEdit = () => {
 
     const handleStatusChange = (event, manpowerId) => {
         const newStatus = event.target.value;
+        console.log(newStatus,"sdfds")
         setManpowerStatus(newStatus);
         setManpowerId(manpowerId);
         setFormData(prev => ({
@@ -914,7 +915,11 @@ const ManpowerRequisitionEdit = () => {
                                 <div className="section-grid multi-col">
                                     <FormControl fullWidth size="small">
                                         <Select
-                                            value={['Pending', 'Approve','FH Replied'].includes(formData.status) ? 'Pending' : formData.status}
+                                            value={
+                                                isDirector
+                                                    ? (['Pending', 'FH Replied'].includes(formData.status) ? 'Pending' : formData.status)
+                                                    : (['Pending','Approve',  'FH Replied'].includes(formData.status) ? 'Pending' : formData.status)
+                                            }
                                             displayEmpty
                                             onChange={(e) => handleStatusChange(e, formData.id)}
                                             size="small"

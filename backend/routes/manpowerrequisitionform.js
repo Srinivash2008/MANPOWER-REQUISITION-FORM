@@ -504,7 +504,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
                         </p>
                         <p>
                             You can view the MRF and reply to the query here:
-                            <a href="${process.env.FRONTEND_URL}fh-reply/${encodedData}">View and Reply to MRF</a>
+                            <a href="${process.env.FRONTEND_URL}/fh-reply/${encodedData}">View and Reply to MRF</a>
                         </p>
                         <br>
                         <p style="color: #555;">
