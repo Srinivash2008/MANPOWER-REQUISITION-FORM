@@ -113,10 +113,6 @@ const ModernProfile = () => {
                                 sx={{ mb: 3, fontWeight: 600, px: 2, py: 0.5, fontSize: '0.9rem' }}
                             />
 
-                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', px: 2 }}>
-                                "Dedicated to driving excellence and innovation."
-                            </Typography>
-
                         </Grid>
 
                         {/* --- Right Column: Details (InfoItems) --- */}
