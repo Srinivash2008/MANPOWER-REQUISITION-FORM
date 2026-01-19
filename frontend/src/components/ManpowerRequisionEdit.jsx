@@ -2,6 +2,7 @@ import React, { useState, useEffect, use } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiX } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
+import { FaCommentDots } from 'react-icons/fa';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import "./Add_Form.css";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -69,6 +70,8 @@ const ManpowerRequisitionEdit = () => {
         director_comments: "",
         status: "",
         created_at: "",
+        Director_Query_Answer: "",
+        HR_Query_Answer: ""
     });
 
     const [errors, setErrors] = useState({});
@@ -84,6 +87,7 @@ const ManpowerRequisitionEdit = () => {
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
     const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
+    console.log(selectedRequisition,"selectedRequisition")
 
     useEffect(() => {
         dispatch(fetchManpowerRequisitionById(id));
@@ -137,6 +141,8 @@ const ManpowerRequisitionEdit = () => {
                 director_comments: selectedRequisition.director_comments || "",
                 status: selectedRequisition.status || "",
                 created_at : selectedRequisition.created_at || "",
+                Director_Query_Answer: selectedRequisition.Director_Query_Answer || "",
+                HR_Query_Answer: selectedRequisition.HR_Query_Answer || ""
             });
         }
     }, [selectedRequisition]);
@@ -562,6 +568,13 @@ const ManpowerRequisitionEdit = () => {
         </div>
     );
 
+    const DisplayTextarea = ({ label, value }) => (
+        <div className="full-width" style={{ marginBottom: '1rem' }}>
+            <label className="form-label">{label}</label>
+            <p className="form-display-textarea">{value || 'N/A'}</p>
+        </div>
+    );
+
     const handleQueryTextChange = (e) => {
         const newQueryText = e.target.value;
         setQueryText(newQueryText);
@@ -907,6 +920,27 @@ const ManpowerRequisitionEdit = () => {
                             </div>
                         )}
 
+                        {((isDirector || isHr) && selectedRequisition && selectedRequisition.status === 'FH Replied') && (
+                            <div className="form-section">
+                                <h3 className="section-title"><FaCommentDots /> Query Response</h3>
+                                <div className="section-grid">
+                                    {selectedRequisition.query_created_by == '1722' ? (
+                                        <>
+                                            <DisplayTextarea label="HR Query" value={formData.query_name_hr} />
+                                            <DisplayTextarea label="FH Answer" value={formData.HR_Query_Answer} />
+                                        </>
+                                    ) : selectedRequisition.query_created_by == '1400' ? (
+                                        <>
+                                            <DisplayTextarea label="Director Query" value={formData.query_name_director} />
+                                            <DisplayTextarea label="FH Answer" value={formData.Director_Query_Answer} />
+                                        </>
+                                    ) : null}
+                                </div>
+                            </div>
+                        )}
+
+
+
                         {/* Status Updation Section */}
 
                         {((isDirector && !isDraft) || (isHr && !isDraft && formData.directorstatus === 'Approve')) && (
@@ -1035,7 +1069,7 @@ const ManpowerRequisitionEdit = () => {
                             exit: "exit",
                             style: { borderRadius: '16px', padding: '1.5rem' }
                         }}
-                    >
+                    > 
                         <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}>
                             <HelpOutlineIcon color="primary" sx={{ fontSize: '3rem', mb: 1 }} />
                             <br />
