@@ -232,10 +232,11 @@ const Dashboard = () => {
   ];
 
   const dirStatusMetrics = [
-    { status: 'Approved', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
-    { status: 'Rejected', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'Query', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
-    { status: 'On-Hold', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+    
+    { status: 'No. of MRF Approved', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'No. of MRF Rejected', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'No. of MRF Raise Query', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
+    { status: 'No. of MRF on Hold', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
   const hrCounts = {
@@ -249,10 +250,10 @@ const Dashboard = () => {
   console.log(hrCounts,"hrCounts")
 
   const hrStatusMetrics = [
-    { status: 'Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
-    { status: 'Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'Query', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
-    { status: 'On-Hold', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+    { status: 'No. of MRF Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'No. of MRF Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'No. of MRF Query', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
+    { status: 'No. of MRF On-Hold', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
   const overallStatusMetrics = [

@@ -874,7 +874,7 @@ const ManpowerRequisition = () => {
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                           <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
-                          <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
+                          <StyledTableCell><StatusBadge status={manpower.status == "Pending" ? "Submitted" : manpower.status} /></StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.director_status !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
                           
