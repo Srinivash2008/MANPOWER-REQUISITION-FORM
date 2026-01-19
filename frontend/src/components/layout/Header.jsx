@@ -271,6 +271,7 @@ const Header = () => {
       dispatch(logoutUser(user.emp_id));
     }
     dispatch(logout());
+    sessionStorage.removeItem("MER_EDIT_ID");
     handleUserMenuClose();
     setDrawerOpen(false);
     navigate("/login");

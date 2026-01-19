@@ -252,6 +252,7 @@ const FHReply = () => {
 
     const handleLogout = () => {
         dispatch(logout());
+        sessionStorage.removeItem("MER_EDIT_ID");
         handleUserMenuClose();
         navigate("/login");
     };

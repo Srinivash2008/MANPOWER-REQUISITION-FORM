@@ -643,25 +643,21 @@ router.get('/get-query/:id', authMiddleware, async (req, res) => {
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
     const { status, user, hr_comments, director_comments, data } = req.body; // Changed from newStatus to status
-    console.log(data, "datadatadatadatadata")
+    console.log(req.body, "req.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.body")
     if (!manpowerId || !status || !user) {
         return res.status(400).json({ message: 'Missing required fields: id, status, and user are required.' });
     }
     try {
-        const connection = await pool.getConnection();
-        await connection.beginTransaction();
-
-        try {
             let mrfNumber = null;
 
 
             if (status === 'HR Approve') {
                 // Check if MRF number already exists for this requisition
-                const [existingMrf] = await connection.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [manpowerId]);
+                const [existingMrf] = await pool.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [manpowerId]);
 
                 if (!existingMrf[0] || !existingMrf[0].mrf_number) {
                     // Find the last MRF number
-                    const [lastMrf] = await connection.execute(
+                    const [lastMrf] = await pool.execute(
                         "SELECT mrf_number FROM manpower_requisition WHERE mrf_number IS NOT NULL AND mrf_number != '' ORDER BY CAST(SUBSTRING_INDEX(mrf_number, '- ', -1) AS UNSIGNED) DESC, id DESC LIMIT 1"
                     );
 
@@ -696,15 +692,15 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             query += ' WHERE id = ?';
             params.push(manpowerId);
 
-            await connection.execute(query, params);
-            console.log(status, "statusstatusstatusstatusstatus")
+            await pool.execute(query, params);
+            console.log(query, params, "query, paramsquery, paramsquery, paramsquery, params")
             const isDraftSubmission = data?.status === 'Draft';
             const canSendEmail = isDraftSubmission
                 ? user?.emp_id !== '1400'
                 : user?.emp_id !== '1400' && user?.emp_id !== '1722';
 
             if (status === 'Pending' && canSendEmail) {
-                const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+                const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 console.log(user_data[0], "user_datauser_datauser_datauser_data")
                 const user_info = user_data[0];
                 // 1. Email to the Requestor/FH (Confirmation) 📧
@@ -780,19 +776,22 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
             if (status === "Approve") {
                 // Check if a query exists for this manpower requisition
-                const [existingQuery] = await connection.execute(
+                const [existingQuery] = await pool.execute(
                     'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
                     [manpowerId]
                 );
 
+                console.log(existingQuery, "existingQueryexistingQueryexistingQuery")
+
                 // If a query exists, delete it
                 if (existingQuery.length > 0) {
-                    await connection.execute(
+                     console.log(existingQuery, "went inside the if condition")
+                    await pool.execute(
                         'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
                         [manpowerId]
                     );
                 }
-                const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+                const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 const hiringManager = user_data[0];
 
                 const requestorMailOptions = {
@@ -834,21 +833,21 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             if (status == "HR Approve") {
 
                 // Check if a query exists for this manpower requisition
-                const [existingQuery] = await connection.execute(
+                const [existingQuery] = await pool.execute(
                     'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
                     [manpowerId]
                 );
 
                 // If a query exists, delete it
                 if (existingQuery.length > 0) {
-                    await connection.execute(
+                    await pool.execute(
                         'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
                         [manpowerId]
                     );
                 }
 
 
-                const [user_data] = await connection.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+                const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 console.log(user_data[0], "user_datauser_datauser_datauser_data")
                 const user_info = user_data[0];
                 // 1. Email to the Requestor/FH (Confirmation) 📧
@@ -891,15 +890,6 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
             }
 
-
-
-            await connection.commit();
-            connection.release();
-        } catch (err) {
-            await connection.rollback();
-            connection.release();
-            throw err; // Rethrow to be caught by outer catch block
-        }
         emitManpowerRequisitionRefresh();
 
         res.status(200).json({
@@ -1279,6 +1269,8 @@ router.put(
 
             if (setClause) {
                 const sql = `UPDATE manpower_requisition SET ${setClause} WHERE id = ?`;
+
+                console.log(sql, params,"sql, paramssql, params")
                 await pool.execute(sql, params);
             }
 
