@@ -18,17 +18,25 @@ import { useSearchParams } from 'react-router-dom';
 const Login = () => {
     const [searchParams] = useSearchParams();
   const userid = searchParams.get('userid'); // Gets "123" from ?userid=123
-  console.log("Userid from URL:", userid);
+  
   const [empId, setEmpId] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { status, error, token } = useSelector((state) => state.auth);
+  const MER_EDIT_ID = sessionStorage.getItem("MER_EDIT_ID");
+  console.log(MER_EDIT_ID,"MER_EDIT_ID")
 
   useEffect(() => {
     if (status === 'succeeded' && token) {
-      navigate('/dashboard');
+      if(MER_EDIT_ID){
+        navigate(`/manpower_requisition_edit/${MER_EDIT_ID}`);
+        sessionStorage.removeItem("MER_EDIT_ID");
+      }
+      else{
+        navigate('/dashboard');
+      }
     }
   }, [status, token, navigate]);
 

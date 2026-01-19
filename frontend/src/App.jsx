@@ -1,5 +1,5 @@
 // frontend/src/App.jsx
-import React, { useEffect } from "react";
+import React, { use, useEffect } from "react";
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme'; 
 import pastelTheme from './pastelTheme'; 
@@ -38,7 +38,7 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const { token, user } = useSelector((state) => state.auth);
-
+console.log(location.pathname,"location")
   const isLoginPage = location.pathname === "/login" || location.pathname === "/" || location.pathname === "/forgot-password" || location.pathname === "/reset-password" || location.pathname.startsWith("/fh-reply/");
 
   useEffect(() => {
@@ -54,6 +54,17 @@ function App() {
       }
     }
   }}, []);
+
+
+  useEffect(() => {
+     if (location.pathname.startsWith("/manpower_requisition_edit/")) {
+      console.log(location.pathname,"location")
+      const id = location.pathname.split("/manpower_requisition_edit/")[1];
+      console.log(id,"id")
+      sessionStorage.setItem("MER_EDIT_ID", id)
+     }
+  }, []);
+
 
   return (
     <ThemeProvider theme={themeBlue}>

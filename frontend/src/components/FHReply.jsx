@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload, FiHelpCircle, FiMessageSquare } from "react-icons/fi";
+import React, { useState, useEffect, use } from 'react';
+import { FiUser, FiBriefcase, FiLayers, FiFileText, FiEdit3, FiClock, FiFile, FiDownload, FiHelpCircle, FiMessageSquare, FiCheckCircle } from "react-icons/fi";
 import { FaUserCheck } from "react-icons/fa";
 import "./Add_Form.css";
-import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography, AppBar, Toolbar, Avatar, Menu, MenuItem, Divider, Backdrop, CircularProgress } from "@mui/material";
+import { Snackbar, Alert as MuiAlert, Button, Tooltip, Box, TextField, Typography, AppBar, Toolbar, Avatar, Menu, MenuItem, Divider, Backdrop, CircularProgress, Card, CardContent } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchManpowerRequisitionById, fetchQuery, replyToQuery } from '../redux/cases/manpowerrequisitionSlice';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,6 +19,8 @@ const FHReply = () => {
     const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
 
     const { selectedRequisition, query, loading } = useSelector((state) => state.manpowerRequisition);
+
+    console.log(selectedRequisition, "selectedRequisition");
     const { user } = useSelector((state) => state.auth);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const navigate = useNavigate();
@@ -60,6 +62,7 @@ const FHReply = () => {
     const [reply, setReply] = useState("");
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const [notification, setNotification] = useState({
         open: false,
         message: "",
@@ -78,6 +81,23 @@ const FHReply = () => {
             }
         }
     }, [dispatch, id, user]);
+
+    useEffect(() => {
+        if(selectedRequisition){
+        if(selectedRequisition.query_created_by == "1400"){
+            if(selectedRequisition.Director_Query_Answer){
+            setIsSubmitted(true);
+            }
+        }
+        else if(selectedRequisition.query_created_by == "1722"){
+            if(selectedRequisition.HR_Query_Answer){
+            setIsSubmitted(true);
+            }
+        }    
+    }
+
+    }, [selectedRequisition]);
+
 
 
 
@@ -210,7 +230,7 @@ const FHReply = () => {
                 message: 'Reply submitted successfully!',
                 severity: 'success'
             });
-            setTimeout(() => navigate('/dashboard'), 1500);
+            setIsSubmitted(true);
         } catch (error) {
             setNotification({
                 open: true,
@@ -266,6 +286,81 @@ const FHReply = () => {
             <p className="form-display-textarea">{value || 'N/A'}</p>
         </div>
     );
+
+    if (isSubmitted) {
+        return (
+            <>
+            <AppBar position="fixed" sx={{
+                backgroundColor: 'white',
+                color: '#2A7F66',
+                boxShadow: '0 2px 4px -1px rgba(0,0,0,0.06), 0 4px 5px 0 rgba(0,0,0,0.04), 0 1px 10px 0 rgba(0,0,0,0.08)',
+                zIndex: (theme) => theme.zIndex.drawer + 1
+            }}>
+                <Toolbar>
+                    <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                        <img
+                            src={Logo}
+                            alt="MRF Logo"
+                            style={{ height: '40px', marginRight: '16px', cursor: 'pointer' }}
+                            onClick={() => navigate('/dashboard')}
+                        />
+                       
+                    </Box> 
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer' }} onClick={handleUserMenuClick}>
+                        <Typography variant="subtitle1" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            {user?.emp_name}
+                        </Typography>
+                        <Avatar sx={{ bgcolor: '#2A7F66', width: 40, height: 40 }}>
+                            {user?.emp_name ? user.emp_name.charAt(0).toUpperCase() : '?'}
+                        </Avatar>
+                    </Box>
+                    <Menu
+                        anchorEl={userMenuAnchorEl}
+                        open={Boolean(userMenuAnchorEl)}
+                        onClose={handleUserMenuClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        PaperProps={{ sx: { mt: 1 } }}
+                    >
+                        <MenuItem
+                            onClick={handleLogout}
+                            sx={{ color: 'error.main', '&:hover': { backgroundColor: 'error.main', color: 'white' } }}
+                        >
+                            <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
+                            Logout
+                        </MenuItem>
+                    </Menu>
+                </Toolbar>
+            </AppBar>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
+                <Card sx={{ maxWidth: 400, textAlign: 'center', p: 4, borderRadius: 4, boxShadow: 3 }}>
+                    <CardContent>
+                        <FiCheckCircle size={60} style={{ color: 'green', marginBottom: '16px' }} />
+                        <Typography variant="h5" component="div" gutterBottom>
+                            Form Submitted
+                        </Typography>
+                        <Typography sx={{ mb: 2, color: 'text.secondary' }}>
+                            Your reply has been successfully submitted.
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => navigate('/dashboard')}
+                        >
+                            Go to Dashboard
+                        </Button>
+                    </CardContent>
+                </Card>
+            </Box>
+            </>
+        );
+    }
 
     return (
         <div className="page-wrapper">

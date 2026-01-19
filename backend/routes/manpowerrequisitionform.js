@@ -346,7 +346,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
     try {
         const { id } = req.params;
 
-        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, projection_plan, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, hr_status, director_status, hr_comments,  director_comments, created_by, created_at, mrq.query_name_hr, mrq.query_name_director,mrq.Director_Query_Answer,mrq.HR_Query_Answer, mrq.query_pid FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
+        const [rows] = await pool.execute(`SELECT mr.id AS mr_id,ed.id AS depart_id, depart, employment_status, designation, num_resources, requirement_type, project_name, projection_plan, ramp_up_file, replacement_detail, ramp_up_reason, job_description, education, experience, ctc_range, specific_info, hiring_tat_fastag, hiring_tat_normal_cat1, hiring_tat_normal_cat2, mrf_number, tat_agreed, delivery_phase, hr_review, requestor_sign, director_sign, status, hr_status, director_status, hr_comments,  director_comments, created_by, created_at, mrq.query_name_hr, mrq.query_name_director,mrq.Director_Query_Answer,mrq.HR_Query_Answer, mrq.query_pid, mrq.query_created_by FROM manpower_requisition AS mr JOIN employee_depart AS ed ON ed.id = mr.department LEFT JOIN manpower_requisition_query as mrq ON mr.id = mrq.query_manpower_requisition_pid WHERE mr.id = ? AND mr.isdelete = "Active" ORDER BY mrq.query_pid DESC LIMIT 1`, [id]);
 
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Manpower requisition not found.' });
@@ -392,6 +392,7 @@ router.get('/getmanpowerrequisitionbyid/:id', authMiddleware, async (req, res) =
             isdelete: row.isdelete,
             emp_name: row.emp_name,
             query_name_hr: row.query_name_hr,
+            query_created_by: row.query_created_by,
             query_name_director: row.query_name_director,
             created_by: row.created_by
         };
@@ -602,7 +603,7 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
                     </p>
                     <p>
                         Please review the response by clicking the link below:
-                        <a href="${process.env.FRONTEND_URL}/">View MRF</a>
+                        <a href="${process.env.FRONTEND_URL}/manpower_requisition_edit/${id}">View MRF</a>
                     </p>
                     <br>
                     <p style="color: #555;">
