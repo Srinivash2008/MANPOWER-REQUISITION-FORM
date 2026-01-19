@@ -75,6 +75,10 @@ const StatusBadge = ({ status }) => {
   else if (status === 'On Hold') {
     displayStatus = 'On Hold';
   }
+    else if (status === 'Pending') {
+    displayStatus = 'Submitted';
+  }
+
 
   const statusStyles = {
           'Approve': {

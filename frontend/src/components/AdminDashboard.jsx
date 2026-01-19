@@ -55,7 +55,7 @@ const AdminDashboard = ({
         ]
       : [
           {
-            label: 'Pending',
+            label: 'Submitted',
             value: counts.pending,
             icon: <PendingActionsIcon fontSize="large" />,
             color: theme.palette.warning.main,
@@ -129,14 +129,16 @@ const AdminDashboard = ({
                     >
                       <Box
                         onClick={() => {
-                          const lowerStatus = p.status.toLowerCase();
-                          let statusParam = p.status;
+                          let statusParam = p.status.replace('MRF ', '');
+                          const lowerStatus = statusParam.toLowerCase();
                           if (lowerStatus.includes('query')) {
                             statusParam = 'Raise Query';
                           } else if (lowerStatus.includes('approved')) {
                             statusParam = 'Approve';
                           } else if (lowerStatus.includes('on-hold') || lowerStatus.includes('on hold')) {
                             statusParam = 'On Hold';
+                          } else if (lowerStatus.includes('submitted')) {
+                            statusParam = 'Pending';
                           }
                           navigate(`/mrf-list?status=${statusParam}`);
                         }}
@@ -221,11 +223,11 @@ const AdminDashboard = ({
                       <Typography variant="subtitle1" fontWeight={600}>{manager.name}</Typography>
                       <Typography variant="h6" fontWeight={700} color="primary">{manager.total}</Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'space-around' }}>
-                      <Typography variant="caption">Pending: <strong>{manager.counts.Pending}</strong></Typography>
-                      <Typography variant="caption" color="success.dark">Approved: <strong>{manager.counts.Approved + manager.counts.HR_Approve}</strong></Typography>
-                      <Typography variant="caption" color="error.dark">Rejected: <strong>{manager.counts.Rejected}</strong></Typography>
-                      <Typography variant="caption" color="warning.dark">On Hold: <strong>{manager.counts.On_Hold}</strong></Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'space-around' }}>
+                      <Typography variant="caption" sx={{fontSize:"9px"}}>MRF Submitted: <strong>{manager.counts.Pending}</strong></Typography>
+                      <Typography variant="caption" sx={{fontSize:"9px"}} color="success.dark">MRF Approved: <strong>{manager.counts.Approved + manager.counts.HR_Approve}</strong></Typography>
+                      <Typography variant="caption" sx={{fontSize:"9px"}} color="error.dark">MRF Rejected: <strong>{manager.counts.Rejected}</strong></Typography>
+                      <Typography variant="caption" sx={{fontSize:"9px"}} color="warning.dark">MRF On Hold: <strong>{manager.counts.On_Hold}</strong></Typography>
                     </Box>
                   </Box>
                 ))

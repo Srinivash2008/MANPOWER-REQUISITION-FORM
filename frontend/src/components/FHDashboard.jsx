@@ -43,7 +43,7 @@ const FHDashboard = ({
 
   const overviewStats = [
     {
-      label: 'Pending',
+      label: 'Submitted',
       value: counts.pending,
       icon: <PendingActionsIcon fontSize="large" />,
       color: theme.palette.warning.main,
@@ -135,12 +135,15 @@ const FHDashboard = ({
                     >
                       <Box
                         onClick={() => {
-                          const lowerStatus = p.status.toLowerCase();
-                          let statusParam = p.status;
+                          let statusParam = p.status.replace('MRF ', '');
+                          const lowerStatus = statusParam.toLowerCase();
+
                           if (lowerStatus.includes('query')) {
                             statusParam = 'Raise Query';
                           } else if (lowerStatus.includes('on-hold') || lowerStatus.includes('on hold')) {
                             statusParam = 'On Hold';
+                          } else if (lowerStatus.includes('submitted')) {
+                            statusParam = 'Pending';
                           }
                           navigate(`/mrf-list?status=${statusParam}`);
                         }}

@@ -167,7 +167,7 @@ const Dashboard = () => {
   // Dynamic status metrics based on API data - Now with 5 cards
   let statusMetrics = [
     {
-      status: 'Pending',
+      status: 'Submitted',
       count: counts.pending,
       icon: (props) => <PendingIcon {...props} />,
       color: 'secondary',
@@ -232,11 +232,11 @@ const Dashboard = () => {
   ];
 
   const dirStatusMetrics = [
-    
-    { status: 'No. of MRF Approved', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
-    { status: 'No. of MRF Rejected', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'No. of MRF Raise Query', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
-    { status: 'No. of MRF on Hold', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+
+    { status: 'MRF Approved', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'MRF Rejected', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'MRF Raise Query', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
+    { status: 'MRF on Hold', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
   const hrCounts = {
@@ -250,14 +250,14 @@ const Dashboard = () => {
   console.log(hrCounts,"hrCounts")
 
   const hrStatusMetrics = [
-    { status: 'No. of MRF Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
-    { status: 'No. of MRF Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'No. of MRF Query', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
-    { status: 'No. of MRF On-Hold', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
+    { status: 'MRF Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
+    { status: 'MRF Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
+    { status: 'MRF Query', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
+    { status: 'MRF On-Hold', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
   const overallStatusMetrics = [
-    { status: 'Pending', count: baseCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'secondary' },
+    { status: 'Submitted', count: baseCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'secondary' },
     { status: 'Approved', count: baseCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
     { status: 'Rejected', count: baseCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
     { status: 'On Hold', count: baseCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
@@ -291,11 +291,11 @@ const Dashboard = () => {
 
   // --- Data for FHDashboard (using baseCounts) ---
   const fhPendingStatuses = [
-    { status: 'Pending', count: baseCounts.pending, color: 'secondary' },
-    { status: 'On Hold', count: baseCounts.onHold, color: 'tertitary' },
-    { status: 'Query by Director', count: baseCounts.directorRaiseQuery, color: 'info' },
-    { status: 'Query by HR', count: baseCounts.hrRaiseQuery, color: 'info' },
-    { status: 'Draft', count: baseCounts.draft, color: 'error' }
+    { status: 'MRF Submitted', count: baseCounts.pending, color: 'secondary' },
+    { status: 'MRF On Hold', count: baseCounts.onHold, color: 'tertitary' },
+    { status: 'MRF Query by Director', count: baseCounts.directorRaiseQuery, color: 'info' },
+    { status: 'MRF Query by HR', count: baseCounts.hrRaiseQuery, color: 'info' },
+    { status: 'MRF Draft', count: baseCounts.draft, color: 'error' }
   ].filter(m => m.count > 0);
   const fhTotalPending = fhPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
 
@@ -305,12 +305,12 @@ const Dashboard = () => {
     case '1722':
       adminPendingStatuses = [
         {
-          status: 'Approved',
+          status: 'MRF Approved',
           count: counts.approved_HR,
           color: 'success',
         },
         {
-          status: 'FH Replied',
+          status: 'MRF FH Replied',
           count: counts.fhReplied,
           color: 'info',
         },
@@ -319,12 +319,12 @@ const Dashboard = () => {
     case '1400':
       adminPendingStatuses = [
          {
-          status: 'Pending',
+          status: 'MRF Submitted',
           count: counts.pending,
           color: 'success',
         },
         {
-          status: 'FH Replied',
+          status: 'MRF FH Replied',
           count: counts.fhReplied,
           color: 'info',
         },
@@ -332,11 +332,11 @@ const Dashboard = () => {
       break;
     default:
       adminPendingStatuses = statusMetrics.filter(
-        (m) =>
-          m.status === 'Pending' ||
-          m.status === 'On-Hold' ||
+        (m) => //NOSONAR
+          m.status === 'MRF Submitted' ||
+          m.status === 'MRF On-Hold' ||
           m.status.startsWith('Query by') ||
-          m.status === 'FH Replied'
+          m.status === 'MRF FH Replied'
       );
       break;
   }
@@ -360,7 +360,7 @@ const Dashboard = () => {
         return [...hrStatusMetrics].sort((a, b) => b.count - a.count);
       case 'overall':
         const statusOrder = [
-          'Overall Pending',
+          'Overall MRF Submitted',
           'Director Approved',
           'Director Rejected',
           'Director Query',
@@ -369,19 +369,19 @@ const Dashboard = () => {
           'HR Rejected',
           'HR Query',
           'HR On-Hold',
-          'Overall Withdraw',
+          'Overall MRF Withdrawn',
         ];
 
-        const withdrawOverall = overallStatusMetrics.find(m => m.status === 'Withdraw');
-        const pendingOverall = overallStatusMetrics.find(m => m.status === 'Pending');
+        const withdrawOverall = overallStatusMetrics.find(m => m.status === 'Withdraw'); //NOSONAR
+        const pendingOverall = overallStatusMetrics.find(m => m.status === 'Submitted');
         let combinedData = [];
         if (pendingOverall) {
-          combinedData.push({ ...pendingOverall, status: 'Overall Pending' });
+          combinedData.push({ ...pendingOverall, status: 'Overall MRF Submitted' });
         }
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status}` })));
         combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status}` })));
         if (withdrawOverall) {
-          combinedData.push({ ...withdrawOverall, status: 'Overall Withdraw' });
+          combinedData.push({ ...withdrawOverall, status: 'Overall MRF Withdrawn' });
         }
 
         // Sort based on the predefined statusOrder

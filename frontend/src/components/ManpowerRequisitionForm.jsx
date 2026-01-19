@@ -127,6 +127,9 @@ const StatusBadge = ({ status }) => {
   else if (status === 'Draft') {
     displayStatus = 'Draft';
   }
+  else if (status === 'Pending') {
+    displayStatus = 'Submitted';
+  }
 
 
 
@@ -142,6 +145,10 @@ const StatusBadge = ({ status }) => {
     'Pending': {
       backgroundColor: '#b29b58ff', // A warm amber/yellow
       color: '#212529', // Dark text for better contrast on yellow
+    },
+    'Submitted': {
+      backgroundColor: '#b29b58ff', // A warm amber/yellow
+      color: '#fff', // Dark text for better contrast on yellow
     },
     'Reject': {
       backgroundColor: '#dc3545', // A strong red
@@ -874,7 +881,7 @@ const ManpowerRequisition = () => {
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                           <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
-                          <StyledTableCell><StatusBadge status={manpower.status == "Pending" ? "Submitted" : manpower.status} /></StyledTableCell>
+                          <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.director_status !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
                           <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
                           
