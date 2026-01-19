@@ -537,6 +537,7 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const { reply } = req.body;
     const { user } = req;
+    console.log(user, "useruseruseruseruser")
 
     if (!reply) {
         return res.status(400).json({ message: 'Reply is required.' });
@@ -579,32 +580,41 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
             );
         }
 
-        // Notify Rajesh and Selvi
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: "srinivasan@pdmrindia.com",
-            cc: [],
-            subject: 'FH has Replied to a Query',
-            html: `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-                <p>Dear Team,</p>
-                <p>
-                    A Functional Head has replied to a query on MRF.
-                </p>
-                <p>
-                    You can view the MRF and the reply here:
-                    <a href="${process.env.FRONTEND_URL}/manpower_requisition_view/${id}">View MRF</a>
-                </p>
-                <br>
-                <p style="color: #555;">
-                   Thanks & Regards,<br>
-                   Automated MRF System
-                </p>
-            </div>
-        `
-        };
+        // Notify Rajesh or Selvi based on who raised the query
+        if (replyColumn) {
+            let recipientName = '';
+            if (replyColumn === 'Director_Query_Answer') {
+                recipientName = 'Je. Rajesh';
+            } else if (replyColumn === 'HR_Query_Answer') {
+                recipientName = 'Muthamil Selvi V';
+            }
 
-        await transporter.sendMail(mailOptions);
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: "srinivasan@pdmrindia.com", // Using placeholder for now
+                cc: [],
+                subject: `Reply Query on MRF from ${user.emp_name}`,
+                html: `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <p>Dear ${recipientName},</p>
+                    <p>
+                        <b>${user.emp_name}</b> has replied to the query you raised on a Manpower Requisition Form.
+                    </p>
+                    <p>
+                        Please review the response by clicking the link below:
+                        <a href="${process.env.FRONTEND_URL}/">View MRF</a>
+                    </p>
+                    <br>
+                    <p style="color: #555;">
+                       Thanks & Regards,<br>
+                       Automated MRF System
+                    </p>
+                </div>
+            `
+            };
+
+            await transporter.sendMail(mailOptions);
+        }
 
         emitManpowerRequisitionRefresh();
         res.status(200).json({ message: 'Reply submitted successfully.' });
@@ -757,8 +767,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                 try {
                     await transporter.sendMail(requestorMailOptions);
                     await transporter.sendMail(directorMailOptions);
-
-                    res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+                    // Return to prevent further execution
+                    return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
 
                 } catch (error) {
                     console.error('Error sending email:', error);
@@ -810,8 +820,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                 // Send the two emails sequentially
                 try {
                     await transporter.sendMail(requestorMailOptions);
-
-                    res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+                    // Return to prevent further execution
+                    return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
 
                 } catch (error) {
                     console.error('Error sending email:', error);
@@ -869,8 +879,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                 // Send the two emails sequentially
                 try {
                     await transporter.sendMail(requestorMailOptions);
-
-                    res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+                    // Return to prevent further execution
+                    return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
 
                 } catch (error) {
                     console.error('Error sending email:', error);
