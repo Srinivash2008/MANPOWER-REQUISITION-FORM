@@ -920,9 +920,9 @@ const ManpowerRequisition = () => {
                               {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
                                 <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
                               )}
-                              {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                              {/* {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
                                 <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
-                              )}
+                              )} */}
                             </Menu>
                           </StyledTableCell>
                         </StyledTableRow>

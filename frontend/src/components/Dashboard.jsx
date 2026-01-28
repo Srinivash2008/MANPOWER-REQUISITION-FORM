@@ -247,7 +247,7 @@ const Dashboard = () => {
     onHold: parseInt(mfrCounts?.hr_status?.on_hold_count) || 0,
   };
 
-  console.log(hrCounts,"hrCounts")
+  console.log(hrCounts, "hrCounts")
 
   const hrStatusMetrics = [
     { status: 'MRF Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
@@ -315,10 +315,10 @@ const Dashboard = () => {
           color: 'info',
         },
       ];
-       break;
+      break;
     case '1400':
       adminPendingStatuses = [
-         {
+        {
           status: 'MRF Submitted',
           count: counts.pending,
           color: 'success',
@@ -360,26 +360,28 @@ const Dashboard = () => {
         return [...hrStatusMetrics].sort((a, b) => b.count - a.count);
       case 'overall':
         const statusOrder = [
-          'Overall MRF Submitted',
-          'Director Approved',
-          'Director Rejected',
-          'Director Query',
-          'Director On-Hold',
-          'HR Approved',
-          'HR Rejected',
-          'HR Query',
-          'HR On-Hold',
-          'Overall MRF Withdrawn',
-        ];
+          "Overall MRF Submitted",
+          "Director Approved",
+          "Director on Hold",
+          "Director Raise Query",
+          "Director Rejected",
+          "HR Approved",
+          "HR On-Hold",
+          "HR Query",
+          "HR Rejected",
+          "Overall MRF Withdrawn"
+        ]
 
         const withdrawOverall = overallStatusMetrics.find(m => m.status === 'Withdraw'); //NOSONAR
         const pendingOverall = overallStatusMetrics.find(m => m.status === 'Submitted');
         let combinedData = [];
+
         if (pendingOverall) {
-          combinedData.push({ ...pendingOverall, status: 'Overall MRF Submitted' });
+          const { status, ...rest } = pendingOverall;
+          combinedData.push({ status: 'Overall MRF Submitted', ...rest });
         }
-        combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status}` })));
-        combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status}` })));
+        combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status.replace('MRF ', '')}` })));
+        combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status.replace('MRF ', '')}` })));
         if (withdrawOverall) {
           combinedData.push({ ...withdrawOverall, status: 'Overall MRF Withdrawn' });
         }

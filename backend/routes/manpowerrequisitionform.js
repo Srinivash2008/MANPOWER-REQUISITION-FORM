@@ -434,6 +434,9 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
+    
+
+
     try {
         // Check if an entry already exists for this requisition PID
         const [existing] = await pool.execute(
@@ -441,31 +444,28 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
             [query_manpower_requisition_pid]
         );
 
+
         const isHrUpdate = user?.emp_id === '1722';
         const isDirectorUpdate = user?.emp_id === '1400';
 
-
         if (existing.length > 0) {
-            // Entry exists, so UPDATE it
-            const query_pid = existing[0].query_pid;
-            const fieldToUpdate = isHrUpdate ? 'query_name_hr' : 'query_name_director';
-
-            const updateQuery = `UPDATE manpower_requisition_query SET ${fieldToUpdate} = ? WHERE query_pid = ?`;
-            await pool.execute(updateQuery, [query_name, query_pid]);
-
-            res.status(200).json({ message: 'Query updated successfully.' });
-        } else {
-            // No entry exists, so INSERT a new one
-            const query_created_date = new Date().toISOString().split('T')[0];
-            const query_created_time = new Date().toLocaleTimeString('en-US', { hour12: false });
-
-            const fieldToInsert = isHrUpdate ? 'query_name_hr' : 'query_name_director';
-            const insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, ${fieldToInsert}, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
-            const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete || 'Active'];
-
-            const [result] = await pool.execute(insertQuery, insertParams);
-            res.status(201).json({ message: 'New Query created successfully.', manpowerId: result.insertId });
+            // If a query already exists, delete it.
+            await pool.execute(
+                'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                [query_manpower_requisition_pid]
+            );
         }
+
+        // Always INSERT a new query record.
+        const query_created_date = new Date().toISOString().split('T')[0];
+        const query_created_time = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+        const fieldToInsert = isHrUpdate ? 'query_name_hr' : 'query_name_director';
+        const insertQuery = `INSERT INTO manpower_requisition_query (query_manpower_requisition_pid, ${fieldToInsert}, query_created_by, query_created_date, query_created_time, query_is_delete) VALUES (?, ?, ?, ?, ?, ?)`;
+        const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete || 'Active'];
+
+        const [result] = await pool.execute(insertQuery, insertParams);
+        
 
         // Fetch creator of the MRF to send an email
         const [mrfCreator] = await pool.execute(
@@ -527,6 +527,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
 
         emitManpowerRequisitionRefresh();
+        res.status(201).json({ message: 'New Query created successfully.', manpowerId: result.insertId });
     } catch (error) {
         console.error('Error in /add-query-form:', error);
         res.status(500).json({ message: 'Server error processing query form.' });
