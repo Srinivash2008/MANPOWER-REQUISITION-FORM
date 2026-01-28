@@ -150,12 +150,15 @@ const App_Form = () => {
                 }
                 break;
             case 'rampUpFile':
-                if (formData.requirementType === "Ramp up" && !value) {
-                    newErrors.rampUpFile = 'File upload is required for Ramp up.';
-                } else if (value && !['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'].includes(value.type)) {
-                    newErrors.rampUpFile = 'Only Word, DOCX, PDF, Excel, and Text files are accepted';
+                // Only validate type if a file is present
+                if (value) {
+                    const acceptedTypes = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'];
+                    if (value instanceof File && !acceptedTypes.includes(value.type)) {
+                        newErrors.rampUpFile = 'Only Word, DOCX, PDF, Excel, and Text files are accepted';
+                    } else {
+                        delete newErrors.rampUpFile;
+                    }
                 } else {
-                  
                     delete newErrors.rampUpFile;
                 }
                 break;
@@ -255,9 +258,11 @@ const App_Form = () => {
         if (formData.requirementType === "Ramp up") {
             if (!formData.projectName) newErrors.projectName = 'Project Name is required for Ramp up.';
             if (!formData.projectionPlan) newErrors.projectionPlan = 'Projection Plan is required for Ramp up.';
-            if (!formData.rampUpFile) newErrors.rampUpFile = 'File upload is required for Ramp up.';
-            else if (!['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'].includes(formData.rampUpFile.type)) {
-                newErrors.rampUpFile = 'Only Word, DOCX, PDF, Excel, and Text files are accepted';
+            if (formData.rampUpFile) { // Only validate type if a file is present
+                const acceptedTypes = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'];
+                if (!acceptedTypes.includes(formData.rampUpFile.type)) {
+                    newErrors.rampUpFile = 'Only Word, DOCX, PDF, Excel, and Text files are accepted';
+                }
             }
         }
 
@@ -660,7 +665,7 @@ const App_Form = () => {
                                             {renderError('projectionPlan')}
                                         </div>
                                         <div className="full-width">
-                                            <label className="form-label">Upload File<span className="required-star">*</span></label>
+                                            <label className="form-label">Upload File</label>
                                             <FileUploader
                                                 classes="file-uploader-custom"
                                                 maxSize={2}

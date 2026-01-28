@@ -194,9 +194,14 @@ const ManpowerRequisitionEdit = () => {
                 }
                 break;
             case 'rampUpFile':
-                if (formData.requirementType === "Ramp up" && !isDocFileValid(value)) {
-                    newErrors.rampUpFile = 'Only Word, PDF, Excel, and Text files are accepted.';
-                } else {
+                if (formData.requirementType === "Ramp up" && value) { // Only validate if it's Ramp up AND a file is present
+                    const acceptedTypes = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'];
+                    if (value instanceof File && !acceptedTypes.includes(value.type)) {
+                        newErrors.rampUpFile = 'Only Word, PDF, Excel, and Text files are accepted.';
+                    } else {
+                        delete newErrors.rampUpFile;
+                    }
+                } else { // No file, or not Ramp up, so no error
                     delete newErrors.rampUpFile;
                 }
                 break;
