@@ -21,6 +21,8 @@ const FHReply = () => {
     const { selectedRequisition, query, loading } = useSelector((state) => state.manpowerRequisition);
 
     console.log(selectedRequisition, "selectedRequisition");
+    console.log(query, "query");
+
     const { user } = useSelector((state) => state.auth);
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const navigate = useNavigate();
@@ -224,7 +226,7 @@ const FHReply = () => {
         const decodedData = jwtDecode(id);
         try {
             setIsSubmitting(true);
-            await dispatch(replyToQuery({ id: decodedData.pid, reply })).unwrap();
+            await dispatch(replyToQuery({ id: decodedData.pid, reply,query_pid: query.query_pid})).unwrap();
             setNotification({
                 open: true, 
                 message: 'Reply submitted successfully!',

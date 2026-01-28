@@ -485,7 +485,7 @@ export const updateManpowerRequisition = createAsyncThunk(
 );
 export const replyToQuery = createAsyncThunk(
   'manpowerRequisition/replyToQuery',
-  async ({ id, reply }, { rejectWithValue, getState }) => {
+  async ({ id, reply,query_pid }, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
       const token = auth.token;
@@ -497,7 +497,7 @@ export const replyToQuery = createAsyncThunk(
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const response = await axios.post(
         `${API_URL}/api/mrf/reply-to-query/${id}`,
-        { reply },
+        { reply,query_pid },
         {
           headers: {
             Authorization: `Bearer ${token}`,

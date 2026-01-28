@@ -450,10 +450,10 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
         if (existing.length > 0) {
             // If a query already exists, delete it.
-            await pool.execute(
-                'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-                [query_manpower_requisition_pid]
-            );
+            // await pool.execute(
+            //     'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+            //     [query_manpower_requisition_pid]
+            // );
         }
 
         // Always INSERT a new query record.
@@ -537,9 +537,12 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
 router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
-    const { reply } = req.body;
+    const { reply,query_pid } = req.body;
     const { user } = req;
+    console.log(id, "idid")
     console.log(user, "useruseruseruseruser")
+    console.log(reply,"reply")
+    console.log(query_pid, "query_pidquery_pidquery_pid")
 
     if (!reply) {
         return res.status(400).json({ message: 'Reply is required.' });
@@ -549,8 +552,8 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
     let replyColumn;
     try {
         const [queryRows] = await pool.execute(
-            'SELECT query_name_hr, query_name_director FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-            [id]
+            'SELECT query_name_hr, query_name_director FROM manpower_requisition_query WHERE query_pid = ?',
+            [query_pid]
         );
 
         if (queryRows.length > 0) {
@@ -564,8 +567,8 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
 
         if (replyColumn) {
             await pool.execute(
-                `UPDATE manpower_requisition_query SET ${replyColumn} = ? WHERE query_manpower_requisition_pid = ?`,
-                [reply, id]
+                `UPDATE manpower_requisition_query SET ${replyColumn} = ? WHERE query_pid = ?`,
+                [reply, query_pid]
             );
         }
 
@@ -628,7 +631,7 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
 router.get('/get-query/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     try {
-        const [rows] = await pool.execute('SELECT * FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?', [id]);
+        const [rows] = await pool.execute('SELECT * FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ? order by `query_pid` DESC Limit 1', [id]);
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Query not found.' });
         }
@@ -787,10 +790,10 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                 // If a query exists, delete it
                 if (existingQuery.length > 0) {
                      console.log(existingQuery, "went inside the if condition")
-                    await pool.execute(
-                        'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-                        [manpowerId]
-                    );
+                    // await pool.execute(
+                    //     'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                    //     [manpowerId]
+                    // );
                 }
                 const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
                 const hiringManager = user_data[0];
@@ -841,10 +844,10 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
 
                 // If a query exists, delete it
                 if (existingQuery.length > 0) {
-                    await pool.execute(
-                        'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-                        [manpowerId]
-                    );
+                    // await pool.execute(
+                    //     'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                    //     [manpowerId]
+                    // );
                 }
 
 
