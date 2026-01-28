@@ -414,7 +414,7 @@ const ManpowerRequisitionView = () => {
                             {formData.hrstatus === 'FH Replied' && (
                                 <div style={{ marginTop: '1rem' }}>
                                     <DisplayTextarea label="HR Query" value={formData.query_name_hr} />
-                                    <DisplayTextarea label="HR Query Answer" value={formData.HR_Query_Answer} />
+                                    <DisplayTextarea label="FH Answer" value={formData.HR_Query_Answer} />
                                 </div>
                             )}
                         </div>
