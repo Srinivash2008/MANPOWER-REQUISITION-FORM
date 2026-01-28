@@ -15,6 +15,7 @@ import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -40,32 +41,32 @@ const AdminDashboard = ({
   const overviewStats =
     user?.emp_id === '1722'
       ? [
-          {
-            label: 'Approved',
-            value: counts.approved,
-            icon: <CheckCircleOutlineIcon fontSize="large" />,
-            color: theme.palette.success.main,
-          },
-          {
-            label: 'Rejected',
-            value: counts.rejected,
-            icon: <HighlightOffIcon fontSize="large" />,
-            color: theme.palette.error.main,
-          },
-        ]
+        {
+          label: 'Approved',
+          value: counts.approved,
+          icon: <CheckCircleOutlineIcon fontSize="large" />,
+          color: theme.palette.success.main,
+        },
+        {
+          label: 'Rejected',
+          value: counts.rejected,
+          icon: <HighlightOffIcon fontSize="large" />,
+          color: theme.palette.error.main,
+        },
+      ]
       : [
-          {
-            label: 'Submitted',
-            value: counts.pending,
-            icon: <PendingActionsIcon fontSize="large" />,
-            color: theme.palette.warning.main,
-          },
-        ];
+        {
+          label: 'Submitted',
+          value: counts.pending,
+          icon: <PendingActionsIcon fontSize="large" />,
+          color: theme.palette.warning.main,
+        },
+      ];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
       {/* --- Left Column (Main Content) --- */}
-      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}> 
+      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr', lg: '1fr 1.2fr' }, gap: { xs: 3, md: 4 } }}>
           {/* Quick Actions Card */}
           <Card sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)', border: `1px solid ${theme.palette.divider}` }}>
@@ -87,13 +88,20 @@ const AdminDashboard = ({
               Your administrative shortcuts.
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box
+              {user?.emp_id == '1722' && (<Box
                 onClick={() => navigate('/add-mrf')}
                 sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
               >
                 <AddCircleOutlineIcon color="primary" />
                 <Typography fontWeight={600}>Create New MRF</Typography>
-              </Box>
+              </Box>)}
+                  {user?.emp_id == '1400' && (<Box
+                onClick={() => navigate('/mrf-list')}
+                sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+              >
+                <ArrowForwardIosIcon color="primary" />
+                <Typography fontWeight={600}>View MRF</Typography>
+              </Box>)}
               <Box
                 onClick={() => navigate('/reports')}
                 sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
@@ -177,11 +185,11 @@ const AdminDashboard = ({
 
         <Box sx={{ mt: 1 }}>
           <Card sx={{ borderLeft: `4px solid ${theme.palette.primary.main}` }}>
-             <Box sx={{ display: 'flex',flexDirection: 'column',justifyContent: 'space-between', alignItems: 'center',mt: 2,mb: 2 }}>
-                          <Typography variant="h6" fontWeight={700}>
-                            Requisition Status Graph
-                          </Typography>
-            <LineChart data={comprehensiveData} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', mt: 2, mb: 2 }}>
+              <Typography variant="h6" fontWeight={700}>
+                Requisition Status Graph
+              </Typography>
+              <LineChart data={comprehensiveData} />
             </Box>
           </Card>
         </Box>
@@ -224,10 +232,10 @@ const AdminDashboard = ({
                       <Typography variant="h6" fontWeight={700} color="primary">{manager.total}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'space-around' }}>
-                      <Typography variant="caption" sx={{fontSize:"9px"}}>MRF Submitted: <strong>{manager.counts.Pending}</strong></Typography>
-                      <Typography variant="caption" sx={{fontSize:"9px"}} color="success.dark">MRF Approved: <strong>{manager.counts.Approved + manager.counts.HR_Approve}</strong></Typography>
-                      <Typography variant="caption" sx={{fontSize:"9px"}} color="error.dark">MRF Rejected: <strong>{manager.counts.Rejected}</strong></Typography>
-                      <Typography variant="caption" sx={{fontSize:"9px"}} color="warning.dark">MRF On Hold: <strong>{manager.counts.On_Hold}</strong></Typography>
+                      <Typography variant="caption" sx={{ fontSize: "9px" }}>MRF Submitted: <strong>{manager.counts.Pending}</strong></Typography>
+                      <Typography variant="caption" sx={{ fontSize: "9px" }} color="success.dark">MRF Approved: <strong>{manager.counts.Approved + manager.counts.HR_Approve}</strong></Typography>
+                      <Typography variant="caption" sx={{ fontSize: "9px" }} color="error.dark">MRF Rejected: <strong>{manager.counts.Rejected}</strong></Typography>
+                      <Typography variant="caption" sx={{ fontSize: "9px" }} color="warning.dark">MRF On Hold: <strong>{manager.counts.On_Hold}</strong></Typography>
                     </Box>
                   </Box>
                 ))
