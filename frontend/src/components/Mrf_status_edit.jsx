@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Paper, Typography, Grid, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop, Divider, IconButton
+    Box, Paper, Typography, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop, Divider, IconButton, Card, CardContent, Tooltip
 } from "@mui/material";
 import {
     Numbers as NumbersIcon,
     Person as PersonIcon,
     Badge as BadgeIcon,
     CalendarToday as CalendarTodayIcon,
-    Update as UpdateIcon
+    Update as UpdateIcon,
+    Group as GroupIcon,
+    PersonAdd as PersonAddIcon
 } from '@mui/icons-material'; 
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux';
@@ -62,6 +64,22 @@ const MRF_Status_Edit = () => {
         setFormData(prev => ({ ...prev, candidates: updatedCandidates }));
     };
 
+    const allCandidatesFilled = formData.candidates.every(c => c.candidate_name && c.offer_date);
+
+    const handleStatusChange = (e) => {
+        const newStatus = e.target.value;
+        if (newStatus === 'Completed' && !allCandidatesFilled) {
+            swal.fire({
+                title: 'Incomplete Details',
+                text: 'Please fill in the offer date and name for all candidates before marking as completed.',
+                icon: 'warning',
+                confirmButtonColor: '#2A7F66',
+            });
+            return;
+        }
+        setFormData(prev => ({ ...prev, mrf_track_status: newStatus }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsUpdating(true);
@@ -70,6 +88,17 @@ const MRF_Status_Edit = () => {
             id: id,
             ...formData
         };
+
+        if (payload.mrf_track_status === 'Completed' && !allCandidatesFilled) {
+            setIsUpdating(false);
+            swal.fire({
+                title: 'Cannot Complete MRF',
+                text: 'Please ensure all candidate details (Offer Date and Name) are filled before completing the MRF.',
+                icon: 'error',
+                confirmButtonColor: '#d33',
+            });
+            return;
+        }
 
         try {
             await dispatch(updateManpowerTracking(payload)).unwrap();
@@ -116,10 +145,10 @@ const MRF_Status_Edit = () => {
     );
 
     return (
-        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '16px', maxWidth: '900px', mx: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.05)', mt: 9 }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '16px', maxWidth: '100%', mx: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', mt: { xs: 8, md: 9 } }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2A7F66' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2A7F66', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                         Edit MRF Tracking Status
                     </Typography>
                     <Button
@@ -133,73 +162,78 @@ const MRF_Status_Edit = () => {
                 </Box>
 
                 <Box component="form" onSubmit={handleSubmit}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12} md={5}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 3, md: 5 } }}>
+                        <Box sx={{ flex: '1 1 1%' }}>
                             <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: 'text.secondary', mb: 2 }}>
                                 Requisition Details
                             </Typography>
                             <DisplayField icon={<NumbersIcon />} label="MRF Number" value={selectedRequisition.mrf_number || '-'} />
                             <DisplayField icon={<PersonIcon />} label="Hiring Manager" value={selectedRequisition.emp_name || '-'} />
                             <DisplayField icon={<BadgeIcon />} label="Position" value={selectedRequisition.designation || '-'} />
+                            <DisplayField icon={<GroupIcon />} label="Number of Resources" value={selectedRequisition.num_resources || '-'} />
                             <DisplayField icon={<CalendarTodayIcon />} label="MRF Start Date" value={selectedRequisition.mrf_start_date ? new Date(selectedRequisition.mrf_start_date).toLocaleDateString() : '-'} />
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={12} md={1} sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
                             <Divider orientation="vertical" flexItem />
-                        </Grid>
+                        </Box>
 
-                        <Grid item xs={12} md={6}>
-                            <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: 'text.secondary', mb: 3 }}>Update Status</Typography>
-                            <Box sx={{ mb: 2.5 }}>
-                                <TextField
-                                    fullWidth
-                                    type="date"
-                                    name="mrf_closed_date"
-                                    label="MRF Closed Date"
-                                    value={formData.mrf_closed_date}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, mrf_closed_date: e.target.value }))}
-                                    InputLabelProps={{ shrink: true }}
-                                    variant="outlined"
-                                />
-                            </Box>
+                        <Box sx={{ flex: '1 1 55%' }}>
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: 'text.secondary', mb: 3, display: 'flex', alignItems: 'center' }}>
+                                <GroupIcon sx={{ mr: 1.5, color: 'primary.main' }} />
+                                Candidate & Status Update
+                            </Typography>
 
-                            {formData.candidates.map((candidate, index) => (
-                                <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2.5, alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                <Box>
                                     <TextField
                                         fullWidth
                                         type="date"
-                                        name="offer_date"
-                                        label={`Offer Date #${index + 1}`}
-                                        value={candidate.offer_date}
-                                        onChange={(e) => handleInputChange(e, index)}
+                                        name="mrf_closed_date"
+                                        label="MRF Closed Date"
+                                        value={formData.mrf_closed_date}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, mrf_closed_date: e.target.value }))}
                                         InputLabelProps={{ shrink: true }}
                                         variant="outlined"
                                     />
-                                    <TextField
-                                        fullWidth
-                                        name="candidate_name"
-                                        label={`Candidate Name #${index + 1}`}
-                                        value={candidate.candidate_name}
-                                        onChange={(e) => handleInputChange(e, index)}
-                                        variant="outlined"
-                                    />
                                 </Box>
-                            ))}
+                                <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                    {formData.candidates.map((candidate, index) => (
+                                        <Box key={index}>
+                                            <Card variant="outlined" sx={{ p: 2, borderRadius: 2, backgroundColor: '#fafafa' }}>
+                                                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}><PersonAddIcon sx={{ mr: 1 }}/> Candidate #{index + 1}</Typography>
+                                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <TextField fullWidth type="date" name="offer_date" label="Offer Date" value={candidate.offer_date} onChange={(e) => handleInputChange(e, index)} InputLabelProps={{ shrink: true }} variant="outlined" />
+                                                    </Box>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <TextField fullWidth name="candidate_name" label="Candidate Name" value={candidate.candidate_name} onChange={(e) => handleInputChange(e, index)} variant="outlined" />
+                                                    </Box>
+                                                </Box>
+                                            </Card>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Box>
 
-                            <FormControl fullWidth variant="outlined">
+                            <FormControl fullWidth variant="outlined" sx={{ mt: 2.5 }}>
                                 <InputLabel>Status</InputLabel>
                                 <Select
                                     name="mrf_track_status"
                                     value={formData.mrf_track_status}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, mrf_track_status: e.target.value }))}
+                                    onChange={handleStatusChange}
                                     label="Status"
                                 >
                                     <MenuItem value="In Process">In Process</MenuItem>
-                                    <MenuItem value="Completed">Completed</MenuItem>
+                                    <Tooltip title={!allCandidatesFilled ? "Fill all candidate details to complete" : ""}>
+                                        <span>
+                                            <MenuItem value="Completed" disabled={!allCandidatesFilled}>Completed</MenuItem>
+                                        </span>
+                                    </Tooltip>
                                 </Select>
                             </FormControl>
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
                         <Button
                             type="submit"
