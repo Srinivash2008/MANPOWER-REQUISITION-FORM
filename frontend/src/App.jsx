@@ -30,6 +30,7 @@ import ManpowerRequisitionEdit from "./components/ManpowerRequisionEdit.jsx";
 import Profile from "./components/Profile.jsx";
 import FHReply from "./components/FHReply.jsx";
 import { login } from "./redux/auth/authSlice.js";
+import MRF_Status from "./components/MRF_Status.jsx";
 
 
 
@@ -83,6 +84,7 @@ console.log(location.pathname,"location")
            <Route path="/add-mrf" element={<Add_Form />} />
 
            <Route path="/mrf-list" element={<ManpowerRequisition />} />
+           <Route path="/mrf-status" element={<MRF_Status />} />
            <Route path="/my-requisitions" element={<ManpowerRequisition />} />
            <Route path="/mrf-list/:param_status" element={<ManpowerRequisitionByStatus />} />
 
