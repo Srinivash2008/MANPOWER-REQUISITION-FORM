@@ -74,9 +74,10 @@ const MRF_Status = () => {
                                 <StyledTableCell>Position</StyledTableCell>
                                 <StyledTableCell>MRF Start Date</StyledTableCell>
                                 <StyledTableCell>MRF Closed Date</StyledTableCell>
-                                <StyledTableCell>Status</StyledTableCell>
+                               
                                 <StyledTableCell>Offer Date</StyledTableCell>
                                 <StyledTableCell>Candidate Name</StyledTableCell>
+                                 <StyledTableCell>Status</StyledTableCell>
                                 <StyledTableCell>Action</StyledTableCell>
                             </TableRow>
                         </TableHead>
@@ -94,9 +95,10 @@ const MRF_Status = () => {
                                         <TableCell>{item.designation || '-'}</TableCell>
                                         <TableCell>{item.mrf_start_date ? new Date(item.mrf_start_date).toLocaleDateString() : '-'}</TableCell>
                                         <TableCell>{item.mrf_closed_date || '-'}</TableCell>
-                                        <TableCell>{item.mrf_track_status || '-'}</TableCell>
+                                        
                                         <TableCell>{item.offer_date || '-'}</TableCell>
                                         <TableCell>{item.candidate_name || '-'}</TableCell>
+                                        <TableCell>{item.mrf_track_status || '-'}</TableCell>
                                         <TableCell>
                                             {item.mrf_track_status !== 'Completed' && (
                                                 <IconButton

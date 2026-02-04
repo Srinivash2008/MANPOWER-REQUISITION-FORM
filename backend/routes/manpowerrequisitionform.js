@@ -74,6 +74,9 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             hr_status: row.hr_status,
             director_status: row.director_status,
             isWithdrawOpen: row.isWithdrawOpen,
+            mrf_start_date: row.mrf_start_date,
+            mrf_end_date: row.mrf_end_date,
+            mrf_track_status: row.mrf_track_status,
 
         }));
         res.json(fetchManpowerRequisitionByUser);
