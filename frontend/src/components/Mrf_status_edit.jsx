@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Paper, Typography, Grid, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop
+    Box, Paper, Typography, Grid, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop, Divider
 } from "@mui/material";
+import {
+    Numbers as NumbersIcon,
+    Person as PersonIcon,
+    Badge as BadgeIcon,
+    CalendarToday as CalendarTodayIcon,
+    Update as UpdateIcon
+} from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchManpowerRequisitionById, updateManpowerTracking } from '../redux/cases/manpowerrequisitionSlice';
@@ -81,10 +88,24 @@ const MRF_Status_Edit = () => {
         );
     }
 
+    const DisplayField = ({ icon, label, value }) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 1.5, borderRadius: 2, transition: 'background-color 0.3s', '&:hover': { backgroundColor: 'action.hover' } }}>
+            <Box sx={{ mr: 2, color: 'primary.main' }}>{icon}</Box>
+            <Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {label}
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
+                    {value}
+                </Typography>
+            </Box>
+        </Box>
+    );
+
     return (
-        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh', mt: 8 }}>
-            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '12px', maxWidth: '800px', mx: 'auto' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh'}}>
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '16px', maxWidth: '90%', mx: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.05)',mt:9 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                     <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2A7F66' }}>
                         Edit MRF Tracking Status
                     </Typography>
@@ -92,6 +113,7 @@ const MRF_Status_Edit = () => {
                         variant="outlined"
                         onClick={() => navigate(-1)}
                         startIcon={<ArrowBackIcon />}
+                        sx={{ color: '#2A7F66', borderColor: '#2A7F66', '&:hover': { borderColor: '#1D5947', backgroundColor: 'rgba(42, 127, 102, 0.04)' } }}
                     >
                         Back
                     </Button>
@@ -99,27 +121,24 @@ const MRF_Status_Edit = () => {
 
                 <Box component="form" onSubmit={handleSubmit}>
                     <Grid container spacing={3}>
-                        {/* Display Fields */}
-                        <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle1" fontWeight="bold">MRF Number</Typography>
-                            <Typography variant="body1">{selectedRequisition.mrf_number || '-'}</Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle1" fontWeight="bold">Hiring Manager</Typography>
-                            <Typography variant="body1">{selectedRequisition.emp_name || '-'}</Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle1" fontWeight="bold">Position</Typography>
-                            <Typography variant="body1">{selectedRequisition.designation || '-'}</Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle1" fontWeight="bold">MRF Start Date</Typography>
-                            <Typography variant="body1">{selectedRequisition.mrf_start_date ? new Date(selectedRequisition.mrf_start_date).toLocaleDateString() : '-'}</Typography>
+                        <Grid item xs={12} md={5}>
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: 'text.secondary', mb: 2 }}>
+                                Requisition Details
+                            </Typography>
+                            <DisplayField icon={<NumbersIcon />} label="MRF Number" value={selectedRequisition.mrf_number || '-'} />
+                            <DisplayField icon={<PersonIcon />} label="Hiring Manager" value={selectedRequisition.emp_name || '-'} />
+                            <DisplayField icon={<BadgeIcon />} label="Position" value={selectedRequisition.designation || '-'} />
+                            <DisplayField icon={<CalendarTodayIcon />} label="MRF Start Date" value={selectedRequisition.mrf_start_date ? new Date(selectedRequisition.mrf_start_date).toLocaleDateString() : '-'} />
                         </Grid>
 
-                        {/* Editable Fields */}
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} md={1} sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Divider orientation="vertical" flexItem />
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: 'text.secondary', mb: 3 }}>Update Status</Typography>
                             <TextField
+                                sx={{ mb: 2.5 }}
                                 fullWidth
                                 type="date"
                                 name="mrf_closed_date"
@@ -129,9 +148,8 @@ const MRF_Status_Edit = () => {
                                 InputLabelProps={{ shrink: true }}
                                 variant="outlined"
                             />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
                             <TextField
+                                sx={{ mb: 2.5 }}
                                 fullWidth
                                 type="date"
                                 name="offer_date"
@@ -141,9 +159,8 @@ const MRF_Status_Edit = () => {
                                 InputLabelProps={{ shrink: true }}
                                 variant="outlined"
                             />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
                             <TextField
+                                sx={{ mb: 2.5 }}
                                 fullWidth
                                 name="candidate_name"
                                 label="Candidate Name"
@@ -151,8 +168,7 @@ const MRF_Status_Edit = () => {
                                 onChange={handleInputChange}
                                 variant="outlined"
                             />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
+
                             <FormControl fullWidth variant="outlined">
                                 <InputLabel>Status</InputLabel>
                                 <Select
@@ -166,21 +182,21 @@ const MRF_Status_Edit = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
-
-                        <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                disabled={isUpdating}
-                                sx={{
-                                    backgroundColor: '#2A7F66',
-                                    '&:hover': { backgroundColor: '#1D5947' }
-                                }}
-                            >
-                                {isUpdating ? <CircularProgress size={24} color="inherit" /> : 'Update Status'}
-                            </Button>
-                        </Grid>
                     </Grid>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={isUpdating}
+                            startIcon={<UpdateIcon />}
+                            sx={{
+                                backgroundColor: '#2A7F66',
+                                '&:hover': { backgroundColor: '#1D5947' }
+                            }}
+                        >
+                            {isUpdating ? <CircularProgress size={24} color="inherit" /> : 'Update Status'}
+                        </Button>
+                    </Box>
                 </Box>
             </Paper>
             <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isUpdating}>

@@ -59,8 +59,8 @@ const MRF_Status = () => {
     };
 
     return (
-        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh', mt: 10 }}>
-            <Paper sx={{ p: 3, borderRadius: '12px' }}>
+        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh'}}>
+            <Paper sx={{ p: 3, borderRadius: '12px' , mt: 10 }}>
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#2A7F66', mb: 2 }}>
                     MRF Tracking Status
                 </Typography>
