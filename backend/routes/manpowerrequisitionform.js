@@ -669,15 +669,15 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                     "SELECT mrf_number FROM manpower_requisition WHERE mrf_number IS NOT NULL AND mrf_number != '' ORDER BY CAST(SUBSTRING_INDEX(mrf_number, '- ', -1) AS UNSIGNED) DESC, id DESC LIMIT 1"
                 );
 
-                let nextMrfNum = 1;
+                let nextMrfNum = 202420;
                 if (lastMrf.length > 0 && lastMrf[0].mrf_number) {
-                    const lastNum = parseInt(lastMrf[0].mrf_number.split('-')[1], 10);
+                    const lastNum = parseInt(lastMrf[0].mrf_number, 10);
 
                     if (!isNaN(lastNum)) {
                         nextMrfNum = lastNum + 1;
                     }
                 }
-                mrfNumber = `MRF-${String(nextMrfNum).padStart(6, '0')}`;
+                mrfNumber = String(nextMrfNum);
             }
         }
 
