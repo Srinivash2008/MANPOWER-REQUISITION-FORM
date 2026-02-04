@@ -67,7 +67,7 @@ const MRF_Status_Edit = () => {
                 icon: 'success',
                 confirmButtonColor: '#2A7F66',
             }).then(() => {
-                navigate('/mrf-status');
+                navigate('/approved-mrf');
             });
         } catch (error) {
             setIsUpdating(false);
