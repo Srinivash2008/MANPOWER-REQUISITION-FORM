@@ -1354,20 +1354,30 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
             'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ? WHERE id = ?',
             [mrf_closed_date || null, mrf_track_status || null, id]
         );
-        // Delete existing tracking records for this MRF
-        await pool.execute(
-            'DELETE FROM manpower_requisition_tracking WHERE mrf_id = ?',
-            [id]
-        );
-           // Bulk insert new tracking records if candidates are provided
+
         if (candidates && candidates.length > 0) {
-            const validCandidates = candidates.filter(c => c.candidate_name && c.offer_date);
-            if (validCandidates.length > 0) {
-                const candidateValues = validCandidates.map(c => [id, c.offer_date, c.candidate_name]);
-                await pool.query(
-                    'INSERT INTO manpower_requisition_tracking (mrf_id, offer_date, candidate_name) VALUES ?',
-                    [candidateValues]
-                );
+            for (const candidate of candidates) {
+                if (candidate.candidate_name && candidate.offer_date) {
+                    if (candidate.mrf_track_id) {
+                        // Update existing record
+                        await pool.execute(
+                            'UPDATE manpower_requisition_tracking SET offer_date = ?, candidate_name = ? WHERE mrf_track_id = ?',
+                            [candidate.offer_date, candidate.candidate_name, candidate.mrf_track_id]
+                        );
+                    } else {
+                        // Insert new record
+                        await pool.execute(
+                            'INSERT INTO manpower_requisition_tracking (mrf_id, offer_date, candidate_name) VALUES (?, ?, ?)',
+                            [id, candidate.offer_date, candidate.candidate_name]
+                        );
+                    }
+                } else if (candidate.mrf_track_id) {
+                    // If fields are cleared for an existing candidate, delete the record
+                    await pool.execute(
+                        'DELETE FROM manpower_requisition_tracking WHERE mrf_track_id = ?',
+                        [candidate.mrf_track_id]
+                    );
+                }
             }
         }
 

@@ -41,6 +41,7 @@ const MRF_Status_Edit = () => {
             const initialCandidates = Array.from({ length: numResources }, (_, index) => {
                 const existing = existingCandidates[index];
                 return {
+                    mrf_track_id: existing?.mrf_track_id || null,
                     offer_date: existing?.offer_date ? existing.offer_date.split('T')[0] : '',
                     candidate_name: existing?.candidate_name || ''
                 };
