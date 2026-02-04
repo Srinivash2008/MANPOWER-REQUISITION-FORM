@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box, Paper, Typography, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, tableCellClasses, styled, IconButton, Modal, Fade,
+    TableHead, TableRow, tableCellClasses, styled, IconButton, Modal, Fade, TablePagination,
     List, ListItem, ListItemText, Divider, Chip, Avatar
 } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
@@ -55,6 +55,8 @@ const MRF_Status = () => {
     const [trackingData, setTrackingData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCandidates, setSelectedCandidates] = useState([]);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     useEffect(() => {
         dispatch(fetchMrfTrackingList(user?.emp_id));
@@ -74,6 +76,16 @@ const MRF_Status = () => {
         }
     }, [manpowerRequisitionList]);
 
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+
     const handleEditClick = (id) => {
         navigate(`/mrf_status_edit/${id}`);
     };
@@ -88,6 +100,11 @@ const MRF_Status = () => {
     };
 
     const handleCloseModal = () => setIsModalOpen(false);
+
+    const paginatedData = trackingData.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
+    );
 
 
     return (
@@ -116,8 +133,8 @@ const MRF_Status = () => {
                                 <TableRow>
                                     <TableCell colSpan={10} align="center">Loading...</TableCell>
                                 </TableRow>
-                            ) : trackingData.length > 0 ? (
-                                trackingData.map((item, index) => (
+                            ) : paginatedData.length > 0 ? (
+                                paginatedData.map((item, index) => (
                                     <StyledTableRow key={item.id}>
                                         <TableCell>{index + 1}</TableCell>
                                         <TableCell>{item.mrf_number || '-'}</TableCell>
@@ -168,6 +185,15 @@ const MRF_Status = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+                <TablePagination
+                    rowsPerPageOptions={[10, 25, 50]}
+                    component="div"
+                    count={trackingData.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
                 <Modal
                     open={isModalOpen}
                     onClose={handleCloseModal}
