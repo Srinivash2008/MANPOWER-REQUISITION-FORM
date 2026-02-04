@@ -1440,6 +1440,50 @@ router.get('/get-mrf-tracking/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Server error fetching MRF tracking data.' });
     }
 });
+
+router.get('/mrf-tracking-list/:userId', authMiddleware, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        let query = `
+            SELECT 
+                mr.id,
+                mr.mrf_number,
+                mr.designation,
+                mr.num_resources,
+                mr.mrf_start_date,
+                mr.mrf_closed_date,
+                mr.mrf_track_status,
+                ep.emp_name,
+                COUNT(mrt.mrf_track_id) as candidates_count,
+                GROUP_CONCAT(mrt.candidate_name SEPARATOR ', ') AS candidate_names,
+                GROUP_CONCAT(mrt.offer_date SEPARATOR ', ') AS offer_dates
+            FROM manpower_requisition AS mr
+            JOIN employee_personal AS ep ON mr.created_by = ep.employee_id
+            LEFT JOIN manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
+            WHERE mr.isdelete = 'Active' AND mr.hr_status = 'HR Approve'
+        `;
+        const params = [];
+
+        // If the user is not an admin/director/hr, only show their own MRFs
+        if (!['12345', '1400', '1722'].includes(userId)) {
+            query += " AND mr.created_by = ?";
+            params.push(userId);
+        }
+
+        query += ' GROUP BY mr.id ORDER BY mr.id DESC';
+
+        const [rows] = await pool.execute(query, params);
+        
+        res.json(rows);
+
+    } catch (error) {
+        console.error('Error fetching MRF tracking list:', error);
+        res.status(500).json({ message: 'Server error fetching MRF tracking list.' });
+    }
+});
+
+
 // router.get('/uploadFiles/submittedArticlesFile/:filename', (req, res) => {
 //     const filename = req.params.filename;
 //     // const __filename = fileURLToPath(import.meta.url);

@@ -251,6 +251,32 @@ export const fetchMrfTrackingById = createAsyncThunk(
   }
 );
 
+export const fetchMrfTrackingList = createAsyncThunk(
+  'manpowerRequisition/fetchMrfTrackingList',
+  async (userId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/mrf/mrf-tracking-list/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch MRF tracking list.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 
 
 export const fetchManpowerRequisitionById = createAsyncThunk(
@@ -877,6 +903,19 @@ const manpowerrequisitionSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
         state.selectedRequisition = null;
+      })
+      .addCase(fetchMrfTrackingList.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchMrfTrackingList.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.data = action.payload;
+      })
+      .addCase(fetchMrfTrackingList.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.data = [];
       })
       .addCase(fetchQuery.pending, (state) => {
         state.status = 'loading';
