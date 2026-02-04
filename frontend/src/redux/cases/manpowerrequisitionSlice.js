@@ -192,6 +192,37 @@ export const fetchManagerList = createAsyncThunk(
   }
 );
 
+export const updateManpowerTracking = createAsyncThunk(
+  'manpowerRequisition/updateManpowerTracking',
+  async (payload, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const { id, ...data } = payload;
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+      const response = await axios.put(
+        `${API_URL}/api/mrf/update-mrf-tracking/${id}`,
+        data,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update manpower tracking status.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+      
+
+
 
 export const fetchManpowerRequisitionById = createAsyncThunk(
   'manpowerRequisition/fetchManpowerRequisitionById',

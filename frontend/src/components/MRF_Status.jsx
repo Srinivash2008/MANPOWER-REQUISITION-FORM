@@ -55,7 +55,7 @@ const MRF_Status = () => {
     }, [manpowerRequisitionList]);
 
     const handleEditClick = (id) => {
-        navigate(`/manpower_requisition_edit/${id}`);
+        navigate(`/mrf_status_edit/${id}`);
     };
 
     return (

@@ -31,6 +31,8 @@ import Profile from "./components/Profile.jsx";
 import FHReply from "./components/FHReply.jsx";
 import { login } from "./redux/auth/authSlice.js";
 import MRF_Status from "./components/MRF_Status.jsx";
+import MRF_Status_Edit from "./components/Mrf_status_edit.jsx";
+
 
 
 
@@ -91,7 +93,8 @@ console.log(location.pathname,"location")
            <Route path="/manpower_requisition_view/:id" element={<ManpowerRequisitionView/>} />
            <Route path="/fh-reply/:id" element={<FHReply/>} />
            {/* <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionView/>} /> */}
-            <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionEdit/>} />
+            <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionEdit />} />
+            <Route path="/mrf_status_edit/:id" element={<MRF_Status_Edit />} />
             
             <Route path="/reports" element={<ManpowerRequisitionReport/>} />
             <Route path="/profile" element={<Profile/>} />
