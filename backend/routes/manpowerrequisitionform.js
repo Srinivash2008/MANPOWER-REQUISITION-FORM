@@ -74,10 +74,10 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             hr_status: row.hr_status,
             director_status: row.director_status,
             isWithdrawOpen: row.isWithdrawOpen,
-            mrf_start_date: row.mrf_start_date,
+            mrf_hr_approve_date: row.mrf_hr_approve_date,
             mrf_end_date: row.mrf_end_date,
             mrf_track_status: row.mrf_track_status,
-            mrf_closed_date:row.mrf_closed_date
+            mrf_closed_date: row.mrf_closed_date
 
         }));
         res.json(fetchManpowerRequisitionByUser);
@@ -438,7 +438,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    
+
 
 
     try {
@@ -469,7 +469,7 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
         const insertParams = [query_manpower_requisition_pid, query_name, query_created_by, query_created_date, query_created_time, query_is_delete || 'Active'];
 
         const [result] = await pool.execute(insertQuery, insertParams);
-        
+
 
         // Fetch creator of the MRF to send an email
         const [mrfCreator] = await pool.execute(
@@ -541,11 +541,11 @@ router.post('/add-query-form', authMiddleware, async (req, res) => {
 
 router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
-    const { reply,query_pid } = req.body;
+    const { reply, query_pid } = req.body;
     const { user } = req;
     console.log(id, "idid")
     console.log(user, "useruseruseruseruser")
-    console.log(reply,"reply")
+    console.log(reply, "reply")
     console.log(query_pid, "query_pidquery_pidquery_pid")
 
     if (!reply) {
@@ -656,75 +656,74 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
         return res.status(400).json({ message: 'Missing required fields: id, status, and user are required.' });
     }
     try {
-            let mrfNumber = null;
+        let mrfNumber = null;
 
 
-            if (status === 'HR Approve') {
-                // Check if MRF number already exists for this requisition
-                const [existingMrf] = await pool.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [manpowerId]);
+        if (status === 'HR Approve') {
+            // Check if MRF number already exists for this requisition
+            const [existingMrf] = await pool.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [manpowerId]);
 
-                if (!existingMrf[0] || !existingMrf[0].mrf_number) {
-                    // Find the last MRF number
-                    const [lastMrf] = await pool.execute(
-                        "SELECT mrf_number FROM manpower_requisition WHERE mrf_number IS NOT NULL AND mrf_number != '' ORDER BY CAST(SUBSTRING_INDEX(mrf_number, '- ', -1) AS UNSIGNED) DESC, id DESC LIMIT 1"
-                    );
+            if (!existingMrf[0] || !existingMrf[0].mrf_number) {
+                // Find the last MRF number
+                const [lastMrf] = await pool.execute(
+                    "SELECT mrf_number FROM manpower_requisition WHERE mrf_number IS NOT NULL AND mrf_number != '' ORDER BY CAST(SUBSTRING_INDEX(mrf_number, '- ', -1) AS UNSIGNED) DESC, id DESC LIMIT 1"
+                );
 
-                    let nextMrfNum = 1;
-                    if (lastMrf.length > 0 && lastMrf[0].mrf_number) {
-                        const lastNum = parseInt(lastMrf[0].mrf_number.split('-')[1], 10);
+                let nextMrfNum = 1;
+                if (lastMrf.length > 0 && lastMrf[0].mrf_number) {
+                    const lastNum = parseInt(lastMrf[0].mrf_number.split('-')[1], 10);
 
-                        if (!isNaN(lastNum)) {
-                            nextMrfNum = lastNum + 1;
-                        }
+                    if (!isNaN(lastNum)) {
+                        nextMrfNum = lastNum + 1;
                     }
-                    mrfNumber = `MRF-${String(nextMrfNum).padStart(6, '0')}`;
                 }
+                mrfNumber = `MRF-${String(nextMrfNum).padStart(6, '0')}`;
             }
+        }
 
-            let query = 'UPDATE manpower_requisition SET status = ?';
-            const params = [status];
+        let query = 'UPDATE manpower_requisition SET status = ?';
+        const params = [status];
+        const approve_date = new Date().toISOString().split('T')[0];
+        if (user?.emp_id === '1400') { // Director
+            query += ', director_status = ?, director_comments = ?, mrf_dir_approve_date = ?';
+            params.push(status, director_comments, approve_date);
+        } else if (user?.emp_id === '1722') { // HR
 
-            if (user?.emp_id === '1400') { // Director
-                query += ', director_status = ?, director_comments = ?';
-                params.push(status, director_comments);
-            } else if (user?.emp_id === '1722') { // HR
-                const mrfStartDate = new Date().toISOString().split('T')[0];
-                console.log(mrfStartDate, "mrfStartDatemrfStartDatemrfStartDate")
-                query += ', hr_status = ?, hr_comments = ?, mrf_start_date = ?';
-                params.push(status, hr_comments, mrfStartDate);
-            }
+            query += ', hr_status = ?, hr_comments = ?, mrf_hr_approve_date = ?';
+            params.push(status, hr_comments, approve_date);
+        }
 
-            if (mrfNumber) {
-                query += ', mrf_number = ?';
-                params.push(mrfNumber);
-            }
+        if (mrfNumber) {
+            query += ', mrf_number = ?';
+            params.push(mrfNumber);
+        }
 
-            query += ' WHERE id = ?';
-            params.push(manpowerId);
+        query += ' WHERE id = ?';
+        params.push(manpowerId);
 
-            await pool.execute(query, params);
-            console.log(query, params, "query, paramsquery, paramsquery, paramsquery, params")
-            const isDraftSubmission = data?.status === 'Draft';
-            const canSendEmail = isDraftSubmission
-                ? user?.emp_id !== '1400'
-                : user?.emp_id !== '1400' && user?.emp_id !== '1722';
+        await pool.execute(query, params);
+        console.log(query, params, "query, paramsquery, paramsquery, paramsquery, params")
+        const isDraftSubmission = data?.status === 'Draft';
+        const canSendEmail = isDraftSubmission
+            ? user?.emp_id !== '1400'
+            : user?.emp_id !== '1400' && user?.emp_id !== '1722';
 
-            if (status === 'Pending' && canSendEmail) {
-                const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
-                console.log(user_data[0], "user_datauser_datauser_datauser_data")
-                const user_info = user_data[0];
-                // 1. Email to the Requestor/FH (Confirmation) 📧
-                // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
-                // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
-                const requestorMailOptions = {
-                    from: process.env.EMAIL_USER,
-                    // The 'to' email should be the submitter's email address (emp_email)
-                    // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
-                    to: "srinivasan@pdmrindia.com",
-                    // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: ["srinivasan@pdmrindia.com"],
-                    subject: `A New Manpower requisition Form submitted for your approval`,
-                    html: `
+        if (status === 'Pending' && canSendEmail) {
+            const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+            console.log(user_data[0], "user_datauser_datauser_datauser_data")
+            const user_info = user_data[0];
+            // 1. Email to the Requestor/FH (Confirmation) 📧
+            // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
+            // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
+            const requestorMailOptions = {
+                from: process.env.EMAIL_USER,
+                // The 'to' email should be the submitter's email address (emp_email)
+                // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
+                to: "srinivasan@pdmrindia.com",
+                // You might want to CC HR/Recruitment on the FH/Requestor email as well
+                cc: ["srinivasan@pdmrindia.com"],
+                subject: `A New Manpower requisition Form submitted for your approval`,
+                html: `
                         <div style="
                             font-family: Arial, sans-serif;
                         ">
@@ -744,14 +743,14 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                                 Automated MRF System
                             </p>
                         </div>`
-                };
+            };
 
-                const directorMailOptions = {
-                    from: process.env.EMAIL_USER,
-                    to: "srinivasan@pdmrindia.com",
-                    cc: ["srinivasan@pdmrindia.com"],
-                    subject: 'New MRF Submitted – Notification for Your Review',
-                    html: `
+            const directorMailOptions = {
+                from: process.env.EMAIL_USER,
+                to: "srinivasan@pdmrindia.com",
+                cc: ["srinivasan@pdmrindia.com"],
+                subject: 'New MRF Submitted – Notification for Your Review',
+                html: `
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                             <p>Dear Rajesh,</p>
                             <p>
@@ -767,50 +766,50 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                             </p>
                         </div>
                     `
-                };
+            };
 
 
-                // Send the two emails sequentially
-                try {
-                    await transporter.sendMail(requestorMailOptions);
-                    await transporter.sendMail(directorMailOptions);
-                    // Return to prevent further execution
-                    return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+            // Send the two emails sequentially
+            try {
+                await transporter.sendMail(requestorMailOptions);
+                await transporter.sendMail(directorMailOptions);
+                // Return to prevent further execution
+                return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
 
-                } catch (error) {
-                    console.error('Error sending email:', error);
-                    // You might want to send a different status if the form was saved but email failed
-                    res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
-                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                // You might want to send a different status if the form was saved but email failed
+                res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
             }
+        }
 
-            if (status === "Approve") {
-                // Check if a query exists for this manpower requisition
-                const [existingQuery] = await pool.execute(
-                    'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-                    [manpowerId]
-                );
+        if (status === "Approve") {
+            // Check if a query exists for this manpower requisition
+            const [existingQuery] = await pool.execute(
+                'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                [manpowerId]
+            );
 
-                console.log(existingQuery, "existingQueryexistingQueryexistingQuery")
+            console.log(existingQuery, "existingQueryexistingQueryexistingQuery")
 
-                // If a query exists, delete it
-                if (existingQuery.length > 0) {
-                     console.log(existingQuery, "went inside the if condition")
-                    // await pool.execute(
-                    //     'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-                    //     [manpowerId]
-                    // );
-                }
-                const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
-                const hiringManager = user_data[0];
+            // If a query exists, delete it
+            if (existingQuery.length > 0) {
+                console.log(existingQuery, "went inside the if condition")
+                // await pool.execute(
+                //     'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                //     [manpowerId]
+                // );
+            }
+            const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+            const hiringManager = user_data[0];
 
-                const requestorMailOptions = {
-                    from: process.env.EMAIL_USER,
-                    // cc: hiringManager?.mail_id,
-                    to: "srinivasan@pdmrindia.com",
-                    cc: ["srinivasan@pdmrindia.com"],
-                    subject: 'MRF Approval Confirmation – Ready for Next Steps',
-                    html: `
+            const requestorMailOptions = {
+                from: process.env.EMAIL_USER,
+                // cc: hiringManager?.mail_id,
+                to: "srinivasan@pdmrindia.com",
+                cc: ["srinivasan@pdmrindia.com"],
+                subject: 'MRF Approval Confirmation – Ready for Next Steps',
+                html: `
                         <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                             <p>Dear Selvi,</p>
                             <p>
@@ -825,53 +824,53 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                                 Automated MRF System
                             </p>
                         </div>`
-                };
+            };
 
-                // Send the two emails sequentially
-                try {
-                    await transporter.sendMail(requestorMailOptions);
-                    // Return to prevent further execution
-                    return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+            // Send the two emails sequentially
+            try {
+                await transporter.sendMail(requestorMailOptions);
+                // Return to prevent further execution
+                return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
 
-                } catch (error) {
-                    console.error('Error sending email:', error);
-                    // You might want to send a different status if the form was saved but email failed
-                    res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
-                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                // You might want to send a different status if the form was saved but email failed
+                res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
+            }
+        }
+
+        if (status == "HR Approve") {
+
+            // Check if a query exists for this manpower requisition
+            const [existingQuery] = await pool.execute(
+                'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                [manpowerId]
+            );
+
+            // If a query exists, delete it
+            if (existingQuery.length > 0) {
+                // await pool.execute(
+                //     'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
+                //     [manpowerId]
+                // );
             }
 
-            if (status == "HR Approve") {
 
-                // Check if a query exists for this manpower requisition
-                const [existingQuery] = await pool.execute(
-                    'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-                    [manpowerId]
-                );
-
-                // If a query exists, delete it
-                if (existingQuery.length > 0) {
-                    // await pool.execute(
-                    //     'DELETE FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
-                    //     [manpowerId]
-                    // );
-                }
-
-
-                const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
-                console.log(user_data[0], "user_datauser_datauser_datauser_data")
-                const user_info = user_data[0];
-                // 1. Email to the Requestor/FH (Confirmation) 📧
-                // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
-                // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
-                const requestorMailOptions = {
-                    from: process.env.EMAIL_USER,
-                    // The 'to' email should be the submitter's email address (emp_email)
-                    // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
-                    to: "srinivasan@pdmrindia.com",
-                    // You might want to CC HR/Recruitment on the FH/Requestor email as well
-                    cc: ["srinivasan@pdmrindia.com"],
-                    subject: `MRF Approval Confirmation`,
-                    html: `
+            const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
+            console.log(user_data[0], "user_datauser_datauser_datauser_data")
+            const user_info = user_data[0];
+            // 1. Email to the Requestor/FH (Confirmation) 📧
+            // 'to' should ideally be the email of the person who submitted the form (emp_email), not hardcoded.
+            // Assuming 'emp_email' is available in the scope. If not, use 'srinivasan@pdmrindia.com' as per your original code.
+            const requestorMailOptions = {
+                from: process.env.EMAIL_USER,
+                // The 'to' email should be the submitter's email address (emp_email)
+                // Using srinivasan@pdmrindia.com as a placeholder based on your original 'to' field.
+                to: "srinivasan@pdmrindia.com",
+                // You might want to CC HR/Recruitment on the FH/Requestor email as well
+                cc: ["srinivasan@pdmrindia.com"],
+                subject: `MRF Approval Confirmation`,
+                html: `
                         <div style="
                             font-family: Arial, sans-serif;
                         ">
@@ -885,20 +884,20 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                                 Automated MRF System
                             </p>
                         </div>`
-                };
-                // Send the two emails sequentially
-                try {
-                    await transporter.sendMail(requestorMailOptions);
-                    // Return to prevent further execution
-                    return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
+            };
+            // Send the two emails sequentially
+            try {
+                await transporter.sendMail(requestorMailOptions);
+                // Return to prevent further execution
+                return res.status(200).json({ message: 'Manpower Requisition Form submitted successfully and notifications sent.' });
 
-                } catch (error) {
-                    console.error('Error sending email:', error);
-                    // You might want to send a different status if the form was saved but email failed
-                    return res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
-                }
-
+            } catch (error) {
+                console.error('Error sending email:', error);
+                // You might want to send a different status if the form was saved but email failed
+                return res.status(500).json({ message: 'Form submitted but failed to send email notification.' });
             }
+
+        }
 
         emitManpowerRequisitionRefresh();
 
@@ -1280,7 +1279,7 @@ router.put(
             if (setClause) {
                 const sql = `UPDATE manpower_requisition SET ${setClause} WHERE id = ?`;
 
-                console.log(sql, params,"sql, paramssql, params")
+                console.log(sql, params, "sql, paramssql, params")
                 await pool.execute(sql, params);
             }
 
@@ -1342,7 +1341,7 @@ router.put(
 
 router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
- const { mrf_closed_date, mrf_track_status, candidates } = req.body;
+    const { mrf_closed_date, mrf_track_status, candidates } = req.body;
 
     try {
         const [mrf] = await pool.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [id]);
@@ -1451,7 +1450,7 @@ router.get('/mrf-tracking-list/:userId', authMiddleware, async (req, res) => {
                 mr.mrf_number,
                 mr.designation,
                 mr.num_resources,
-                mr.mrf_start_date,
+                mr.mrf_hr_approve_date,
                 mr.mrf_closed_date,
                 mr.mrf_track_status,
                 ep.emp_name,
@@ -1474,7 +1473,7 @@ router.get('/mrf-tracking-list/:userId', authMiddleware, async (req, res) => {
         query += ' GROUP BY mr.id ORDER BY mr.id DESC';
 
         const [rows] = await pool.execute(query, params);
-        
+
         res.json(rows);
 
     } catch (error) {

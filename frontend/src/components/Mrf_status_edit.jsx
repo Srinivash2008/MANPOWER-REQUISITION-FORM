@@ -68,14 +68,17 @@ const MRF_Status_Edit = () => {
 
     const handleStatusChange = (e) => {
         const newStatus = e.target.value;
-        if (newStatus === 'Completed' && !allCandidatesFilled) {
+        // Re-evaluate `allCandidatesFilled` inside the handler to ensure it's up-to-date
+        const allFilled = formData.candidates.every(c => c.candidate_name && c.offer_date);
+
+        if (newStatus === 'Completed' && !allFilled) {
             swal.fire({
                 title: 'Incomplete Details',
                 text: 'Please fill in the offer date and name for all candidates before marking as completed.',
                 icon: 'warning',
                 confirmButtonColor: '#2A7F66',
             });
-            return;
+            return; // Prevent status change
         }
         setFormData(prev => ({ ...prev, mrf_track_status: newStatus }));
     };
@@ -103,12 +106,26 @@ const MRF_Status_Edit = () => {
         try {
             await dispatch(updateManpowerTracking(payload)).unwrap();
             setIsUpdating(false);
-            swal.fire({
-                title: 'Success!',
-                text: 'MRF Tracking status updated successfully.',
-                icon: 'success',
-                confirmButtonColor: '#2A7F66',
-            }).then(() => {
+            swal.fire({ 
+                html: `
+                    <div style="text-align: center;">
+                        <div style="display: inline-block; border-radius: 50%; background-color: #E8F5E9; padding: 10px;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #4CAF50;">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <h2 style="font-size: 1.5rem; font-weight: 600; margin-top: 16px; color: #333;">Success!</h2>
+                        <p style="font-size: 1rem; color: #666;">MRF Tracking status updated successfully.</p>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2A7F66', 
+                showCloseButton: false,
+                customClass: {
+                    popup: 'modern-swal-popup'
+                }
+            }).then(() => { 
                 navigate('/approved-mrf');
             });
         } catch (error) {
@@ -146,7 +163,7 @@ const MRF_Status_Edit = () => {
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3, md: 4 }, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '16px', maxWidth: '100%', mx: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', mt: { xs: 8, md: 9 } }}>
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '16px', maxWidth: '90%', mx: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', mt: { xs: 8, md: 9 } }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                     <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2A7F66', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                         Edit MRF Tracking Status
@@ -171,7 +188,7 @@ const MRF_Status_Edit = () => {
                             <DisplayField icon={<PersonIcon />} label="Hiring Manager" value={selectedRequisition.emp_name || '-'} />
                             <DisplayField icon={<BadgeIcon />} label="Position" value={selectedRequisition.designation || '-'} />
                             <DisplayField icon={<GroupIcon />} label="Number of Resources" value={selectedRequisition.num_resources || '-'} />
-                            <DisplayField icon={<CalendarTodayIcon />} label="MRF Start Date" value={selectedRequisition.mrf_start_date ? new Date(selectedRequisition.mrf_start_date).toLocaleDateString() : '-'} />
+                            <DisplayField icon={<CalendarTodayIcon />} label="MRF Start Date" value={selectedRequisition.mrf_hr_approve_date ? new Date(selectedRequisition.mrf_hr_approve_date).toLocaleDateString() : '-'} />
                         </Box>
 
                         <Box sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
@@ -225,11 +242,7 @@ const MRF_Status_Edit = () => {
                                     label="Status"
                                 >
                                     <MenuItem value="In Process">In Process</MenuItem>
-                                    <Tooltip title={!allCandidatesFilled ? "Fill all candidate details to complete" : ""}>
-                                        <span>
-                                            <MenuItem value="Completed" disabled={!allCandidatesFilled}>Completed</MenuItem>
-                                        </span>
-                                    </Tooltip>
+                                    <MenuItem value="Completed">Completed</MenuItem>
                                 </Select>
                             </FormControl>
                         </Box>
@@ -239,13 +252,12 @@ const MRF_Status_Edit = () => {
                             type="submit"
                             variant="contained"
                             disabled={isUpdating}
-                            startIcon={<UpdateIcon />}
                             sx={{
                                 backgroundColor: '#2A7F66',
                                 '&:hover': { backgroundColor: '#1D5947' }
                             }}
                         >
-                            {isUpdating ? <CircularProgress size={24} color="inherit" /> : 'Update Status'}
+                            {isUpdating ? <CircularProgress size={24} color="inherit" /> : 'Update'}
                         </Button>
                     </Box>
                 </Box>

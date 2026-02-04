@@ -123,7 +123,7 @@ const MRF_Status = () => {
                                         <TableCell>{item.mrf_number || '-'}</TableCell>
                                         <TableCell>{item.emp_name || '-'}</TableCell>
                                         <TableCell>{item.designation || '-'}</TableCell>
-                                        <TableCell>{item.mrf_start_date ? new Date(item.mrf_start_date).toLocaleDateString() : '-'}</TableCell>
+                                        <TableCell>{item.mrf_hr_approve_date ? new Date(item.mrf_hr_approve_date).toLocaleDateString() : '-'}</TableCell>
                                         <TableCell>{item.mrf_closed_date || '-'}</TableCell>
                                         <TableCell>
                                             <Chip
