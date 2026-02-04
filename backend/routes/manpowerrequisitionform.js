@@ -1292,43 +1292,83 @@ router.put(
     }
 );
 
+// router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
+//     const { id } = req.params;
+//     const { mrf_closed_date, offer_date, candidate_name, mrf_track_status } = req.body;
+
+//     console.log(req.body, "req.bodyreq.body",req.params)
+
+//     try {
+//         const [mrf] = await pool.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [id]);
+//         if (mrf.length === 0) {
+//             return res.status(404).json({ message: 'MRF not found.' });
+//         }
+//         const mrf_id = id;
+
+//         // Update manpower_requisition table
+//         await pool.execute(
+//             'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ? WHERE id = ?',
+//             [mrf_closed_date || null, mrf_track_status || null, id]
+//         );
+
+//         // Check if a tracking record exists
+//         const [existingTracking] = await pool.execute(
+//             'SELECT mrf_track_id FROM manpower_requisition_tracking WHERE mrf_id = ?',
+//             [mrf_id]
+//         );
+
+//         if (existingTracking.length > 0) {
+//             // Update existing tracking record
+//             await pool.execute(
+//                 'UPDATE manpower_requisition_tracking SET offer_date = ?, candidate_name = ? WHERE mrf_id = ?',
+//                 [offer_date || null, candidate_name || null, mrf_id]
+//             );
+//         } else {
+//             // Insert new tracking record
+//             await pool.execute(
+//                 'INSERT INTO manpower_requisition_tracking (mrf_id, offer_date, candidate_name) VALUES (?, ?, ?)',
+//                 [mrf_id, offer_date || null, candidate_name || null]
+//             );
+//         }
+
+//         emitManpowerRequisitionRefresh();
+//         res.status(200).json({ message: 'MRF tracking information updated successfully.' });
+
+//     } catch (error) {
+//         console.error('Error updating MRF tracking:', error);
+//         res.status(500).json({ message: 'Server error while updating MRF tracking information.' });
+//     }
+// });
+
 router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
-    const { mrf_closed_date, offer_date, candidate_name, mrf_track_status } = req.body;
-
-    console.log(req.body, "req.bodyreq.body",req.params)
+ const { mrf_closed_date, mrf_track_status, candidates } = req.body;
 
     try {
         const [mrf] = await pool.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [id]);
         if (mrf.length === 0) {
             return res.status(404).json({ message: 'MRF not found.' });
         }
-        const mrf_id = id;
-
         // Update manpower_requisition table
         await pool.execute(
             'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ? WHERE id = ?',
             [mrf_closed_date || null, mrf_track_status || null, id]
         );
-
-        // Check if a tracking record exists
-        const [existingTracking] = await pool.execute(
-            'SELECT mrf_track_id FROM manpower_requisition_tracking WHERE mrf_id = ?',
-            [mrf_id]
+        // Delete existing tracking records for this MRF
+        await pool.execute(
+            'DELETE FROM manpower_requisition_tracking WHERE mrf_id = ?',
+            [id]
         );
-
-        if (existingTracking.length > 0) {
-            // Update existing tracking record
-            await pool.execute(
-                'UPDATE manpower_requisition_tracking SET offer_date = ?, candidate_name = ? WHERE mrf_id = ?',
-                [offer_date || null, candidate_name || null, mrf_id]
-            );
-        } else {
-            // Insert new tracking record
-            await pool.execute(
-                'INSERT INTO manpower_requisition_tracking (mrf_id, offer_date, candidate_name) VALUES (?, ?, ?)',
-                [mrf_id, offer_date || null, candidate_name || null]
-            );
+           // Bulk insert new tracking records if candidates are provided
+        if (candidates && candidates.length > 0) {
+            const validCandidates = candidates.filter(c => c.candidate_name && c.offer_date);
+            if (validCandidates.length > 0) {
+                const candidateValues = validCandidates.map(c => [id, c.offer_date, c.candidate_name]);
+                await pool.query(
+                    'INSERT INTO manpower_requisition_tracking (mrf_id, offer_date, candidate_name) VALUES ?',
+                    [candidateValues]
+                );
+            }
         }
 
         emitManpowerRequisitionRefresh();
@@ -1340,24 +1380,52 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// router.get('/get-mrf-tracking/:id', authMiddleware, async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const [rows] = await pool.execute(`
+//             SELECT mr.*, ep.emp_name, mrt.*
+//             FROM
+//                 manpower_requisition AS mr
+//             JOIN
+//                 employee_personal AS ep ON mr.created_by = ep.employee_id
+//             LEFT JOIN
+//                 manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
+//             WHERE
+//                 mr.id = ?`, [id]);
+
+//         if (rows.length === 0) {
+//             return res.status(404).json({ message: 'MRF not found.' });
+//         }
+//         res.json(rows[0]);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server error fetching MRF tracking data.' });
+//     }
+// });
+
 router.get('/get-mrf-tracking/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const [rows] = await pool.execute(`
-            SELECT mr.*, ep.emp_name, mrt.*
-            FROM
-                manpower_requisition AS mr
-            JOIN
-                employee_personal AS ep ON mr.created_by = ep.employee_id
-            LEFT JOIN
-                manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
-            WHERE
-                mr.id = ?`, [id]);
+        const [mrfResult] = await pool.execute(`
+            SELECT mr.*, ep.emp_name
+            FROM manpower_requisition AS mr
+            JOIN employee_personal AS ep ON mr.created_by = ep.employee_id
+            WHERE mr.id = ?`, [id]);
 
-        if (rows.length === 0) {
+        if (mrfResult.length === 0) {
             return res.status(404).json({ message: 'MRF not found.' });
         }
-        res.json(rows[0]);
+
+        const mrfData = mrfResult[0];
+
+        const [trackingResult] = await pool.execute(
+            'SELECT * FROM manpower_requisition_tracking WHERE mrf_id = ?',
+            [id]
+        );
+
+        mrfData.tracking_details = trackingResult;
+
+        res.json(mrfData);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching MRF tracking data.' });
     }

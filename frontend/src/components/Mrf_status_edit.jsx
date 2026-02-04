@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Paper, Typography, Grid, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop, Divider
+    Box, Paper, Typography, Grid, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop, Divider, IconButton
 } from "@mui/material";
 import {
     Numbers as NumbersIcon,
@@ -8,7 +8,8 @@ import {
     Badge as BadgeIcon,
     CalendarToday as CalendarTodayIcon,
     Update as UpdateIcon
-} from '@mui/icons-material';
+} from '@mui/icons-material'; 
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchMrfTrackingById, updateManpowerTracking } from '../redux/cases/manpowerrequisitionSlice';
@@ -23,9 +24,8 @@ const MRF_Status_Edit = () => {
 
     const [formData, setFormData] = useState({
         mrf_closed_date: '',
-        offer_date: '',
-        candidate_name: '',
-        mrf_track_status: ''
+        mrf_track_status: '',
+        candidates: []
     });
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -35,18 +35,30 @@ const MRF_Status_Edit = () => {
 
     useEffect(() => {
         if (selectedRequisition) {
+            const numResources = selectedRequisition.num_resources || 1;
+            const existingCandidates = selectedRequisition.tracking_details || [];
+            
+            const initialCandidates = Array.from({ length: numResources }, (_, index) => {
+                const existing = existingCandidates[index];
+                return {
+                    offer_date: existing?.offer_date ? existing.offer_date.split('T')[0] : '',
+                    candidate_name: existing?.candidate_name || ''
+                };
+            });
+
             setFormData({
                 mrf_closed_date: selectedRequisition.mrf_closed_date ? selectedRequisition.mrf_closed_date.split('T')[0] : '',
-                offer_date: selectedRequisition.offer_date ? selectedRequisition.offer_date.split('T')[0] : '',
-                candidate_name: selectedRequisition.candidate_name || '',
-                mrf_track_status: selectedRequisition.mrf_track_status || 'In Process'
+                mrf_track_status: selectedRequisition.mrf_track_status || 'In Process',
+                candidates: initialCandidates
             });
         }
     }, [selectedRequisition]);
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e, index) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const updatedCandidates = [...formData.candidates];
+        updatedCandidates[index] = { ...updatedCandidates[index], [name]: value };
+        setFormData(prev => ({ ...prev, candidates: updatedCandidates }));
     };
 
     const handleSubmit = async (e) => {
@@ -137,44 +149,48 @@ const MRF_Status_Edit = () => {
 
                         <Grid item xs={12} md={6}>
                             <Typography variant="h6" gutterBottom sx={{ fontWeight: '600', color: 'text.secondary', mb: 3 }}>Update Status</Typography>
-                            <TextField
-                                sx={{ mb: 2.5 }}
-                                fullWidth
-                                type="date"
-                                name="mrf_closed_date"
-                                label="MRF Closed Date"
-                                value={formData.mrf_closed_date}
-                                onChange={handleInputChange}
-                                InputLabelProps={{ shrink: true }}
-                                variant="outlined"
-                            />
-                            <TextField
-                                sx={{ mb: 2.5 }}
-                                fullWidth
-                                type="date"
-                                name="offer_date"
-                                label="Offer Date"
-                                value={formData.offer_date}
-                                onChange={handleInputChange}
-                                InputLabelProps={{ shrink: true }}
-                                variant="outlined"
-                            />
-                            <TextField
-                                sx={{ mb: 2.5 }}
-                                fullWidth
-                                name="candidate_name"
-                                label="Candidate Name"
-                                value={formData.candidate_name}
-                                onChange={handleInputChange}
-                                variant="outlined"
-                            />
+                            <Box sx={{ mb: 2.5 }}>
+                                <TextField
+                                    fullWidth
+                                    type="date"
+                                    name="mrf_closed_date"
+                                    label="MRF Closed Date"
+                                    value={formData.mrf_closed_date}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, mrf_closed_date: e.target.value }))}
+                                    InputLabelProps={{ shrink: true }}
+                                    variant="outlined"
+                                />
+                            </Box>
+
+                            {formData.candidates.map((candidate, index) => (
+                                <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2.5, alignItems: 'center' }}>
+                                    <TextField
+                                        fullWidth
+                                        type="date"
+                                        name="offer_date"
+                                        label={`Offer Date #${index + 1}`}
+                                        value={candidate.offer_date}
+                                        onChange={(e) => handleInputChange(e, index)}
+                                        InputLabelProps={{ shrink: true }}
+                                        variant="outlined"
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        name="candidate_name"
+                                        label={`Candidate Name #${index + 1}`}
+                                        value={candidate.candidate_name}
+                                        onChange={(e) => handleInputChange(e, index)}
+                                        variant="outlined"
+                                    />
+                                </Box>
+                            ))}
 
                             <FormControl fullWidth variant="outlined">
                                 <InputLabel>Status</InputLabel>
                                 <Select
                                     name="mrf_track_status"
                                     value={formData.mrf_track_status}
-                                    onChange={handleInputChange}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, mrf_track_status: e.target.value }))}
                                     label="Status"
                                 >
                                     <MenuItem value="In Process">In Process</MenuItem>
