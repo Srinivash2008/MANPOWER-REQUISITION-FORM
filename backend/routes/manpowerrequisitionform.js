@@ -1302,7 +1302,7 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
         if (mrf.length === 0) {
             return res.status(404).json({ message: 'MRF not found.' });
         }
-        const mrf_id = mrf[0].mrf_number;
+        const mrf_id = id;
 
         // Update manpower_requisition table
         await pool.execute(
