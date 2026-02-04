@@ -11,7 +11,7 @@ import {
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchManpowerRequisitionById, updateManpowerTracking } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchMrfTrackingById, updateManpowerTracking } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -30,7 +30,7 @@ const MRF_Status_Edit = () => {
     const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
-        dispatch(fetchManpowerRequisitionById(id));
+        dispatch(fetchMrfTrackingById(id));
     }, [dispatch, id]);
 
     useEffect(() => {
@@ -103,8 +103,8 @@ const MRF_Status_Edit = () => {
     );
 
     return (
-        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh'}}>
-            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '16px', maxWidth: '90%', mx: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.05)',mt:9 }}>
+        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+            <Paper sx={{ p: { xs: 2, md: 4 }, borderRadius: '16px', maxWidth: '900px', mx: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.05)', mt: 9 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
                     <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2A7F66' }}>
                         Edit MRF Tracking Status

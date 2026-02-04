@@ -286,7 +286,7 @@ const Header = () => {
       submenu: [
         !isDirector && { label: "Add MRF", link: "/add-mrf" },
         { label: "View MRF", link: "/mrf-list" },
-        { label: "MRF status", link: "/mrf-status" },
+        { label: "Approved MRF", link: "/approved-mrf" },
         // user?.emp_id === "1722" && { label: "My Requisitions", link: "/my-requisitions" },
       ].filter(Boolean),
     },

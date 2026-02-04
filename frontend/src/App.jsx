@@ -86,7 +86,7 @@ console.log(location.pathname,"location")
            <Route path="/add-mrf" element={<Add_Form />} />
 
            <Route path="/mrf-list" element={<ManpowerRequisition />} />
-           <Route path="/mrf-status" element={<MRF_Status />} />
+           <Route path="/approved-mrf" element={<MRF_Status />} />
            <Route path="/my-requisitions" element={<ManpowerRequisition />} />
            <Route path="/mrf-list/:param_status" element={<ManpowerRequisitionByStatus />} />
 

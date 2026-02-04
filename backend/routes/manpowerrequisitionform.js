@@ -77,6 +77,7 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             mrf_start_date: row.mrf_start_date,
             mrf_end_date: row.mrf_end_date,
             mrf_track_status: row.mrf_track_status,
+            mrf_closed_date:row.mrf_closed_date
 
         }));
         res.json(fetchManpowerRequisitionByUser);
@@ -1339,6 +1340,28 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
     }
 });
 
+router.get('/get-mrf-tracking/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await pool.execute(`
+            SELECT mr.*, ep.emp_name, mrt.*
+            FROM
+                manpower_requisition AS mr
+            JOIN
+                employee_personal AS ep ON mr.created_by = ep.employee_id
+            LEFT JOIN
+                manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
+            WHERE
+                mr.id = ?`, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'MRF not found.' });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error fetching MRF tracking data.' });
+    }
+});
 // router.get('/uploadFiles/submittedArticlesFile/:filename', (req, res) => {
 //     const filename = req.params.filename;
 //     // const __filename = fileURLToPath(import.meta.url);
