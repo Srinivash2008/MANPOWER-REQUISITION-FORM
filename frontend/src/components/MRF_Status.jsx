@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box, Paper, Typography, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, tableCellClasses, styled, TextField, Button, Select, MenuItem, FormControl
+    TableHead, TableRow, tableCellClasses, styled, IconButton
 } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchManpowerRequisitionByuserId } from '../redux/cases/manpowerrequisitionSlice';
-import swal from "sweetalert2";
+import { useNavigate } from 'react-router-dom';
+import EditDocumentIcon from '@mui/icons-material/EditDocument';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -30,6 +31,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const MRF_Status = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
+    const navigate = useNavigate();
     const { data: manpowerRequisitionList, loading } = useSelector((state) => state.manpowerRequisition);
 
     const [trackingData, setTrackingData] = useState([]);
@@ -52,44 +54,8 @@ const MRF_Status = () => {
         }
     }, [manpowerRequisitionList]);
 
-    const handleInputChange = (e, id) => {
-        const { name, value } = e.target;
-        setTrackingData(prevData =>
-            prevData.map(item =>
-                item.id === id ? { ...item, [name]: value } : item
-            )
-        );
-    };
-
-    const handleUpdate = (id) => {
-        const currentItem = trackingData.find(item => item.id === id);
-        const payload = {
-            id: currentItem.id,
-            mrf_closed_date: currentItem.mrf_closed_date,
-            mrf_track_status: currentItem.mrf_track_status,
-            offer_date: currentItem.offer_date,
-            candidate_name: currentItem.candidate_name,
-        };
-
-        // dispatch(updateManpowerTracking(payload))
-        //     .unwrap()
-        //     .then(() => {
-        //         swal.fire({
-        //             title: 'Success!',
-        //             text: 'MRF Tracking updated successfully.',
-        //             icon: 'success',
-        //             confirmButtonColor: '#2A7F66',
-        //         });
-        //         dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-        //     })
-        //     .catch((error) => {
-        //         swal.fire({
-        //             title: 'Error!',
-        //             text: error.message || 'Failed to update MRF Tracking.',
-        //             icon: 'error',
-        //             confirmButtonColor: '#d33',
-        //         });
-        //     });
+    const handleEditClick = (id) => {
+        navigate(`/manpower_requisition_edit/${id}`);
     };
 
     return (
@@ -123,71 +89,24 @@ const MRF_Status = () => {
                                 trackingData.map((item, index) => (
                                     <StyledTableRow key={item.id}>
                                         <TableCell>{index + 1}</TableCell>
-                                        <TableCell>{item.mrf_number}</TableCell>
-                                        <TableCell>{item.emp_name}</TableCell>
-                                        <TableCell>{item.designation}</TableCell>
+                                        <TableCell>{item.mrf_number || '-'}</TableCell>
+                                        <TableCell>{item.emp_name || '-'}</TableCell>
+                                        <TableCell>{item.designation || '-'}</TableCell>
                                         <TableCell>{item.mrf_start_date ? new Date(item.mrf_start_date).toLocaleDateString() : '-'}</TableCell>
+                                        <TableCell>{item.mrf_closed_date || '-'}</TableCell>
+                                        <TableCell>{item.mrf_track_status || '-'}</TableCell>
+                                        <TableCell>{item.offer_date || '-'}</TableCell>
+                                        <TableCell>{item.candidate_name || '-'}</TableCell>
                                         <TableCell>
-                                            <TextField
-                                                type="date"
-                                                name="mrf_closed_date"
-                                                value={item.mrf_closed_date || ''}
-                                                onChange={(e) => handleInputChange(e, item.id)}
-                                                InputLabelProps={{ shrink: true }}
-                                                size="small"
-                                                variant="standard"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <FormControl variant="standard" size="small" fullWidth>
-                                                <Select
-                                                    name="mrf_track_status"
-                                                    value={item.mrf_track_status || ''}
-                                                    onChange={(e) => handleInputChange(e, item.id)}
-                                                    disabled={item.mrf_track_status === 'Completed'}
+                                            {item.mrf_track_status !== 'Completed' && (
+                                                <IconButton
+                                                    onClick={() => handleEditClick(item.id)}
+                                                    size="small"
+                                                    sx={{ color: 'primary.main' }}
                                                 >
-                                                    <MenuItem value="In Process">In Process</MenuItem>
-                                                    <MenuItem value="Completed">Completed</MenuItem>
-                                                </Select>
-                                            </FormControl>
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                type="date"
-                                                name="offer_date"
-                                                value={item.offer_date || ''}
-                                                onChange={(e) => handleInputChange(e, item.id)}
-                                                InputLabelProps={{ shrink: true }}
-                                                size="small"
-                                                variant="standard"
-                                                disabled={item.mrf_track_status === 'Completed'}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                name="candidate_name"
-                                                value={item.candidate_name || ''}
-                                                onChange={(e) => handleInputChange(e, item.id)}
-                                                size="small"
-                                                variant="standard"
-                                                disabled={item.mrf_track_status === 'Completed'}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                size="small"
-                                                onClick={() => handleUpdate(item.id)}
-                                                sx={{
-                                                    backgroundColor: '#2A7F66',
-                                                    '&:hover': {
-                                                        backgroundColor: '#1D5947'
-                                                    }
-                                                }}
-                                            >
-                                                Update
-                                            </Button>
+                                                    <EditDocumentIcon />
+                                                </IconButton>
+                                            )}
                                         </TableCell>
                                     </StyledTableRow>
                                 ))

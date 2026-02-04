@@ -684,8 +684,10 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
                 query += ', director_status = ?, director_comments = ?';
                 params.push(status, director_comments);
             } else if (user?.emp_id === '1722') { // HR
-                query += ', hr_status = ?, hr_comments = ?';
-                params.push(status, hr_comments);
+                const mrfStartDate = new Date().toISOString().split('T')[0];
+                console.log(mrfStartDate, "mrfStartDatemrfStartDatemrfStartDate")
+                query += ', hr_status = ?, hr_comments = ?, mrf_start_date = ?';
+                params.push(status, hr_comments, mrfStartDate);
             }
 
             if (mrfNumber) {
