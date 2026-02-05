@@ -500,7 +500,7 @@ const App_Form = () => {
             finalFormData.created_by = formData.manager;
         }
 
-        
+
         const data = new FormData();
 
         // Append all form fields to the FormData object
@@ -630,22 +630,6 @@ const App_Form = () => {
                                 </div>
                                 )}
 
-                                <div>
-                                    <label className="form-label">Status of Employment<span className="required-star">*</span></label>
-                                    <select
-                                        name="employmentStatus"
-                                        value={formData.employmentStatus}
-                                        onChange={handleInputChange}
-                                        onBlur={handleBlur}
-                                        className={`form-select ${getFieldClassName('employmentStatus')}`}
-                                    >
-                                        <option value="">Select Status</option>
-                                        <option value="Permanent">Permanent</option>
-                                        <option value="Contract">Contract</option>
-                                        <option value="Freelancer">Freelancer</option>
-                                    </select>
-                                    {renderError('employmentStatus')}
-                                </div>
 
                                 <div>
                                     <label className="form-label">Status of Employment<span className="required-star">*</span></label>
