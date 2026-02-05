@@ -650,7 +650,7 @@ router.get('/get-query/:id', authMiddleware, async (req, res) => {
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status, user, hr_comments, director_comments, data, sendmail=true } = req.body; // Changed from newStatus to status
+    const { status, user, hr_comments, director_comments, data, sendmail = true } = req.body; // Changed from newStatus to status
     console.log(req.body, "req.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.body")
     if (!manpowerId || !status || !user) {
         return res.status(400).json({ message: 'Missing required fields: id, status, and user are required.' });
@@ -707,8 +707,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
         const canSendEmail = isDraftSubmission
             ? user?.emp_id !== '1400'
             : user?.emp_id !== '1400' && user?.emp_id !== '1722';
-console.log(canSendEmail, "canSendEmailcanSendEmailcanSendEmailcanSendEmailcanSendEmail")
-console.log(sendmail, "sendmailsendmailsendmailsendmailsendmailsendmail")
+        console.log(canSendEmail, "canSendEmailcanSendEmailcanSendEmailcanSendEmailcanSendEmail")
+        console.log(sendmail, "sendmailsendmailsendmailsendmailsendmailsendmail")
 
         if (sendmail && status === 'Pending' && canSendEmail) {
             const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
@@ -1234,6 +1234,34 @@ router.get('/manager-list', authMiddleware, async (req, res) => {
     }
 });
 
+
+router.get('/manager-list/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = `
+            SELECT 
+    e.ReportingManager AS employee_id,
+    m.emp_name        AS emp_name,
+    e.department AS department
+FROM employee_personal e
+LEFT JOIN employee_personal m
+    ON m.employee_id = e.ReportingManager
+WHERE 
+    e.emp_resign = '12/31/2030'
+    AND e.department = ?
+    AND e.ReportingManager <> '1400'
+     AND e.ReportingManager != 0
+GROUP BY 
+    e.ReportingManager,
+    m.emp_name;
+`;
+        const [rows] = await pool.execute(query, [id]);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error fetching manager list.' });
+    }
+});
 
 
 router.put(

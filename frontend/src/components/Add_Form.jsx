@@ -4,7 +4,7 @@ import { FaUserCheck } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { FileUploader } from "react-drag-drop-files";
 import "./Add_Form.css";
-import { addManpowerRequisition, fetchDepartmentsManagerId, fetchManagerList } from "../redux/cases/manpowerrequisitionSlice";
+import { addManpowerRequisition, fetchDepartmentsManagerId, fetchManagerByDepartmentId, fetchManagerList } from "../redux/cases/manpowerrequisitionSlice";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { useNavigate } from 'react-router-dom';
@@ -15,12 +15,13 @@ const App_Form = () => {
     const dispatch = useDispatch();
      const navigate = useNavigate();
     const { token, user } = useSelector((state) => state.auth);
-    const { managerList } = useSelector((state) => state.manpowerRequisition);
+    const { managerList ,managerListById} = useSelector((state) => state.manpowerRequisition);
+
         const {
         status: submissionStatus,
         departments
     } = useSelector((state) => state.manpowerRequisition) || {};
-    console.log("departments from Redux:", departments);
+
     const [notification, setNotification] = useState({
         open: false,
         message: "",
@@ -41,6 +42,7 @@ const App_Form = () => {
     // --- Form State ---
     const [formData, setFormData] = useState({
         department: "",
+        manager: "",
         employmentStatus: "",
         designation: "",
         numResources: 1,
@@ -72,6 +74,7 @@ const App_Form = () => {
     useEffect(() => {
         const initialData = {
             department: "",
+            manager: "",
             employmentStatus: "",
             designation: "",
             numResources: 1,
@@ -108,6 +111,13 @@ const App_Form = () => {
     }, [user, isHr, isDirector, isSeniorManager]);
 
 
+    useEffect(() => {
+        if(formData.department){
+            console.log(formData.department)
+            dispatch(fetchManagerByDepartmentId(formData.department));
+        }
+       
+    }, [formData.department]);
 
 
     // --- Validation Functions ---
@@ -118,6 +128,10 @@ const App_Form = () => {
             case 'department':
                 if (!value) newErrors.department = 'Department is required.';
                 else delete newErrors.department;
+                break;
+            case 'manager':
+                if (user?.emp_id === '12345' && !value) newErrors.manager = 'Manager is required.';
+                else delete newErrors.manager;
                 break;
             case 'employmentStatus':
                 if (!value) newErrors.employmentStatus = 'Status of Employment is required.';
@@ -245,6 +259,7 @@ const App_Form = () => {
 
         // Base validations
         if (!formData.department) newErrors.department = 'Department is required.';
+        if (user?.emp_id === '12345' && !formData.manager) newErrors.manager = 'Manager is required.';
         if (!formData.employmentStatus) newErrors.employmentStatus = 'Status of Employment is required.';
         if (!formData.designation) newErrors.designation = 'Proposed Designation is required.';
         if (!formData.numResources || formData.numResources < 1) newErrors.numResources = 'At least one resource is required.';
@@ -299,6 +314,10 @@ const App_Form = () => {
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         const newValue = type === 'number' ? parseInt(value) : value;
+        setFormData(prev => ({
+            ...prev,
+            [name]: newValue
+        }));
         setFormData(prev => ({
             ...prev,
             [name]: newValue
@@ -388,6 +407,12 @@ const App_Form = () => {
         data.append('buttonClicked', 'submit');
         data.append("emp_name", user?.emp_name || "")
         // Append all form fields to the FormData object
+
+        const finalFormData = { ...formData };
+        if (user?.emp_id === '12345') {
+            finalFormData.created_by = formData.manager;
+        }
+
         for (const key in formData) {
             if (key === 'hiringTAT' && formData.hiringTAT) {
                 // Append hiring TAT fields based on the selected radio button
@@ -397,9 +422,10 @@ const App_Form = () => {
                 continue;
             }
             if (formData[key] !== null && formData[key] !== "") {
-                data.append(key, formData[key]);
+                data.append(key, finalFormData[key]);
             }
         }
+        console.log(finalFormData,"datadatadatadata")
 
         dispatch(addManpowerRequisition(data))
             .unwrap()
@@ -428,7 +454,7 @@ const App_Form = () => {
                     ctcRange: "",
                     specificInfo: "",
                     hiringTAT: "",
-                    created_by: user?.emp_id || "",
+                    created_by: user?.emp_id == '12345'? formData.manager || "" : user?.emp_id || "",
                     requestorSign: null,
                     directorSign: null,
                     mrfNumber: "",
@@ -479,7 +505,7 @@ const App_Form = () => {
                 continue;
             }
             if (formData[key] !== null && formData[key] !== "") {
-                data.append(key, formData[key]);
+                data.append(key, finalFormData[key]);
             }
         }
 
@@ -573,6 +599,43 @@ const App_Form = () => {
                                         ))}
                                     </select>
                                     {renderError('department')}
+                                </div>
+
+                                {user?.emp_id === '12345' && (
+                                <div>
+                                    <label className="form-label">Manager<span className="required-star">*</span></label>
+                                    <select
+                                        name="manager"
+                                        value={formData.manager}
+                                        onChange={handleInputChange}
+                                        onBlur={handleBlur}
+                                        className={`form-select ${getFieldClassName('manager')}`}
+                                        disabled={!formData.department}
+                                    >
+                                        <option value="">Select Manager</option>
+                                        {managerListById.filter(mgr => mgr.department === formData.department).map(mgr => (
+                                            <option key={mgr.employee_id} value={mgr.employee_id}>{mgr.emp_name}</option>
+                                        ))}
+                                    </select>
+                                    {renderError('manager')}
+                                </div>
+                                )}
+
+                                <div>
+                                    <label className="form-label">Status of Employment<span className="required-star">*</span></label>
+                                    <select
+                                        name="employmentStatus"
+                                        value={formData.employmentStatus}
+                                        onChange={handleInputChange}
+                                        onBlur={handleBlur}
+                                        className={`form-select ${getFieldClassName('employmentStatus')}`}
+                                    >
+                                        <option value="">Select Status</option>
+                                        <option value="Permanent">Permanent</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Freelancer">Freelancer</option>
+                                    </select>
+                                    {renderError('employmentStatus')}
                                 </div>
 
                                 <div>
@@ -1012,7 +1075,7 @@ const App_Form = () => {
                     </div>
 
                     <div className="form-actions">
-                      {user.emp_id !== '12345' &&   <button
+                      {user?.emp_id !== '12345' &&   <button
                             type="button"
                             className="draft-button"
                             onClick={handleSaveAsDraft}

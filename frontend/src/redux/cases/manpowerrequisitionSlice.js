@@ -251,6 +251,36 @@ export const fetchMrfTrackingById = createAsyncThunk(
   }
 );
 
+export const fetchManagerByDepartmentId = createAsyncThunk(
+  'manpowerRequisition/fetchManagerByDepartmentId',
+  async (id, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+      const response = await axios.get(
+        `${API_URL}/api/mrf/manager-list/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch MRF tracking data by ID.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 export const fetchMrfTrackingList = createAsyncThunk(
   'manpowerRequisition/fetchMrfTrackingList',
   async (userId, { rejectWithValue, getState }) => {
@@ -636,6 +666,7 @@ const manpowerrequisitionSlice = createSlice({
     mfrCounts: [],
     departments: [],
     managerList: [],
+    managerListById: [],
     query: null,
     status: 'idle',
     error: null,
@@ -774,6 +805,20 @@ const manpowerrequisitionSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
         state.managerList = [];
+      })
+
+      .addCase(fetchManagerByDepartmentId.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchManagerByDepartmentId.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.managerListById = action.payload;
+      })
+      .addCase(fetchManagerByDepartmentId.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.managerListById = [];
       })
 
       // Handle fetchDepartments
