@@ -519,17 +519,19 @@ const ManpowerRequisitionEdit = () => {
             }
         }
 
+        console.log(manpowerStatus,"manpowerStatusmanpowerStatusmanpowerStatus")
         try {
             await dispatch(updateManpowerRequisition({ id, data })).unwrap();
 
             if (manpowerStatus) {
+                // console.log(manpowerStatus,"manpowerStatus")
                 await dispatch(updateManpowerStatus({
                     manpowerId,
                     newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
                     hr_comments: formData.hr_comments,
                     director_comments: formData.director_comments,
                     data : selectedRequisition,
-                    sendmail: manpowerStatus == "Draft" ? true : false,
+                    // sendmail: manpowerStatus == "Draft" ? false :  true,
                 })).unwrap();
             }
 

@@ -650,7 +650,7 @@ router.get('/get-query/:id', authMiddleware, async (req, res) => {
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status, user, hr_comments, director_comments, data, sendmail = true } = req.body; // Changed from newStatus to status
+    const { status, user, hr_comments, director_comments, data } = req.body; // Changed from newStatus to status
     console.log(req.body, "req.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.body")
     if (!manpowerId || !status || !user) {
         return res.status(400).json({ message: 'Missing required fields: id, status, and user are required.' });
@@ -704,13 +704,9 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
         await pool.execute(query, params);
         console.log(query, params, "query, paramsquery, paramsquery, paramsquery, params")
         const isDraftSubmission = data?.status === 'Draft';
-        const canSendEmail = isDraftSubmission
-            ? user?.emp_id !== '1400'
-            : user?.emp_id !== '1400' && user?.emp_id !== '1722';
-        console.log(canSendEmail, "canSendEmailcanSendEmailcanSendEmailcanSendEmailcanSendEmail")
-        console.log(sendmail, "sendmailsendmailsendmailsendmailsendmailsendmail")
-
-        if (sendmail && status === 'Pending' && canSendEmail) {
+        console.log(isDraftSubmission, "isDraftSubmissionisDraftSubmissionisDraftSubmissionisDraftSubmission")
+      
+        if (status === 'Pending') {
             const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
             console.log(user_data[0], "user_datauser_datauser_datauser_data")
             const user_info = user_data[0];
@@ -785,7 +781,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             }
         }
 
-        if (status === "Approve" && sendmail) {
+        if (status === "Approve") {
             // Check if a query exists for this manpower requisition
             const [existingQuery] = await pool.execute(
                 'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
