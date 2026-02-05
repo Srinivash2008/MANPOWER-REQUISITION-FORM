@@ -365,15 +365,15 @@ const Dashboard = () => {
           'MRF Submitted',
           'MRF Withdrawn',
           'Director Pending',
-          'Director Approved',
           'Director on Hold',
           'Director Raise Query',
           'Director Rejected',
+          'Director Approved',
           'HR Pending',
-          'HR Approved',
           'HR On-Hold',
           'HR Query',
           'HR Rejected',
+          'HR Approved',
         ];
 
         const withdrawOverall = overallStatusMetrics.find(m => m.status === 'Withdraw'); //NOSONAR

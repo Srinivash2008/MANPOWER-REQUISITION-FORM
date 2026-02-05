@@ -1139,7 +1139,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
             COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
             COALESCE(SUM(status = 'Withdraw'), 0) AS withdraw_count,
             COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
-            COALESCE(SUM(CASE WHEN status != 'Draft' THEN 1 ELSE 0 END), 0) AS total_count
+            COALESCE(SUM(CASE WHEN status != 'Draft' AND status != 'Withdraw' THEN 1 ELSE 0 END), 0) AS total_count
         `;
 
         const directorStatusSelect = `
