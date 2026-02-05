@@ -33,7 +33,7 @@ const ManpowerRequisitionEdit = () => {
     const { managerList } = useSelector((state) => state.manpowerRequisition);
 
     // --- Role-based visibility flags ---
-    const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
+    const isHr =user?.emp_id === "1722";
     const isDirector = user?.emp_id === "1400";
     const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
 
@@ -528,7 +528,8 @@ const ManpowerRequisitionEdit = () => {
                     newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
                     hr_comments: formData.hr_comments,
                     director_comments: formData.director_comments,
-                    data : selectedRequisition
+                    data : selectedRequisition,
+                    sendmail: manpowerStatus == "Draft" ? true : false,
                 })).unwrap();
             }
 
