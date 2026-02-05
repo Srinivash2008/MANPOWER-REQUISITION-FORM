@@ -430,10 +430,10 @@ const ManpowerRequisitionEdit = () => {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
         }
-        if (isHr && formData.status == "Pending") {
-            setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
-            return;
-        }
+        // if (isHr && formData.status == "Pending") {
+        //     setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
+        //     return;
+        // }
 
         if (isHr && formData.status === 'HR Approve' || formData.status === 'FH Replied') {
             const hrFieldsToValidate = {

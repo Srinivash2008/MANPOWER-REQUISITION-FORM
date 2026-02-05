@@ -1012,14 +1012,14 @@ const App_Form = () => {
                     </div>
 
                     <div className="form-actions">
-                        <button
+                      {user.emp_id !== '12345' &&   <button
                             type="button"
                             className="draft-button"
                             onClick={handleSaveAsDraft}
                             disabled={submissionStatus === 'loading'}
                         >
                             {'Save as Draft'}
-                        </button>
+                        </button>}
                         <button
                             type="submit"
                             className="submit-button"

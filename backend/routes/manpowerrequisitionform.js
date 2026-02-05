@@ -785,7 +785,7 @@ console.log(sendmail, "sendmailsendmailsendmailsendmailsendmailsendmail")
             }
         }
 
-        if (status === "Approve") {
+        if (status === "Approve" && sendmail) {
             // Check if a query exists for this manpower requisition
             const [existingQuery] = await pool.execute(
                 'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
