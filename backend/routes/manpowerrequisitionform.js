@@ -1382,6 +1382,60 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
             }
         }
 
+        if (mrf_track_status === 'Completed' && candidates && candidates.length > 0) {
+            const [mrfDetails] = await pool.execute(
+                `SELECT mr.created_by, mr.mrf_number, mr.designation, ep.emp_name as hiring_manager_name, ep.mail_id as hiring_manager_email
+                 FROM manpower_requisition mr
+                 JOIN employee_personal ep ON mr.created_by = ep.employee_id
+                 WHERE mr.id = ?`,
+                [id]
+            );
+
+            if (mrfDetails.length > 0) {
+                const { hiring_manager_name, hiring_manager_email, mrf_number, designation } = mrfDetails[0];
+
+                const joinerRows = candidates.map(c => `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${c.candidate_name || ''}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${designation || ''}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${c.offer_date ? new Date(c.offer_date).toLocaleDateString() : ''}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${mrf_number || ''}</td>
+                    </tr>
+                `).join('');
+
+                const mailOptions = {
+                    from: process.env.EMAIL_USER,
+                    to: "srinivasan@pdmrindia.com",
+                    subject: 'MRF - New Joiner Information',
+                    html: `
+                        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                            <p>Hello ${hiring_manager_name},</p>
+                            <p>Kindly find the below joiner details for your team:</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <thead>
+                                    <tr style="background-color: #f2f2f2;">
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Name</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Position</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date of Joining</th>
+                                        <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">MRF Number</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${joinerRows}
+                                </tbody>
+                            </table>
+                            <p>He/She will be reporting to the office for completing his/her joining formalities and will be handed over to you on the same day.</p>
+                            <br>
+                            <p style="color: #555;">
+                               Thanks & regards,<br>
+                               Automated MRF System
+                            </p>
+                        </div>`
+                };
+                await transporter.sendMail(mailOptions);
+            }
+        }
+
         emitManpowerRequisitionRefresh();
         res.status(200).json({ message: 'MRF tracking information updated successfully.' });
 
@@ -1390,6 +1444,7 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Server error while updating MRF tracking information.' });
     }
 });
+
 
 // router.get('/get-mrf-tracking/:id', authMiddleware, async (req, res) => {
 //     try {
