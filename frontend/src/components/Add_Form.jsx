@@ -494,6 +494,13 @@ const App_Form = () => {
             });
             return;
         }
+
+         const finalFormData = { ...formData };
+        if (user?.emp_id === '12345') {
+            finalFormData.created_by = formData.manager;
+        }
+
+        
         const data = new FormData();
 
         // Append all form fields to the FormData object
@@ -513,6 +520,8 @@ const App_Form = () => {
         data.append('status', 'Draft');
         data.append("buttonClicked", "Draft");
         data.append("emp_name", user?.emp_name || "")
+
+        
 
         dispatch(addManpowerRequisition(data))
             .unwrap()
