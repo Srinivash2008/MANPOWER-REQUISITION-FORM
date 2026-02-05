@@ -362,8 +362,8 @@ const Dashboard = () => {
         return [...hrStatusMetrics].sort((a, b) => b.count - a.count);
       case 'overall':
         const statusOrder = [
-          'Overall MRF Submitted',
-          'Overall MRF Withdrawn',
+          'MRF Submitted',
+          'MRF Withdrawn',
           'Director Pending',
           'Director Approved',
           'Director on Hold',
@@ -383,13 +383,13 @@ const Dashboard = () => {
 
         if (pendingOverall) {
           const { status, ...rest } = pendingOverall;
-          combinedData.push({ status: 'Overall MRF Submitted', ...rest });
+          combinedData.push({ status: 'MRF Submitted', ...rest });
         }
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status.replace('MRF ', '')}` })));
         combinedData.push(mrfPending);
         combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status.replace('MRF ', '')}` })));
         if (withdrawOverall) {
-          combinedData.push({ ...withdrawOverall, status: 'Overall MRF Withdrawn' });
+          combinedData.push({ ...withdrawOverall, status: 'MRF Withdrawn' });
         }
 
         // Sort based on the predefined statusOrder
