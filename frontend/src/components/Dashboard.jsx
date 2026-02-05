@@ -250,6 +250,7 @@ const Dashboard = () => {
   console.log(hrCounts, "hrCounts")
 
   const hrStatusMetrics = [
+    { status: 'MRF Pending', count: hrCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'warning' },
     { status: 'MRF Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
     { status: 'MRF Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
     { status: 'MRF Query', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
@@ -367,6 +368,7 @@ const Dashboard = () => {
           'Director on Hold',
           'Director Raise Query',
           'Director Rejected',
+          'HR Pending',
           'HR Approved',
           'HR On-Hold',
           'HR Query',
