@@ -87,7 +87,7 @@ const RadialBarChart = ({ data = [] }) => {
                                 {item.count.toLocaleString()}
                             </Typography>
                         </Box>
-                        {(item.status === 'MRF Withdrawn' || item.status === 'Director Rejected') && (
+                        {(item.status === 'MRF Withdrawn' || item.status === 'Director Approved') && (
                             <hr style={{
                                 border: 'none',
                                 borderTop: `1px dashed ${theme.palette.divider}`,
