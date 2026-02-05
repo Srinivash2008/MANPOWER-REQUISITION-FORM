@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, useTheme, Tooltip } from '@mui/material';
 import { motion } from 'framer-motion';
 
-const RadialBarChart = ({ data }) => {
+const RadialBarChart = ({ data = [] }) => {
     const theme = useTheme();
     if (!data || data.length === 0) {
         return <Typography>No data available</Typography>;
@@ -72,20 +72,29 @@ const RadialBarChart = ({ data }) => {
             </svg>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxWidth: 250 }}>
                 {data.map((item, index) => (
-                    <Box key={item.status} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{
-                            width: 14,
-                            height: 14,
-                            borderRadius: '4px',
-                            bgcolor: item.color ? theme.palette[item.color]?.main : colors[index % colors.length],
-                        }} />
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {item.status}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', ml: 'auto' }}>
-                            {item.count.toLocaleString()}
-                        </Typography>
-                    </Box>
+                    <React.Fragment key={item.status}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: '4px',
+                                bgcolor: item.color ? theme.palette[item.color]?.main : colors[index % colors.length],
+                            }} />
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {item.status}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', ml: 'auto' }}>
+                                {item.count.toLocaleString()}
+                            </Typography>
+                        </Box>
+                        {(item.status === 'Overall MRF Withdrawn' || item.status === 'Director Rejected') && (
+                            <hr style={{
+                                border: 'none',
+                                borderTop: `1px dashed ${theme.palette.divider}`,
+                                margin: '8px 0'
+                            }} />
+                        )}
+                    </React.Fragment>
                 ))}
             </Box>
         </Box>

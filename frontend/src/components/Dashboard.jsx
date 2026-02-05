@@ -362,7 +362,7 @@ const Dashboard = () => {
         const statusOrder = [
           'Overall MRF Submitted',
           'Overall MRF Withdrawn',
-          'MRF Pending',
+          'Director Pending',
           'Director Approved',
           'Director on Hold',
           'Director Raise Query',
@@ -375,7 +375,7 @@ const Dashboard = () => {
 
         const withdrawOverall = overallStatusMetrics.find(m => m.status === 'Withdraw'); //NOSONAR
         const pendingOverall = overallStatusMetrics.find(m => m.status === 'Submitted');
-        const mrfPending = { status: 'MRF Pending', count: baseCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'warning' };
+        const mrfPending = { status: 'Director Pending', count: baseCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'warning' };
         let combinedData = [];
 
         if (pendingOverall) {
