@@ -126,6 +126,7 @@ const Dashboard = () => {
   })();
 
   // Convert string values to numbers and calculate dynamic values
+  console.log(mfrCounts?.overall,"mfrCounts?.overallmfrCounts?.overall")
   const baseCounts = {
     pending: parseInt(mfrCounts?.overall?.pending_count) || 0,
     approved: parseInt(mfrCounts?.overall?.approve_count) || 0,

@@ -650,7 +650,7 @@ router.get('/get-query/:id', authMiddleware, async (req, res) => {
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status, user, hr_comments, director_comments, data } = req.body; // Changed from newStatus to status
+    const { status, user, hr_comments, director_comments, data,isSendMail } = req.body; // Changed from newStatus to status
     console.log(req.body, "req.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.body")
     if (!manpowerId || !status || !user) {
         return res.status(400).json({ message: 'Missing required fields: id, status, and user are required.' });
@@ -659,7 +659,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
         let mrfNumber = null;
 
 
-        if (status === 'HR Approve') {
+        if (isSendMail && status === 'HR Approve') {
             // Check if MRF number already exists for this requisition
             const [existingMrf] = await pool.execute('SELECT mrf_number FROM manpower_requisition WHERE id = ?', [manpowerId]);
 
@@ -705,8 +705,9 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
         console.log(query, params, "query, paramsquery, paramsquery, paramsquery, params")
         const isDraftSubmission = data?.status === 'Draft';
         console.log(isDraftSubmission, "isDraftSubmissionisDraftSubmissionisDraftSubmissionisDraftSubmission")
-      
-        if (status === 'Pending') {
+        console.log(isSendMail, "isSendMail");
+        console.log(isSendMail && status === 'Pending',"isSendMail && status === 'Pending'isSendMail && status === 'Pending'")
+        if (isSendMail && status === 'Pending') {
             const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
             console.log(user_data[0], "user_datauser_datauser_datauser_data")
             const user_info = user_data[0];
@@ -781,7 +782,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             }
         }
 
-        if (status === "Approve") {
+        if (isSendMail && status === "Approve") {
             // Check if a query exists for this manpower requisition
             const [existingQuery] = await pool.execute(
                 'SELECT query_pid FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ?',
@@ -837,7 +838,7 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             }
         }
 
-        if (status == "HR Approve") {
+        if (isSendMail &&status == "HR Approve") {
 
             // Check if a query exists for this manpower requisition
             const [existingQuery] = await pool.execute(
@@ -1138,7 +1139,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
             COALESCE(SUM(status = 'Draft'), 0) AS draft_count,
             COALESCE(SUM(status = 'Withdraw'), 0) AS withdraw_count,
             COALESCE(SUM(status = 'HR Approve'), 0) AS HR_Approve_count,
-            COALESCE(COUNT(*), 0) AS total_count
+            COALESCE(SUM(CASE WHEN status != 'Draft' THEN 1 ELSE 0 END), 0) AS total_count
         `;
 
         const directorStatusSelect = `
@@ -1165,6 +1166,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
             FROM manpower_requisition
             WHERE isdelete = 'Active'
         `;
+        console.log(query, "queryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryquery")
 
         if (isHr) {
             params = [numericId, numericId, numericId];

@@ -407,7 +407,7 @@ export const addQueryForm = createAsyncThunk(
 
 export const updateManpowerStatus = createAsyncThunk(
   'manpowerRequisition/updateManpowerStatus',
-  async ({ manpowerId, newStatus, hr_comments, director_comments,data,sendmail }, { rejectWithValue, getState }) => {
+  async ({ manpowerId, newStatus, hr_comments, director_comments,data,isSendMail }, { rejectWithValue, getState }) => {
     console.log('updateManpowerStatus called with:', { manpowerId, newStatus });
     try {
       const { auth } = getState();
@@ -423,7 +423,7 @@ export const updateManpowerStatus = createAsyncThunk(
         hr_comments,
         director_comments,
         data,
-        sendmail
+        isSendMail
       };
 
       const response = await axios.put(
