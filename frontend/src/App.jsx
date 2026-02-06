@@ -28,6 +28,8 @@ import ManpowerRequisitionByStatus from "./components/ManPowerRequestionFormBySt
 import ManpowerRequisitionReport from "./components/ManpowerRequisitionReport.jsx";
 import ManpowerRequisitionEdit from "./components/ManpowerRequisionEdit.jsx";
 import Profile from "./components/Profile.jsx";
+import ManpowerRequisitionChatBox from "./components/ManpowerRequisitionChatBox.jsx";
+import ManpowerHRFHChatBox from "./components/ManpowerHRFHChatBox.jsx";
 import FHReply from "./components/FHReply.jsx";
 import { login } from "./redux/auth/authSlice.js";
 import MRF_Status from "./components/MRF_Status.jsx";
@@ -96,6 +98,11 @@ console.log(location.pathname,"location")
             <Route path="/manpower_requisition_edit/:id" element={<ManpowerRequisitionEdit />} />
             <Route path="/mrf_status_edit/:id" element={<MRF_Status_Edit />} />
             
+
+            <Route path="/manpower_requisition_chatbox/:id" element={<ManpowerRequisitionChatBox/>} /> 
+           <Route Path="/manpower_hr_fh_chatbox/:id" element ={<ManpowerHRFHChatBox />} />
+
+
             <Route path="/reports" element={<ManpowerRequisitionReport/>} />
             <Route path="/profile" element={<Profile/>} />
 

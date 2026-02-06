@@ -9,6 +9,7 @@ import {
     FormHelperText
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
+import MessageIcon from '@mui/icons-material/Message';
 import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList, my_requisitions } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import { withdrawManpowerRequisition } from '../redux/cases/manpowerrequisitionSlice';
@@ -527,6 +528,11 @@ const ManpowerRequisition = () => {
   };
   const handleMenuClose = () => setAnchorEl(null);
 
+    const handleChatboxClick = (id) => {
+    navigate(`/manpower_requisition_chatbox/${id}`);
+  }
+
+
   const TablePaginationActions = (props) => {
     const { count, page, onPageChange } = props;
     const isFirstPage = page === 0;
@@ -617,10 +623,10 @@ const ManpowerRequisition = () => {
 
 
     
-setStatusModalErrors({});
+      setStatusModalErrors({});
         let isSendMail = false;
 
-       
+       console.log(statusFormData?.current_status,"statusFormData?.current_statusstatusFormData?.current_status")
         switch (statusFormData?.current_status) {
             case 'Draft':
                 if(user.emp_id != "1722" && user.emp_id != "1400"){
@@ -643,6 +649,13 @@ setStatusModalErrors({});
                     isSendMail = true;
                 }
                 else {
+                    isSendMail = false;
+                }
+                break;
+            case 'Raise Query':
+               if (user.emp_id == "1400" || user.emp_id == "1722") {
+                    isSendMail = true;
+                } else {
                     isSendMail = false;
                 }
                 break;
@@ -1063,6 +1076,8 @@ setStatusModalErrors({});
                               {/* {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
                                 <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
                               )} */}
+                               <MenuItem  onClick={() => { handleChatboxClick(manpower.id); handleMenuClose(); }}><MessageIcon sx={{ mr: 1.5, color: 'secondary.main' }} />ChatBox</MenuItem>
+
                             </Menu>
                           </StyledTableCell>
                         </StyledTableRow>

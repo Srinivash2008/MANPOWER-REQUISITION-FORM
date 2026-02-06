@@ -10,6 +10,8 @@ const cron = require('node-cron');
 const path = require('path');
 const fs = require('fs');
 const mime = require('mime-types');
+const manpowerrequisitionChatRoutes =require('./routes/manpowerrequisitionchatbox');
+
 
 
 // Import socketManager to centralize Socket.IO logic
@@ -99,6 +101,7 @@ app.use('/api/dashboard', authMiddleware, dashboardRoutes);
 // Protected MRF routes
 app.use('/api/mrf', authMiddleware, mrfRoutes);
 app.use('/api/cases', authMiddleware, manpowerrequisitionRoutes);
+app.use('/api/chatbox',authMiddleware,manpowerrequisitionChatRoutes);
 
 
 

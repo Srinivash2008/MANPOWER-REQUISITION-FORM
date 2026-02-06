@@ -158,6 +158,8 @@ const emitQualityApproveDiscussionMessage = () => {
   }
 };
 
+
+
 const emitManpowerRequisitionRefresh = () => {
   if(io) {
     //console.log('[Socket] Emitting emailtemplate-refresh event.');
@@ -165,9 +167,23 @@ const emitManpowerRequisitionRefresh = () => {
   }
 };
 
+const emitManpowerRequisitionQueryRefresh = () => {
+  if(io) {
+    //console.log('[Socket] Emitting emailtemplate-refresh event.');
+    io.emit('manpowerrequisition-query-refresh');
+  }
+};
+
+const emitManpowerHRFHQueryRefresh = () => {
+  if(io) {
+    //console.log('[Socket] Emitting emailtemplate-refresh event.');
+    io.emit('manpowerrequisition-hrfh-query-refresh');
+  }
+};
+
 // Export the functions that need to be used in other files
 module.exports = {
     initializeSocketIO,
     getSocketIo, emitDashboardRefresh, emitToDepartment, emitEmailTemplateRefresh, emitSystemUpdate, emitAssessmentDataRefresh, emitAssessmentQuestionDataRefresh, emitAssessmentSubmitDataRefresh,
-    emitAssessmentCorrectionSubmitDataRefresh,emitAssessmentDataShowRefresh,emitCaseEntryCreated, emitCaseEntryUpdated, emitCaseEntryDeleted, emitCaseEntryBatchCreated, emitDiscussionRead,emitDashboardRefreshCaseEntry, emitQualityDiscussionMessage,emitQualityView,emitQualityApproved,emitQualityApproveDiscussionMessage, emitManpowerRequisitionRefresh
+    emitAssessmentCorrectionSubmitDataRefresh,emitAssessmentDataShowRefresh,emitCaseEntryCreated, emitCaseEntryUpdated, emitCaseEntryDeleted, emitCaseEntryBatchCreated, emitDiscussionRead,emitDashboardRefreshCaseEntry, emitQualityDiscussionMessage,emitQualityView,emitQualityApproved,emitQualityApproveDiscussionMessage, emitManpowerRequisitionRefresh,emitManpowerRequisitionRefresh, emitManpowerRequisitionQueryRefresh
 };
