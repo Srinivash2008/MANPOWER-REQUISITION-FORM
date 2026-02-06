@@ -608,13 +608,6 @@ const ManpowerRequisition = () => {
     }
    
 
-    // if (isDirector && ['Approve', 'Reject', 'On Hold'].includes(statusFormData.status) && !statusFormData.comments.trim()) {
-    //   errors.comments = 'Director Comments are required for this action.';
-    // }
-    // if (isHr && ['HR Approve', 'Reject', 'On Hold'].includes(statusFormData.status) && !statusFormData.comments.trim()) {
-    //   errors.comments = 'HR Comments are required for this action.';
-    // }
-
      if (Object.keys(errors).length > 0) {
       setStatusModalErrors(errors);
       return;
