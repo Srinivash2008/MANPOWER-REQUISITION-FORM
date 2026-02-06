@@ -272,6 +272,15 @@ const ManpowerRequisitionChatBox = () => {
                     author_name: msg.emp_name,
                     original_pid: `${msg.query_pid}_q_hr`,
                 });
+                if (msg.Hr_Query_Answer) {
+                    expandedList.push({
+                        ...msg,
+                        text: msg.Hr_Query_Answer,
+                        author_id: selectedRequisition?.created_by,
+                        author_name: selectedRequisition?.emp_name,
+                        original_pid: `${msg.query_pid}_a_hr`,
+                    });
+                }
             }
         });
 
