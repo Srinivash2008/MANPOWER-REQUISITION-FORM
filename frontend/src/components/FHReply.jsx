@@ -75,6 +75,7 @@ const FHReply = () => {
         if (user && id) {
             try {
                 const decodedData = jwtDecode(id);
+                console.log(decodedData,"decodedData")
                 dispatch(fetchManpowerRequisitionById(decodedData.pid));
                 dispatch(fetchQuery(decodedData.pid));
             } catch (e) {

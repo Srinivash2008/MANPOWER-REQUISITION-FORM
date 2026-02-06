@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchChatMessageList, sentChatboxMessage } from '../redux/cases/manpowerrequisitionChatSlice';
 import io from 'socket.io-client';
+import { fetchManpowerRequisitionById, fetchQuery, replyToQuery } from '../redux/cases/manpowerrequisitionSlice';
 // ==================== STYLED COMPONENTS ====================
 
 const ChatContainer = styled(Paper)(({ theme }) => ({
@@ -194,6 +195,8 @@ const ManpowerRequisitionChatBox = () => {
     useEffect(() => {
         if (status === 'idle' || status === 'succeeded' && user) {
             dispatch(fetchChatMessageList(id));
+            dispatch(fetchManpowerRequisitionById(id));
+            dispatch(fetchQuery(id));
         }
         const socket = io(API_URL);
         socket.on('manpowerrequisition-query-refresh', () => {
@@ -204,7 +207,11 @@ const ManpowerRequisitionChatBox = () => {
 
 
     const chatMessageList = useSelector((state) => state.manpowerRequisitionChat.data ?? [] );
+    const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
+    const query = useSelector((state) => state.manpowerRequisition.query);
+    console.log(selectedRequisition,"selectedRequisition")
     console.log(chatMessageList,"chatMessageList");
+    console.log(query,"queryquery")
     
     const [form, setForm] = useState({
         answerMessage: '',
@@ -251,7 +258,7 @@ const ManpowerRequisitionChatBox = () => {
     };
 
     // Handle send message
-    const handleSendMessage = (e) => {
+    const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!form.answerMessage || form.answerMessage.trim() === '') return;
 
@@ -260,7 +267,12 @@ const ManpowerRequisitionChatBox = () => {
             query_manpower_requisition_pid: id,
         };
 
-        dispatch(sentChatboxMessage(messageData));
+         
+        console.log({ id: user?.emp_id, reply: messageData.message, query_pid: query.query_pid})
+
+        
+   
+        await dispatch(replyToQuery({ id: user?.emp_id, reply: messageData.message, query_pid: query.query_pid})).unwrap();
         setForm(prev => ({ ...prev, answerMessage: '' }));
     };
 
@@ -531,6 +543,7 @@ const ManpowerRequisitionChatBox = () => {
                         <Button
                             type="submit"
                             variant="contained"
+                            disabled={query?.Director_Query_Answer !=""}
                             endIcon={<SendIcon sx={{ color: '#fff' }} />}
                             sx={{
                                 borderRadius: 2,
@@ -541,7 +554,7 @@ const ManpowerRequisitionChatBox = () => {
                                 }
                             }}
                         >
-                            Send
+                            Reply
                         </Button>
                     </Box>
                 </ChatContainer>
