@@ -23,7 +23,7 @@ import {
     Check as CheckIcon,
     DoneAll as DoneAllIcon,
 } from '@mui/icons-material';
-import { useNavigate, useParams} from "react-router-dom";
+import { useNavigate, useParams, useLocation} from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchChatMessageList, sentChatboxMessage } from '../redux/cases/manpowerrequisitionChatSlice';
@@ -184,6 +184,7 @@ const ManpowerRequisitionChatBox = () => {
     const theme = useTheme();
     const navigate = useNavigate();
     const messagesEndRef = useRef(null);
+    const location = useLocation();
     const { id } = useParams();
     const { token, user , status} = useSelector((state) => state.auth);
     const currentUser = user;
@@ -227,29 +228,56 @@ const ManpowerRequisitionChatBox = () => {
     };
 
     const sortedChatMessageList = React.useMemo(() => {
-        const expandedList = [];
-        chatMessageList.forEach(msg => {
-            if (msg.query_name_director) {
-                expandedList.push({ ...msg, text: msg.query_name_director, type: 'query_director', original_pid: msg.query_pid + '_q', author_id: msg.query_created_by });
-            }
-            if (msg.Director_Query_Answer) {
-                expandedList.push({ ...msg, text: msg.Director_Query_Answer, type: 'answer_director', original_pid: msg.query_pid + '_a', author_id: currentUser.emp_id });
-            }
-            if (msg.query_name_hr) {
-                expandedList.push({ ...msg, text: msg.query_name_hr, type: 'query_hr', original_pid: msg.query_pid + '_q_hr', author_id: msg.query_created_by });
-            }
-            if (msg.HR_Query_Answer) {
-                expandedList.push({ ...msg, text: msg.HR_Query_Answer, type: 'answer_hr', original_pid: msg.query_pid + '_a_hr', author_id: msg.query_replied_by });
-            }
+        const isDirectorChat = location.pathname.includes('/Director_chatbox');
+        const isHrChat = location.pathname.includes('/HR_chatbox');
 
-            // If it's a simple message without the query/answer structure
-            if (!msg.query_name_director && !msg.Director_Query_Answer && !msg.query_name_hr && !msg.HR_Query_Answer && (msg.query_name || msg.message)) {
-                 expandedList.push({ ...msg, text: msg.query_name || msg.message, type: 'simple', original_pid: msg.query_pid });
+        const filteredList = chatMessageList.filter(msg => {
+            if (isDirectorChat) {
+                return String(msg.query_created_by) === '1400';
+            }
+            if (isHrChat) {
+                return String(msg.query_created_by) === '1722';
+            }
+            return false; // By default, show nothing if the URL doesn't match
+        });
+
+        const expandedList = [];
+
+        filteredList.forEach(msg => {
+            if (isDirectorChat && msg.query_name_director) {
+                expandedList.push({
+                    ...msg,
+                    text: msg.query_name_director,
+                    author_id: msg.query_created_by,
+                    author_name: msg.emp_name,
+                    original_pid: `${msg.query_pid}_q_dir`,
+                });
+                if (msg.Director_Query_Answer) {
+                    expandedList.push({
+                        ...msg,
+                        text: msg.Director_Query_Answer,
+                        author_id: selectedRequisition?.created_by,
+                        author_name: selectedRequisition?.emp_name,
+                        original_pid: `${msg.query_pid}_a_dir`,
+                    });
+                }
+            } else if (isHrChat && msg.query_name_hr) {
+                expandedList.push({
+                    ...msg,
+                    text: msg.query_name_hr,
+                    author_id: msg.query_created_by,
+                    author_name: msg.emp_name,
+                    original_pid: `${msg.query_pid}_q_hr`,
+                });
             }
         });
 
-        return expandedList.sort((a, b) => new Date(a.query_created_date) - new Date(b.query_created_date) || a.query_pid - b.query_pid);
-    }, [chatMessageList]);
+        return expandedList.sort((a, b) => {
+            const dateA = new Date(a.query_created_date + 'T' + a.query_created_time);
+            const dateB = new Date(b.query_created_date + 'T' + b.query_created_time);
+            return dateA - dateB;
+        });
+    }, [chatMessageList, location.pathname, user.emp_id]);
 
      useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -403,8 +431,8 @@ const ManpowerRequisitionChatBox = () => {
                             <AnimatePresence mode="popLayout">
                                 {sortedChatMessageList.map((msg) => {
                                     const isMine = Number(msg.author_id) === Number(currentUser.emp_id);
-                                    const isUnreadForMe = isMessageUnreadForCurrentUser(msg);
-
+                                    const isUnreadForMe = false; // Simplified for this logic
+                                    if (!msg.text) return null;
                                     return (
                                         <MessageBubble
                                             key={msg.original_pid}
@@ -423,8 +451,7 @@ const ManpowerRequisitionChatBox = () => {
                                                         color: 'primary.main'
                                                     }}
                                                 >
-                                                    {msg.emp_name}{' '}
-                                                    {msg.emp_dept ? `(${msg.emp_dept})` : ''}
+                                                    {msg.author_name}
                                                 </Typography>
                                             )}
                                             {/* Message Text */}
