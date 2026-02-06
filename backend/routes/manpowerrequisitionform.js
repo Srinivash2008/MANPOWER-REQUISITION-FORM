@@ -706,7 +706,6 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
         const isDraftSubmission = data?.status === 'Draft';
         console.log(isDraftSubmission, "isDraftSubmissionisDraftSubmissionisDraftSubmissionisDraftSubmission")
         console.log(isSendMail, "isSendMail");
-        console.log(isSendMail && status === 'Pending',"isSendMail && status === 'Pending'isSendMail && status === 'Pending'")
         if (isSendMail && status === 'Pending') {
             const [user_data] = await pool.execute('SELECT * FROM `employee_personal` WHERE employee_id=?', [data?.created_by]);
             console.log(user_data[0], "user_datauser_datauser_datauser_data")

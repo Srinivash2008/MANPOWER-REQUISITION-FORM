@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
-  Avatar, InputLabel, Input,
-  Divider
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+    Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
+    Avatar, InputLabel, Input,
+    Divider,
+    Backdrop
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList,my_requisitions } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList, my_requisitions } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import { withdrawManpowerRequisition } from '../redux/cases/manpowerrequisitionSlice';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -24,6 +25,7 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditSquareIcon from '@mui/icons-material/EditSquare';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
 import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import "react-quill-new/dist/quill.snow.css";
 import { useDispatch, useSelector } from 'react-redux';
@@ -31,6 +33,7 @@ import io from 'socket.io-client';
 import { motion, AnimatePresence, color } from 'framer-motion';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaUserCheck } from 'react-icons/fa';
 
 const modalStyle = {
   position: 'absolute',
@@ -308,7 +311,6 @@ const ManpowerRequisition = () => {
   const location = useLocation();
   const { user, token } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
-  console.log(manpowerRequisitionList, "manpowerRequisitionList")
   const status = useSelector((state) => state.manpowerRequisition.status);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
@@ -334,6 +336,11 @@ const ManpowerRequisition = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentManpowerId, setCurrentManpowerId] = useState(null);
   const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusFormData, setStatusFormData] = useState({ status: '', comments: '',currentStatus : ''});
+  const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
+  const [queryText, setQueryText] = useState("");
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 
   // Filter States
   const [departmentFilter, setDepartmentFilter] = useState("");
@@ -559,6 +566,117 @@ const ManpowerRequisition = () => {
     );
   };
 
+  const handleOpenStatusModal = (manpower) => {
+    setCurrentManpowerId(manpower.id);
+    const currentStatus = manpower.status;
+    // If HR opens a director-approved MRF, default the select to 'Pending' to avoid value mismatch.
+    const initialModalStatus = (isHr && currentStatus === 'Approve') ? 'Pending' : currentStatus;
+    setStatusFormData({
+      status: initialModalStatus,
+      comments: '',
+      current_status: currentStatus
+    });
+    setQueryText('');
+    setIsRaiseQueryOpen(false);
+    setIsStatusModalOpen(true);
+    handleMenuClose();
+  };
+
+  const handleCloseStatusModal = () => {
+    setIsStatusModalOpen(false);
+    setCurrentManpowerId(null);
+  };
+
+  const handleStatusFormChange = (e) => {
+    const { name, value } = e.target;
+    setStatusFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'status' && value === 'Raise Query') {
+      setIsRaiseQueryOpen(true);
+    } else if (name === 'status') {
+      setIsRaiseQueryOpen(false);
+    }
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!currentManpowerId || !statusFormData.status) {
+      swal.fire('Error', 'Please select a status.', 'error');
+      return;
+    }
+
+    setIsStatusUpdating(true);
+
+        let isSendMail = false;
+
+       
+        switch (statusFormData?.current_status) {
+            case 'Draft':
+                if(user.emp_id != "1722" && user.emp_id != "1400"){
+                    isSendMail = true;
+                }
+                else{
+                    isSendMail = false;
+                }
+                
+                break;
+            case 'Pending':
+                if (user.emp_id == "1400") {
+                    isSendMail = true;
+                } else {
+                    isSendMail = false;
+                }
+                break;
+            case 'Approve':
+                if (user.emp_id == "1722") {
+                    isSendMail = true;
+                }
+                else {
+                    isSendMail = false;
+                }
+                break;
+
+            default:
+                isSendMail = false;
+                break;
+        }
+        
+
+
+    const payload = {
+      manpowerId: currentManpowerId,
+      newStatus: statusFormData.status == "Draft" ? "Pending" : statusFormData.status,
+      hr_comments: (isHr ? statusFormData.comments : null) || null,
+      director_comments: (isDirector ? statusFormData.comments : null) || null,
+      data: paginatedManpower.find(m => m.id === currentManpowerId),
+      isSendMail: isSendMail
+    };
+
+    console.log("isSendMail After Switch Case", isSendMail);
+    console.log(payload, "payloadpayloadpayloadpayloadpayload");
+    console.log(statusFormData.status,"statusFormData.statusstatusFormData.status")
+    console.log(statusFormData?.current_status,"current_statuscurrent_status")
+
+    try {
+      await dispatch(updateManpowerStatus(payload)).unwrap();
+
+      if (statusFormData.status === 'Raise Query' && queryText) {
+        const queryAddData = {
+          query_manpower_requisition_pid: currentManpowerId,
+          query_name: queryText,
+          query_created_by: user?.emp_id,
+          query_created_date: new Date().toISOString().split('T')[0],
+          query_created_time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+        };
+        await dispatch(addQueryForm(queryAddData)).unwrap();
+      }
+      swal.fire('Success', 'Status updated successfully!', 'success');
+      handleCloseStatusModal();
+      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+    } catch (error) {
+      setIsStatusUpdating(false);
+      swal.fire('Error', error.message || 'Failed to update status.', 'error');
+    }
+    setIsStatusUpdating(false);
+  };
 
   //   const handleStatusChange = (event, manpowerId) => {
   //     const newStatus = event.target.value;
@@ -902,6 +1020,10 @@ const ManpowerRequisition = () => {
                                 (isSeniorManager && (manpower.director_status === "Approve" || manpower.hr_status === "HR Approve"))) && (
                                   <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
                                 )} */}
+                              
+                              {((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
+                                <MenuItem onClick={() => handleOpenStatusModal(manpower)}><PublishedWithChangesIcon sx={{ mr: 1.5, color: 'secondary.main' }} />Update Status</MenuItem>
+                              )}
 
 
 
@@ -1053,7 +1175,7 @@ const ManpowerRequisition = () => {
       )}
       {isSuccessModalOpen && (
         <AnimatePresence>
-          <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+          <Dialog open={isSuccessModalOpen} onClose={handleClose} maxWidth="xs" fullWidth>
             <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit"
               style={{
                 display: 'flex', flexDirection: 'column', backgroundColor: 'white',
@@ -1095,7 +1217,7 @@ const ManpowerRequisition = () => {
       )}
 
       {isRaiseQueryModalOpen && (
-        <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description" closeAfterTransition={false}  >
+        <Modal open={isRaiseQueryModalOpen} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description" closeAfterTransition={false}  >
           <Box sx={modalStyle}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <AssessmentIcon
@@ -1196,7 +1318,7 @@ const ManpowerRequisition = () => {
 
       {isSuccessQueryModalOpen && (
         <AnimatePresence>
-          <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+          <Dialog open={isSuccessQueryModalOpen} onClose={handleClose} maxWidth="xs" fullWidth>
             <motion.div variants={modalVariants} initial="hidden" animate="visible" exit="exit"
               style={{
                 display: 'flex', flexDirection: 'column', backgroundColor: 'white',
@@ -1236,6 +1358,94 @@ const ManpowerRequisition = () => {
           </Dialog>
         </AnimatePresence>
       )}
+
+      {isStatusModalOpen && (
+          <AnimatePresence>
+              <Dialog
+                  open={isStatusModalOpen}
+                  onClose={handleCloseStatusModal}
+                  maxWidth="sm"
+                  fullWidth
+                  PaperProps={{
+                      component: motion.div,
+                      variants: modalVariants,
+                      initial: "hidden",
+                      animate: "visible",
+                      exit: "exit",
+                  }}
+              >
+                  <DialogTitle sx={{ borderBottom: `1px solid ${theme.palette.divider}`, pb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <PublishedWithChangesIcon color="primary" />
+                          <Typography variant="h6" component="div">Update Requisition Status</Typography>
+                      </Box>
+                  </DialogTitle>
+                  <DialogContent sx={{ pt: '20px !important', pb: 2 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          <FormControl fullWidth variant="outlined">
+                              <InputLabel id="status-select-label">Status</InputLabel>
+                              <Select
+                                  labelId="status-select-label"
+                                  label="Status"
+                                  name="status"
+                                  value={statusFormData.status}
+                                  onChange={handleStatusFormChange}
+                              >
+                                  {isDirector && (
+                                      [
+                                          <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
+                                          <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
+                                          <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
+                                          <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
+                                      ]
+                                  )}
+                                  {isHr && (
+                                      [
+                                          <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
+                                          <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
+                                          <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
+                                          <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
+                                      ]
+                                  )}
+                              </Select>
+                          </FormControl>
+                          {isRaiseQueryOpen && (
+                              <TextField
+                                  fullWidth
+                                  multiline
+                                  rows={3}
+                                  label="Query"
+                                  value={queryText}
+                                  onChange={(e) => setQueryText(e.target.value)}
+                                  variant="outlined"
+                              />
+                          )}
+                          <TextField
+                              fullWidth
+                              multiline
+                              rows={3}
+                              label="Comments"
+                              name="comments"
+                              value={statusFormData.comments}
+                              onChange={handleStatusFormChange}
+                              variant="outlined"
+                          />
+                      </Box>
+                  </DialogContent>
+                  <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                      <Button onClick={handleCloseStatusModal} color="secondary">Cancel</Button>
+                      <Button onClick={handleStatusUpdate} variant="contained" color="primary">Update</Button>
+                  </DialogActions>
+              </Dialog>
+          </AnimatePresence>
+      )}
+
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
+        open={isStatusUpdating}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 
