@@ -5,7 +5,8 @@ import {
     Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
     Avatar, InputLabel, Input,
     Divider,
-    Backdrop
+    Backdrop,
+    FormHelperText
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList, my_requisitions } from '../redux/cases/manpowerrequisitionSlice';
@@ -341,6 +342,7 @@ const ManpowerRequisition = () => {
   const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
   const [queryText, setQueryText] = useState("");
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+  const [statusModalErrors, setStatusModalErrors] = useState({});
 
   // Filter States
   const [departmentFilter, setDepartmentFilter] = useState("");
@@ -569,15 +571,15 @@ const ManpowerRequisition = () => {
   const handleOpenStatusModal = (manpower) => {
     setCurrentManpowerId(manpower.id);
     const currentStatus = manpower.status;
-    // If HR opens a director-approved MRF, default the select to 'Pending' to avoid value mismatch.
-    const initialModalStatus = (isHr && currentStatus === 'Approve') ? 'Pending' : currentStatus;
     setStatusFormData({
-      status: initialModalStatus,
+      // Initialize status as empty to force user selection.
+      status: '',
       comments: '',
       current_status: currentStatus
     });
     setQueryText('');
     setIsRaiseQueryOpen(false);
+    setStatusModalErrors({});
     setIsStatusModalOpen(true);
     handleMenuClose();
   };
@@ -585,6 +587,7 @@ const ManpowerRequisition = () => {
   const handleCloseStatusModal = () => {
     setIsStatusModalOpen(false);
     setCurrentManpowerId(null);
+    setStatusModalErrors({});
   };
 
   const handleStatusFormChange = (e) => {
@@ -598,13 +601,30 @@ const ManpowerRequisition = () => {
   };
 
   const handleStatusUpdate = async () => {
-    if (!currentManpowerId || !statusFormData.status) {
-      swal.fire('Error', 'Please select a status.', 'error');
+
+    const errors = {};
+    if (!statusFormData.status) {
+      errors.status = 'Please select a status.';
+    }
+   
+
+    // if (isDirector && ['Approve', 'Reject', 'On Hold'].includes(statusFormData.status) && !statusFormData.comments.trim()) {
+    //   errors.comments = 'Director Comments are required for this action.';
+    // }
+    // if (isHr && ['HR Approve', 'Reject', 'On Hold'].includes(statusFormData.status) && !statusFormData.comments.trim()) {
+    //   errors.comments = 'HR Comments are required for this action.';
+    // }
+
+     if (Object.keys(errors).length > 0) {
+      setStatusModalErrors(errors);
       return;
     }
+    
 
-    setIsStatusUpdating(true);
 
+
+    
+setStatusModalErrors({});
         let isSendMail = false;
 
        
@@ -656,6 +676,7 @@ const ManpowerRequisition = () => {
     console.log(statusFormData?.current_status,"current_statuscurrent_status")
 
     try {
+      setIsStatusUpdating(true);
       await dispatch(updateManpowerStatus(payload)).unwrap();
 
       if (statusFormData.status === 'Raise Query' && queryText) {
@@ -1382,7 +1403,7 @@ const ManpowerRequisition = () => {
                   </DialogTitle>
                   <DialogContent sx={{ pt: '20px !important', pb: 2 }}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          <FormControl fullWidth variant="outlined">
+                          <FormControl fullWidth variant="outlined" error={!!statusModalErrors.status}>
                               <InputLabel id="status-select-label">Status</InputLabel>
                               <Select
                                   labelId="status-select-label"
@@ -1390,8 +1411,10 @@ const ManpowerRequisition = () => {
                                   name="status"
                                   value={statusFormData.status}
                                   onChange={handleStatusFormChange}
+                                  
                               >
                                   {isDirector && (
+                                       <MenuItem value="" disabled>Select the Status</MenuItem>,
                                       [
                                           <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
                                           <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
@@ -1400,6 +1423,7 @@ const ManpowerRequisition = () => {
                                       ]
                                   )}
                                   {isHr && (
+                                      <MenuItem value="" disabled>Select the Status</MenuItem>,
                                       [
                                           <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
                                           <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
@@ -1408,6 +1432,9 @@ const ManpowerRequisition = () => {
                                       ]
                                   )}
                               </Select>
+                              {statusModalErrors.status && (
+                                <FormHelperText>{statusModalErrors.status}</FormHelperText>
+                              )}
                           </FormControl>
                           {isRaiseQueryOpen && (
                               <TextField
@@ -1429,6 +1456,8 @@ const ManpowerRequisition = () => {
                               value={statusFormData.comments}
                               onChange={handleStatusFormChange}
                               variant="outlined"
+                              error={!!statusModalErrors.comments}
+                              helperText={statusModalErrors.comments}
                           />
                       </Box>
                   </DialogContent>
