@@ -223,6 +223,8 @@ const ManpowerRequisitionChatBox = () => {
     }, [showReplyButton]);
 
     useEffect(() => {
+        console.log(selectedRequisition?.status,"selectedRequisition?.statusselectedRequisition?.statusselectedRequisition?.status")
+            
         if (user && user?.emp_id == "12345") {
             setShowReplyButton(false);
         } else if (user?.emp_id == "1400") {
@@ -347,18 +349,14 @@ const ManpowerRequisitionChatBox = () => {
             query_manpower_requisition_pid: id,
         };
 
-
-        console.log({ id: user?.emp_id, reply: messageData.message, query_pid: query.query_pid })
-
-
-
-        // await dispatch(replyToQuery({ id: id, reply: messageData.message, query_pid: query.query_pid})).unwrap();
-        // setForm(prev => ({ ...prev, answerMessage: '' }));
         try {
             await dispatch(replyToQuery({ id: id, reply: messageData.message, query_pid: query.query_pid })).unwrap();
             setForm(prev => ({ ...prev, answerMessage: '' }));
+            // Manually refetch data to show the new message and update status
+            dispatch(fetchChatMessageList(id));
+            dispatch(fetchManpowerRequisitionById(id));
         } catch (error) {
-            console.error("Failed to send reply:", error);
+            console.error("Failed to send reply:", error); //NOSONAR
         } finally {
             setIsSending(false);
         }
