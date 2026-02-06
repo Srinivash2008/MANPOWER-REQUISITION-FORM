@@ -99,8 +99,10 @@ console.log(location.pathname,"location")
             <Route path="/mrf_status_edit/:id" element={<MRF_Status_Edit />} />
             
 
-            <Route path="/manpower_requisition_chatbox/:id" element={<ManpowerRequisitionChatBox/>} /> 
-           <Route Path="/manpower_hr_fh_chatbox/:id" element ={<ManpowerHRFHChatBox />} />
+            <Route path="/Director_chatbox/:id" element={<ManpowerRequisitionChatBox/>} /> 
+            
+            <Route path="/HR_chatbox/:id" element={<ManpowerRequisitionChatBox/>} /> 
+   
 
 
             <Route path="/reports" element={<ManpowerRequisitionReport/>} />

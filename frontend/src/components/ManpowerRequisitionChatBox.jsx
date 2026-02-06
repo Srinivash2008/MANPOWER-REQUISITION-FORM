@@ -227,9 +227,28 @@ const ManpowerRequisitionChatBox = () => {
     };
 
     const sortedChatMessageList = React.useMemo(() => {
-        return [...chatMessageList].sort(
-            (a, b) => a.query_pid - b.query_pid
-        );
+        const expandedList = [];
+        chatMessageList.forEach(msg => {
+            if (msg.query_name_director) {
+                expandedList.push({ ...msg, text: msg.query_name_director, type: 'query_director', original_pid: msg.query_pid + '_q', author_id: msg.query_created_by });
+            }
+            if (msg.Director_Query_Answer) {
+                expandedList.push({ ...msg, text: msg.Director_Query_Answer, type: 'answer_director', original_pid: msg.query_pid + '_a', author_id: currentUser.emp_id });
+            }
+            if (msg.query_name_hr) {
+                expandedList.push({ ...msg, text: msg.query_name_hr, type: 'query_hr', original_pid: msg.query_pid + '_q_hr', author_id: msg.query_created_by });
+            }
+            if (msg.HR_Query_Answer) {
+                expandedList.push({ ...msg, text: msg.HR_Query_Answer, type: 'answer_hr', original_pid: msg.query_pid + '_a_hr', author_id: msg.query_replied_by });
+            }
+
+            // If it's a simple message without the query/answer structure
+            if (!msg.query_name_director && !msg.Director_Query_Answer && !msg.query_name_hr && !msg.HR_Query_Answer && (msg.query_name || msg.message)) {
+                 expandedList.push({ ...msg, text: msg.query_name || msg.message, type: 'simple', original_pid: msg.query_pid });
+            }
+        });
+
+        return expandedList.sort((a, b) => new Date(a.query_created_date) - new Date(b.query_created_date) || a.query_pid - b.query_pid);
     }, [chatMessageList]);
 
      useEffect(() => {
@@ -383,30 +402,31 @@ const ManpowerRequisitionChatBox = () => {
                         {chatMessageList && chatMessageList.length > 0 ? (
                             <AnimatePresence mode="popLayout">
                                 {sortedChatMessageList.map((msg) => {
-                                    const isMine = Number(msg.query_created_by) === Number(currentUser.emp_id) || msg.query_created_by === currentUser.emp_id;
+                                    const isMine = Number(msg.author_id) === Number(currentUser.emp_id);
                                     const isUnreadForMe = isMessageUnreadForCurrentUser(msg);
 
                                     return (
                                         <MessageBubble
-                                            key={msg.query_pid}
+                                            key={msg.original_pid}
                                             ismine={isMine.toString()}
                                             variants={messageVariants}
                                             initial="hidden"
                                             animate="visible"
                                             exit="exit"
                                         >
-                                            {/* Sender Name */}
-                                            <Typography
-                                                variant="subtitle2"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    color: isMine ? 'white' : 'primary.main'
-                                                }}
-                                            >
-                                                {msg.emp_name}{' '}
-                                                {msg.emp_dept ? `(${msg.emp_dept})` : ''}
-                                            </Typography>
-
+                                            {/* Sender Name (only for other users) */}
+                                            {!isMine && (
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: 'primary.main'
+                                                    }}
+                                                >
+                                                    {msg.emp_name}{' '}
+                                                    {msg.emp_dept ? `(${msg.emp_dept})` : ''}
+                                                </Typography>
+                                            )}
                                             {/* Message Text */}
                                             <Box
                                                 sx={{
@@ -425,13 +445,10 @@ const ManpowerRequisitionChatBox = () => {
                                                 
                                             >
                                                 <Typography sx={{ color: isMine ? 'white' : 'inherit' }}>
-                                                    {msg.query_name_director
-                                                        ? msg.Director_Query_Answer || msg.query_name_director
-                                                        : msg.query_name_hr
-                                                        ? msg.Hr_Query_Answer || msg.query_name_hr
-                                                        : ''
-                                                    }
+                                                    {msg.text}
                                                 </Typography>
+
+
                                                     <Typography
                                                         variant="caption"
                                                         sx={{
@@ -541,21 +558,21 @@ const ManpowerRequisitionChatBox = () => {
                             }}
                         />
                         <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={query?.Director_Query_Answer !=""}
-                            endIcon={<SendIcon sx={{ color: '#fff' }} />}
-                            sx={{
-                                borderRadius: 2,
-                                width: 'fit-content',
-                                transition: 'all 0.3s ease',
-                                '&:hover': {
-                                    transform: 'scale(1.05)',
-                                }
-                            }}
-                        >
-                            Reply
-                        </Button>
+                                type="submit"
+                                variant="contained"
+                                disabled={!query || query?.Director_Query_Answer !== ""}
+                                endIcon={<SendIcon sx={{ color: '#fff' }} />}
+                                sx={{
+                                    borderRadius: 2,
+                                    width: 'fit-content',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        transform: 'scale(1.05)',
+                                    }
+                                }}
+                            >
+                                Reply
+                            </Button>
                     </Box>
                 </ChatContainer>
             </div>
@@ -564,5 +581,3 @@ const ManpowerRequisitionChatBox = () => {
 };
 
 export default ManpowerRequisitionChatBox;
-
-

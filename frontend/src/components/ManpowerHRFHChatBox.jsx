@@ -383,18 +383,19 @@ const ManpowerHRFHChatBox = () => {
                                             animate="visible"
                                             exit="exit"
                                         >
-                                            {/* Sender Name */}
-                                            <Typography
-                                                variant="subtitle2"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    color: isMine ? 'white' : 'primary.main'
-                                                }}
-                                            >
-                                                {msg.emp_name}{' '}
-                                                {msg.emp_dept ? `(${msg.emp_dept})` : ''}
-                                            </Typography>
-
+                                            {/* Sender Name (only for other users) */}
+                                            {!isMine && (
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: 'primary.main'
+                                                    }}
+                                                >
+                                                    {msg.emp_name}{' '}
+                                                    {msg.emp_dept ? `(${msg.emp_dept})` : ''}
+                                                </Typography>
+                                            )}
                                             {/* Message Text */}
                                             <Box
                                                 sx={{
@@ -551,5 +552,3 @@ const ManpowerHRFHChatBox = () => {
 };
 
 export default ManpowerHRFHChatBox;
-
-

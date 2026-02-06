@@ -528,8 +528,8 @@ const ManpowerRequisition = () => {
   };
   const handleMenuClose = () => setAnchorEl(null);
 
-    const handleChatboxClick = (id) => {
-    navigate(`/manpower_requisition_chatbox/${id}`);
+    const handleChatboxClick = (id,type) => {
+    navigate(`/${type}/${id}`);
   }
 
 
@@ -1076,9 +1076,9 @@ const ManpowerRequisition = () => {
                               {/* {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
                                 <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
                               )} */}
-                               <MenuItem  onClick={() => { handleChatboxClick(manpower.id); handleMenuClose(); }}><MessageIcon sx={{ mr: 1.5, color: 'secondary.main' }} />ChatBox</MenuItem>
-
-                            </Menu>
+                                {user.emp_id != "1722" && <MenuItem  onClick={() => { handleChatboxClick(manpower.id,"Director_chatbox"); handleMenuClose(); }}><MessageIcon sx={{ mr: 1.5, color: 'secondary.main' }} />Director Query's</MenuItem>}
+                                {user.emp_id != "1400" &&  <MenuItem  onClick={() => { handleChatboxClick(manpower.id,"HR_chatbox"); handleMenuClose(); }}><MessageIcon sx={{ mr: 1.5, color: 'secondary.main' }} />HR Query's</MenuItem>}
+                              </Menu>
                           </StyledTableCell>
                         </StyledTableRow>
                       ))
