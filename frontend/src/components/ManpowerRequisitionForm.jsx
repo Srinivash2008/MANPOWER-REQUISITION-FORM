@@ -652,7 +652,7 @@ const ManpowerRequisition = () => {
                     isSendMail = false;
                 }
                 break;
-            case 'Raise Query':
+            case 'FH Replied':
                if (user.emp_id == "1400" || user.emp_id == "1722") {
                     isSendMail = true;
                 } else {

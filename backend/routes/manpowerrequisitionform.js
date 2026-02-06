@@ -547,6 +547,7 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
     console.log(user, "useruseruseruseruser")
     console.log(reply, "reply")
     console.log(query_pid, "query_pidquery_pidquery_pid")
+   
 
     if (!reply) {
         return res.status(400).json({ message: 'Reply is required.' });
@@ -575,7 +576,7 @@ router.post('/reply-to-query/:id', authMiddleware, async (req, res) => {
                 [reply, query_pid]
             );
         }
-
+ console.log(replyColumn, "replyColumnreplyColumnreplyColumnreplyColumn")
         // Update the main MRF status based on who raised the query
         if (replyColumn === 'Director_Query_Answer') {
             await pool.execute(

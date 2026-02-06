@@ -14,6 +14,8 @@ import {
     Tooltip,
     TextField,
     Divider,
+    Backdrop,
+    CircularProgress,
 } from "@mui/material";
 import {
     Send as SendIcon,
@@ -189,6 +191,7 @@ const ManpowerRequisitionChatBox = () => {
     const { token, user , status} = useSelector((state) => state.auth);
     const currentUser = user;
     const [errors, setErrors] = useState(false);
+    const [isSending, setIsSending] = useState(false);
   
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
  
@@ -277,7 +280,7 @@ const ManpowerRequisitionChatBox = () => {
             const dateB = new Date(b.query_created_date + 'T' + b.query_created_time);
             return dateA - dateB;
         });
-    }, [chatMessageList, location.pathname, user.emp_id]);
+    }, [chatMessageList, location.pathname, user?.emp_id]);
 
      useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -309,6 +312,8 @@ const ManpowerRequisitionChatBox = () => {
         e.preventDefault();
         if (!form.answerMessage || form.answerMessage.trim() === '') return;
 
+        setIsSending(true);
+
         const messageData = {
             message: form.answerMessage,
             query_manpower_requisition_pid: id,
@@ -319,8 +324,16 @@ const ManpowerRequisitionChatBox = () => {
 
         
    
-        await dispatch(replyToQuery({ id: user?.emp_id, reply: messageData.message, query_pid: query.query_pid})).unwrap();
-        setForm(prev => ({ ...prev, answerMessage: '' }));
+        // await dispatch(replyToQuery({ id: id, reply: messageData.message, query_pid: query.query_pid})).unwrap();
+        // setForm(prev => ({ ...prev, answerMessage: '' }));
+        try {
+            await dispatch(replyToQuery({ id: id, reply: messageData.message, query_pid: query.query_pid})).unwrap();
+            setForm(prev => ({ ...prev, answerMessage: '' }));
+        } catch (error) {
+            console.error("Failed to send reply:", error);
+        } finally {
+            setIsSending(false);
+        }
     };
 
     // Animation variants
@@ -368,6 +381,13 @@ const ManpowerRequisitionChatBox = () => {
       : 'HR';
     return (
         <div className="page-wrapper">
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
+                open={isSending}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+
             <div className="form-panel">
                 {/* Back Button */}
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, mt: 5, flexDirection: "row-reverse" }}>
