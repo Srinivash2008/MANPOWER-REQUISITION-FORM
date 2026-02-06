@@ -638,7 +638,7 @@ router.get('/get-query/:id', authMiddleware, async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT * FROM manpower_requisition_query WHERE query_manpower_requisition_pid = ? order by `query_pid` DESC Limit 1', [id]);
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'Query not found.' });
+          res.json([]);
         }
         res.json(rows[0]);
     } catch (error) {

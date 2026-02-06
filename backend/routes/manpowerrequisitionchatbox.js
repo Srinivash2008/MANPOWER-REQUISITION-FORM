@@ -12,6 +12,7 @@ const { emitManpowerRequisitionQueryRefresh } = require('../socketManager');
 router.get('/get-chat-box-list/:mrfId', authMiddleware, async (req, res) => {
     try {
         const { mrfId } = req.params;
+        console.log('mrfId:', mrfId)
        const [rows] = await pool.execute(
         ` SELECT 
                 mrq.*,
@@ -28,15 +29,15 @@ router.get('/get-chat-box-list/:mrfId', authMiddleware, async (req, res) => {
             [mrfId, 'Active']
         );
         if (rows.length === 0) {
-            return res.status(404).json({ message: 'User not found.' });
+            return res.json([]);
         }
-        //const user = rows[0];
         res.json(rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error.' });
     }
 });
+
 router.post('/add-chatbox-message', authMiddleware, async(req, res) => {
     const { message,query_manpower_requisition_pid } = req.body;
     const { user } = req;
