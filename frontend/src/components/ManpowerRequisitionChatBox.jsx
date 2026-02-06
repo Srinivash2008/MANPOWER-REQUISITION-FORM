@@ -206,6 +206,9 @@ const ManpowerRequisitionChatBox = () => {
         const socket = io(API_URL);
         socket.on('manpowerrequisition-query-refresh', () => {
             dispatch(fetchChatMessageList(id))
+            dispatch(fetchManpowerRequisitionById(id));
+            dispatch(fetchQuery(id));
+
         });
         return () => socket.disconnect();
     }, [user, dispatch]);
@@ -214,9 +217,22 @@ const ManpowerRequisitionChatBox = () => {
     const chatMessageList = useSelector((state) => state.manpowerRequisitionChat.data ?? []);
     const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
     const query = useSelector((state) => state.manpowerRequisition.query);
-    console.log(selectedRequisition, "selectedRequisition")
-    console.log(chatMessageList, "chatMessageList");
-    console.log(query, "queryquery")
+    
+    useEffect(() => {
+        console.log(!showReplyButton,"showReplyButtonshowReplyButtonshowReplyButtonshowReplyButtonshowReplyButton")
+    }, [showReplyButton]);
+
+    useEffect(() => {
+        if (user && user?.emp_id == "12345") {
+            setShowReplyButton(false);
+        } else if (user?.emp_id == "1400") {
+            setShowReplyButton(selectedRequisition?.status === 'Pending');
+        } else if (user?.emp_id == "1722") {
+            setShowReplyButton(selectedRequisition?.status === 'Approved');
+        } else {
+            setShowReplyButton(selectedRequisition?.status === 'Raise Query');
+        }}
+        , [user, selectedRequisition?.status])
 
     const [form, setForm] = useState({
         answerMessage: '',
@@ -316,33 +332,8 @@ const ManpowerRequisitionChatBox = () => {
             setErrors({ ...errors, [name]: "" });
         }
     };
-   console.log(user.emp_id,"sfgsdsfsdfsdfsf")
-   console.log(showReplyButton,"showReplyButtonshowReplyButton")
-    useEffect(() => {
-        switch (user.emp_id) {
-        case "12345":
-           setShowReplyButton(false);
-            break;
-        case "1400":
-            if (selectedRequisition.status == 'Pending') {
-               setShowReplyButton(true);
-            } else {
-             setShowReplyButton(false);
-            }
-            break;
-        case "1722":
-            if (selectedRequisition.status == 'Approved') {
-               setShowReplyButton(true);
-            } else {
-                setShowReplyButton(false);
-            }
-            break;
-        default:
-           setShowReplyButton(false);
-            break;
-    }
-    }
-    ,[user])
+
+    
 
     // Handle send message
     const handleSendMessage = async (e) => {
@@ -417,6 +408,13 @@ const ManpowerRequisitionChatBox = () => {
                 ? 'DR'
                 : 'HR';
     return (
+        <>
+        <Backdrop
+            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
+            open={isSending}
+        >
+            <CircularProgress color="inherit" />
+        </Backdrop>
         <div className="page-wrapper">
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
@@ -644,7 +642,7 @@ const ManpowerRequisitionChatBox = () => {
                         <Button
                             type="submit"
                             variant="contained"
-                            disabled={showReplyButton}
+                            disabled={!showReplyButton}
                             endIcon={<SendIcon sx={{ color: '#fff' }} />}
                             sx={{
                                 borderRadius: 2,
@@ -661,6 +659,7 @@ const ManpowerRequisitionChatBox = () => {
                 </ChatContainer>
             </div>
         </div>
+        </>
     );
 };
 
