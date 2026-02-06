@@ -196,14 +196,14 @@ const Dashboard = () => {
       description: 'Awaiting primary manager approval.',
     },
     {
-      status: 'Query by Director',
+      status: 'Director Query/Replied',
       count: counts.directorRaiseQuery,
       icon: (props) => <ErrorOutlineIcon {...props} />,
       color: 'info',
       description: 'Awaiting final HR/Budget sign-off.',
     },
     {
-      status: 'Query by HR',
+      status: 'HR Query/Replied',
       count: counts.hrRaiseQuery,
       icon: (props) => <ErrorOutlineIcon {...props} />,
       color: 'info',
@@ -236,7 +236,7 @@ const Dashboard = () => {
 
     { status: 'MRF Approved', count: dirCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
     { status: 'MRF Rejected', count: dirCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'MRF Raise Query', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
+    { status: 'MRF Query/Replied', count: dirCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' },
     { status: 'MRF on Hold', count: dirCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
@@ -254,7 +254,7 @@ const Dashboard = () => {
     { status: 'MRF Pending', count: hrCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'warning' },
     { status: 'MRF Approved', count: hrCounts.approved, icon: (props) => <TrendingUpIcon {...props} />, color: 'success' },
     { status: 'MRF Rejected', count: hrCounts.rejected, icon: (props) => <CloseIcon {...props} />, color: 'error' },
-    { status: 'MRF Query', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
+    { status: 'MRF Query/Replied', count: hrCounts.raiseQuery, icon: (props) => <ErrorOutlineIcon {...props} />, color: 'info' }, //NOSONAR
     { status: 'MRF On-Hold', count: hrCounts.onHold, icon: (props) => <AccessTimeIcon {...props} />, color: 'tertitary' },
   ];
 
@@ -295,8 +295,8 @@ const Dashboard = () => {
   const fhPendingStatuses = [
     { status: 'MRF Submitted', count: baseCounts.pending, color: 'secondary' },
     { status: 'MRF On Hold', count: baseCounts.onHold, color: 'tertitary' },
-    { status: 'MRF Query by Director', count: baseCounts.directorRaiseQuery, color: 'info' },
-    { status: 'MRF Query by HR', count: baseCounts.hrRaiseQuery, color: 'info' },
+    { status: 'Director Query/Replied', count: baseCounts.directorRaiseQuery, color: 'info' },
+    { status: 'HR Query/Replied', count: baseCounts.hrRaiseQuery, color: 'info' },
     { status: 'MRF Draft', count: baseCounts.draft, color: 'error' }
   ].filter(m => m.count > 0);
   const fhTotalPending = fhPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
@@ -337,7 +337,7 @@ const Dashboard = () => {
         (m) => //NOSONAR
           m.status === 'MRF Submitted' ||
           m.status === 'MRF On-Hold' ||
-          m.status.startsWith('Query by') ||
+          m.status.includes('Query/Replied') ||
           m.status === 'MRF FH Replied'
       );
       break;
@@ -366,12 +366,12 @@ const Dashboard = () => {
           'MRF Withdrawn',
           'Director Pending',
           'Director on Hold',
-          'Director Raise Query',
+          'Director Query/Replied',
           'Director Rejected',
           'Director Approved',
           'HR Pending',
           'HR On-Hold',
-          'HR Query',
+          'HR Query/Replied',
           'HR Rejected',
           'HR Approved',
         ];

@@ -1146,7 +1146,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
             COALESCE(SUM(CASE WHEN director_status = 'Pending' THEN 1 ELSE 0 END), 0) AS director_pending_count,
             COALESCE(SUM(CASE WHEN director_status = 'Approve' THEN 1 ELSE 0 END), 0) AS director_approve_count,
             COALESCE(SUM(CASE WHEN director_status = 'Reject' THEN 1 ELSE 0 END), 0) AS director_reject_count,
-            COALESCE(SUM(CASE WHEN director_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS director_raise_query_count,
+            COALESCE(SUM(CASE WHEN director_status IN ('Raise Query', 'FH Replied') THEN 1 ELSE 0 END), 0) AS director_raise_query_count,
             COALESCE(SUM(CASE WHEN director_status = 'On Hold' THEN 1 ELSE 0 END), 0) AS director_on_hold_count
         `;
 
@@ -1154,7 +1154,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
             COALESCE(SUM(CASE WHEN hr_status = 'Pending' AND director_status = 'Approve' THEN 1 ELSE 0 END), 0) AS hr_pending_count,
             COALESCE(SUM(CASE WHEN hr_status = 'HR Approve' THEN 1 ELSE 0 END), 0) AS hr_approve_count,
             COALESCE(SUM(CASE WHEN hr_status = 'Reject' THEN 1 ELSE 0 END), 0) AS hr_reject_count,
-            COALESCE(SUM(CASE WHEN hr_status = 'Raise Query' THEN 1 ELSE 0 END), 0) AS hr_raise_query_count,
+            COALESCE(SUM(CASE WHEN hr_status IN ('Raise Query', 'FH Replied') THEN 1 ELSE 0 END), 0) AS hr_raise_query_count,
             COALESCE(SUM(CASE WHEN hr_status = 'On Hold' THEN 1 ELSE 0 END), 0) AS hr_on_hold_count
         `;
 
