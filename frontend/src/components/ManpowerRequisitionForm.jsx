@@ -1032,53 +1032,58 @@ const ManpowerRequisition = () => {
                           <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
                           
                           <StyledTableCell>
-                            <IconButton aria-label="more" aria-controls={`actions-menu-${manpower.id}`} aria-haspopup="true" onClick={(event) => handleMenuClick(event, manpower.id)}>
-                              <MoreVertIcon />
-                            </IconButton>
-                            <Menu
-                              id={`actions-menu-${manpower.id}`}
-                              anchorEl={anchorEl}
-                              open={Boolean(anchorEl) && currentManpowerId === manpower.id}
-                              onClose={handleMenuClose}
-                              PaperProps={{ style: { boxShadow: '0px 1px 5px rgba(0,0,0,0.2)' } }}
-                            >
-                              <MenuItem onClick={() => { handleViewClick(manpower.id); handleMenuClose(); }}><PreviewIcon sx={{ mr: 1.5, color: 'info.main' }} />View</MenuItem>
-                              {/* {!((isHr && manpower.hr_status === "Approve") ||
-                                (isDirector && manpower.director_status === "HR Approve") ||
-                                (isSeniorManager && (manpower.director_status === "Approve" || manpower.hr_status === "HR Approve"))) && (
-                                  <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
-                                )} */}
-                              
-                              {((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
-                                <MenuItem onClick={() => handleOpenStatusModal(manpower)}><PublishedWithChangesIcon sx={{ mr: 1.5, color: 'secondary.main' }} />Update Status</MenuItem>
+                            <Tooltip title="View">
+                              <IconButton onClick={() => handleViewClick(manpower.id)} sx={{ color: 'info.main' }}>
+                                <PreviewIcon />
+                              </IconButton>
+
+                              {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
+                                <Tooltip title="Update Status">
+                                  <IconButton onClick={() => handleOpenStatusModal(manpower)} sx={{ color: 'secondary.main' }}>
+                                    <PublishedWithChangesIcon />
+                                  </IconButton>
+                                </Tooltip>
                               )}
 
-
-
+                            </Tooltip>
                               {(isDirector && manpower.director_status !== "Approve")
-                                && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                && <Tooltip title="Edit">
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
+                                      <EditDocumentIcon />
+                                    </IconButton>
+                                  </Tooltip>
                               }
                               {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
-                                && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                && <Tooltip title="Edit">
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
+                                      <EditDocumentIcon />
+                                    </IconButton>
+                                  </Tooltip>
                               }
                               {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
-                                && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                && <Tooltip title="Edit">
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
+                                      <EditDocumentIcon />
+                                    </IconButton>
+                                  </Tooltip>
                               }
                                {(user.emp_id == "12345" && manpower.hr_status !== "HR Approve")
-                                && <MenuItem onClick={() => { handleEditClick(manpower.id); handleMenuClose(); }}><EditDocumentIcon sx={{ mr: 1.5, color: 'primary.main' }} />Edit</MenuItem>
+                                && <Tooltip title="Edit">
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
+                                      <EditDocumentIcon />
+                                    </IconButton>
+                                  </Tooltip>
                               }
 
-
-
                               {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                <MenuItem onClick={() => { handleWithdrawClick(manpower.id); handleMenuClose(); }}><UndoIcon sx={{ mr: 1.5, color: 'warning.main' }} />Withdraw</MenuItem>
+                                <Tooltip title="Withdraw">
+                                  <IconButton onClick={() => handleWithdrawClick(manpower.id)} sx={{ color: 'warning.main' }}>
+                                    <UndoIcon />
+                                  </IconButton>
+                                </Tooltip>
                               )}
-                              {/* {(user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                <MenuItem onClick={() => { handleDeleteClick(manpower.id); handleMenuClose(); }}><DeleteForeverIcon sx={{ mr: 1.5, color: 'error.main' }} />Delete</MenuItem>
-                              )} */}
-                                {user.emp_id != "1722" && <MenuItem  onClick={() => { handleChatboxClick(manpower.id,"Director_chatbox"); handleMenuClose(); }}><MessageIcon sx={{ mr: 1.5, color: 'secondary.main' }} />Director Query's</MenuItem>}
-                                {user.emp_id != "1400" &&  <MenuItem  onClick={() => { handleChatboxClick(manpower.id,"HR_chatbox"); handleMenuClose(); }}><MessageIcon sx={{ mr: 1.5, color: 'secondary.main' }} />HR Query's</MenuItem>}
-                              </Menu>
+                                {user.emp_id != "1722" && <Tooltip title="Director Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"Director_chatbox")} sx={{ color: 'secondary.main' }}><MessageIcon /></IconButton></Tooltip>}
+                                {user.emp_id != "1400" && <Tooltip title="HR Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"HR_chatbox")} sx={{ color: 'secondary.main' }}><MessageIcon /></IconButton></Tooltip>}
                           </StyledTableCell>
                         </StyledTableRow>
                       ))
