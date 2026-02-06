@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import { FaCommentDots } from 'react-icons/fa';
 import "./Add_Form.css";
@@ -25,7 +25,7 @@ import {
     Check as CheckIcon,
     DoneAll as DoneAllIcon,
 } from '@mui/icons-material';
-import { useNavigate, useParams, useLocation} from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchChatMessageList, sentChatboxMessage } from '../redux/cases/manpowerrequisitionChatSlice';
@@ -188,13 +188,14 @@ const ManpowerRequisitionChatBox = () => {
     const messagesEndRef = useRef(null);
     const location = useLocation();
     const { id } = useParams();
-    const { token, user , status} = useSelector((state) => state.auth);
+    const { token, user, status } = useSelector((state) => state.auth);
     const currentUser = user;
     const [errors, setErrors] = useState(false);
     const [isSending, setIsSending] = useState(false);
-  
+    const [showReplyButton, setShowReplyButton] = useState(false);
+
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
- 
+
 
     useEffect(() => {
         if (status === 'idle' || status === 'succeeded' && user) {
@@ -207,16 +208,16 @@ const ManpowerRequisitionChatBox = () => {
             dispatch(fetchChatMessageList(id))
         });
         return () => socket.disconnect();
-    }, [ user, dispatch]);
+    }, [user, dispatch]);
 
 
-    const chatMessageList = useSelector((state) => state.manpowerRequisitionChat.data ?? [] );
+    const chatMessageList = useSelector((state) => state.manpowerRequisitionChat.data ?? []);
     const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
     const query = useSelector((state) => state.manpowerRequisition.query);
-    console.log(selectedRequisition,"selectedRequisition")
-    console.log(chatMessageList,"chatMessageList");
-    console.log(query,"queryquery")
-    
+    console.log(selectedRequisition, "selectedRequisition")
+    console.log(chatMessageList, "chatMessageList");
+    console.log(query, "queryquery")
+
     const [form, setForm] = useState({
         answerMessage: '',
     });
@@ -291,7 +292,7 @@ const ManpowerRequisitionChatBox = () => {
         });
     }, [chatMessageList, location.pathname, user?.emp_id]);
 
-     useEffect(() => {
+    useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [sortedChatMessageList, isTyping]);
 
@@ -312,9 +313,36 @@ const ManpowerRequisitionChatBox = () => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
         if (errors[name]) {
-        setErrors({ ...errors, [name]: "" });
+            setErrors({ ...errors, [name]: "" });
         }
     };
+   console.log(user.emp_id,"sfgsdsfsdfsdfsf")
+   console.log(showReplyButton,"showReplyButtonshowReplyButton")
+    useEffect(() => {
+        switch (user.emp_id) {
+        case "12345":
+           setShowReplyButton(false);
+            break;
+        case "1400":
+            if (selectedRequisition.status == 'Pending') {
+               setShowReplyButton(true);
+            } else {
+             setShowReplyButton(false);
+            }
+            break;
+        case "1722":
+            if (selectedRequisition.status == 'Approved') {
+               setShowReplyButton(true);
+            } else {
+                setShowReplyButton(false);
+            }
+            break;
+        default:
+           setShowReplyButton(false);
+            break;
+    }
+    }
+    ,[user])
 
     // Handle send message
     const handleSendMessage = async (e) => {
@@ -328,15 +356,15 @@ const ManpowerRequisitionChatBox = () => {
             query_manpower_requisition_pid: id,
         };
 
-         
-        console.log({ id: user?.emp_id, reply: messageData.message, query_pid: query.query_pid})
 
-        
-   
+        console.log({ id: user?.emp_id, reply: messageData.message, query_pid: query.query_pid })
+
+
+
         // await dispatch(replyToQuery({ id: id, reply: messageData.message, query_pid: query.query_pid})).unwrap();
         // setForm(prev => ({ ...prev, answerMessage: '' }));
         try {
-            await dispatch(replyToQuery({ id: id, reply: messageData.message, query_pid: query.query_pid})).unwrap();
+            await dispatch(replyToQuery({ id: id, reply: messageData.message, query_pid: query.query_pid })).unwrap();
             setForm(prev => ({ ...prev, answerMessage: '' }));
         } catch (error) {
             console.error("Failed to send reply:", error);
@@ -381,13 +409,13 @@ const ManpowerRequisitionChatBox = () => {
             }
         }
     };
-    
+
     const role =
-  !user?.emp_id
-    ? 'FH'
-    : ['1400', '1777'].includes(user.emp_id)
-      ? 'DR'
-      : 'HR';
+        !user?.emp_id
+            ? 'FH'
+            : ['1400', '1777'].includes(user.emp_id)
+                ? 'DR'
+                : 'HR';
     return (
         <div className="page-wrapper">
             <Backdrop
@@ -418,7 +446,7 @@ const ManpowerRequisitionChatBox = () => {
                     </Button>
                 </Box>
 
-                
+
 
                 {/* Chat Container */}
                 <ChatContainer >
@@ -438,12 +466,12 @@ const ManpowerRequisitionChatBox = () => {
                                         color: 'primary.dark',
                                     }}
                                 >
-                                    { role }
+                                    {role}
                                 </Avatar>
                             </OnlineBadge>
                             <Box>
                                 <Typography variant="h6" sx={{ fontWeight: 600, color: 'white' }}>
-                                    Discussion for: Manpower Requisition 
+                                    Discussion for: Manpower Requisition
                                 </Typography>
                             </Box>
                         </Box>
@@ -487,7 +515,7 @@ const ManpowerRequisitionChatBox = () => {
                                             <Box
                                                 sx={{
                                                     mt: 0.5,
-                                                    cursor:  isUnreadForMe ? 'pointer' : 'default',
+                                                    cursor: isUnreadForMe ? 'pointer' : 'default',
                                                     transition: 'background-color 0.2s ease-in-out',
                                                     ...((isUnreadForMe) && {
                                                         p: 1,
@@ -498,26 +526,26 @@ const ManpowerRequisitionChatBox = () => {
                                                         }
                                                     })
                                                 }}
-                                                
+
                                             >
                                                 <Typography sx={{ color: isMine ? 'white' : 'inherit' }}>
                                                     {msg.text}
                                                 </Typography>
 
 
-                                                    <Typography
-                                                        variant="caption"
-                                                        sx={{
-                                                            fontStyle: 'italic',
-                                                            opacity: 0.8,
-                                                            
-                                                            ml: 1,
-                                                            display: 'block',
-                                                            mt: 0.5
-                                                        }}
-                                                    >
-                                                    </Typography>
-                                                
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        fontStyle: 'italic',
+                                                        opacity: 0.8,
+
+                                                        ml: 1,
+                                                        display: 'block',
+                                                        mt: 0.5
+                                                    }}
+                                                >
+                                                </Typography>
+
                                             </Box>
 
                                             {/* Footer: Timestamp and Read Receipt */}
@@ -534,17 +562,17 @@ const ManpowerRequisitionChatBox = () => {
                                                         mr: 0.5
                                                     }}
                                                 >
-                                                    { msg.query_created_date
+                                                    {msg.query_created_date
                                                         ? new Date(msg.query_created_date).toLocaleDateString('en-IN', {
                                                             day: '2-digit',
                                                             month: 'short',
                                                             year: 'numeric'
-                                                            })
-                                                    : ''}
+                                                        })
+                                                        : ''}
                                                 </Typography>
 
                                                 {/* Read Receipt Icons (Only for sender) */}
-                                                
+
                                             </Box>
                                         </MessageBubble>
                                     );
@@ -594,7 +622,7 @@ const ManpowerRequisitionChatBox = () => {
                             p: 2
                         }}
                     >
-                          {/* Textarea */}
+                        {/* Textarea */}
                         <StyledTextField
                             name="answerMessage"
                             placeholder="Write your reply..."
@@ -607,28 +635,28 @@ const ManpowerRequisitionChatBox = () => {
                             variant="outlined"
                             required
                             sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: '12px',
-                                backgroundColor: '#fff',
-                            },
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    backgroundColor: '#fff',
+                                },
                             }}
                         />
                         <Button
-                                type="submit"
-                                variant="contained"
-                                disabled={!query || query?.Director_Query_Answer !== ""}
-                                endIcon={<SendIcon sx={{ color: '#fff' }} />}
-                                sx={{
-                                    borderRadius: 2,
-                                    width: 'fit-content',
-                                    transition: 'all 0.3s ease',
-                                    '&:hover': {
-                                        transform: 'scale(1.05)',
-                                    }
-                                }}
-                            >
-                                Reply
-                            </Button>
+                            type="submit"
+                            variant="contained"
+                            disabled={showReplyButton}
+                            endIcon={<SendIcon sx={{ color: '#fff' }} />}
+                            sx={{
+                                borderRadius: 2,
+                                width: 'fit-content',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    transform: 'scale(1.05)',
+                                }
+                            }}
+                        >
+                            Reply
+                        </Button>
                     </Box>
                 </ChatContainer>
             </div>
