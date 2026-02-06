@@ -679,6 +679,7 @@ setStatusModalErrors({});
           query_created_by: user?.emp_id,
           query_created_date: new Date().toISOString().split('T')[0],
           query_created_time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+          query_is_delete: 'Active'
         };
         await dispatch(addQueryForm(queryAddData)).unwrap();
       }
@@ -1429,18 +1430,25 @@ setStatusModalErrors({});
                                 <FormHelperText>{statusModalErrors.status}</FormHelperText>
                               )}
                           </FormControl>
-                          {isRaiseQueryOpen && (
+                          {statusFormData.status === 'Raise Query' ? (
                               <TextField
                                   fullWidth
                                   multiline
                                   rows={3}
                                   label="Query"
                                   value={queryText}
-                                  onChange={(e) => setQueryText(e.target.value)}
+                                  onChange={(e) => {
+                                    setQueryText(e.target.value);
+                                    if (statusModalErrors.query) {
+                                      setStatusModalErrors(prev => ({...prev, query: ''}));
+                                    }
+                                  }}
                                   variant="outlined"
+                                  error={!!statusModalErrors.query}
+                                  helperText={statusModalErrors.query}
                               />
-                          )}
-                          <TextField
+                          ) : (
+                            <TextField
                               fullWidth
                               multiline
                               rows={3}
@@ -1451,7 +1459,8 @@ setStatusModalErrors({});
                               variant="outlined"
                               error={!!statusModalErrors.comments}
                               helperText={statusModalErrors.comments}
-                          />
+                            />
+                          )}
                       </Box>
                   </DialogContent>
                   <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
