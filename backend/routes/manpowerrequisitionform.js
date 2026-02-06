@@ -1165,7 +1165,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
             FROM manpower_requisition
             WHERE isdelete = 'Active'
         `;
-        console.log(query, "queryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryqueryquery")
+       
 
         if (isHr) {
             params = [numericId, numericId, numericId];
