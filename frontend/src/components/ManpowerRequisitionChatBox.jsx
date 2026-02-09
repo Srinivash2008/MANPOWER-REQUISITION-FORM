@@ -216,25 +216,21 @@ const ManpowerRequisitionChatBox = () => {
 
     const chatMessageList = useSelector((state) => state.manpowerRequisitionChat.data ?? []);
     const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
+    console.log(selectedRequisition,"selectedRequisition")
     const query = useSelector((state) => state.manpowerRequisition.query);
-    
+
     useEffect(() => {
-        console.log(!showReplyButton,"showReplyButtonshowReplyButtonshowReplyButtonshowReplyButtonshowReplyButton")
+        console.log(!showReplyButton, "showReplyButtonshowReplyButtonshowReplyButtonshowReplyButtonshowReplyButton")
     }, [showReplyButton]);
 
     useEffect(() => {
-        console.log(selectedRequisition?.status,"selectedRequisition?.statusselectedRequisition?.statusselectedRequisition?.status")
-            
-        if (user && user?.emp_id == "12345") {
+        const adminIds = ["12345", "1400", "1722"];
+        if (user && adminIds.includes(user.emp_id)) {
             setShowReplyButton(false);
-        } else if (user?.emp_id == "1400") {
-            setShowReplyButton(selectedRequisition?.status === 'Pending');
-        } else if (user?.emp_id == "1722") {
-            setShowReplyButton(selectedRequisition?.status === 'Approved');
         } else {
             setShowReplyButton(selectedRequisition?.status === 'Raise Query');
-        }}
-        , [user, selectedRequisition?.status])
+        }
+    }, [user, selectedRequisition?.status]);
 
     const [form, setForm] = useState({
         answerMessage: '',
@@ -335,7 +331,7 @@ const ManpowerRequisitionChatBox = () => {
         }
     };
 
-    
+
 
     // Handle send message
     const handleSendMessage = async (e) => {
@@ -407,256 +403,266 @@ const ManpowerRequisitionChatBox = () => {
                 : 'HR';
     return (
         <>
-        <Backdrop
-            sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
-            open={isSending}
-        >
-            <CircularProgress color="inherit" />
-        </Backdrop>
-        <div className="page-wrapper">
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
                 open={isSending}
             >
                 <CircularProgress color="inherit" />
             </Backdrop>
+            <div className="page-wrapper">
+                <Backdrop
+                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
+                    open={isSending}
+                >
+                    <CircularProgress color="inherit" />
+                </Backdrop>
 
-            <div className="form-panel">
-                {/* Back Button */}
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, mt: 5, flexDirection: "row-reverse" }}>
-                    <Button
-                        variant="outlined"
-                        onClick={() => navigate(-1)}
-                        startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
-                        sx={{
-                            backgroundColor: 'success.main',
-                            color: 'white',
-                            '&:hover': {
-                                backgroundColor: 'success.dark',
-                                transform: 'translateX(-4px)',
-                                transition: 'all 0.3s ease'
-                            },
-                        }}
-                    >
-                        Back
-                    </Button>
-                </Box>
-
-
-
-                {/* Chat Container */}
-                <ChatContainer >
-                    {/* Chat Header */}
-                    <ChatHeader>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <OnlineBadge
-                                overlap="circular"
-                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                                variant="dot"
-                            >
-                                <Avatar
-                                    sx={{
-                                        width: 40,
-                                        height: 40,
-                                        bgcolor: 'white',
-                                        color: 'primary.dark',
-                                    }}
-                                >
-                                    {role}
-                                </Avatar>
-                            </OnlineBadge>
-                            <Box>
-                                <Typography variant="h6" sx={{ fontWeight: 600, color: 'white' }}>
-                                    Discussion for: Manpower Requisition
-                                </Typography>
-                            </Box>
-                        </Box>
-                        <IconButton sx={{ color: 'white' }} size="small">
-                            <MoreVertIcon />
-                        </IconButton>
-                    </ChatHeader>
-
-                    <Divider sx={{ mb: 2 }} />
-
-                    {/* Messages Container */}
-                    <MessagesContainer>
-                        {chatMessageList && chatMessageList.length > 0 ? (
-                            <AnimatePresence mode="popLayout">
-                                {sortedChatMessageList.map((msg) => {
-                                    const isMine = Number(msg.author_id) === Number(currentUser.emp_id);
-                                    const isUnreadForMe = false; // Simplified for this logic
-                                    if (!msg.text) return null;
-                                    return (
-                                        <MessageBubble
-                                            key={msg.original_pid}
-                                            ismine={isMine.toString()}
-                                            variants={messageVariants}
-                                            initial="hidden"
-                                            animate="visible"
-                                            exit="exit"
-                                        >
-                                            {/* Sender Name (only for other users) */}
-                                            {!isMine && (
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    sx={{
-                                                        fontWeight: 600,
-                                                        color: 'primary.main'
-                                                    }}
-                                                >
-                                                    {msg.author_name}
-                                                </Typography>
-                                            )}
-                                            {/* Message Text */}
-                                            <Box
-                                                sx={{
-                                                    mt: 0.5,
-                                                    cursor: isUnreadForMe ? 'pointer' : 'default',
-                                                    transition: 'background-color 0.2s ease-in-out',
-                                                    ...((isUnreadForMe) && {
-                                                        p: 1,
-                                                        borderRadius: 1,
-                                                        bgcolor: 'rgba(0, 0, 0, 0.05)',
-                                                        '&:hover': {
-                                                            bgcolor: 'rgba(0, 0, 0, 0.1)',
-                                                        }
-                                                    })
-                                                }}
-
-                                            >
-                                                <Typography sx={{ color: isMine ? 'white' : 'inherit' }}>
-                                                    {msg.text}
-                                                </Typography>
-
-
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        fontStyle: 'italic',
-                                                        opacity: 0.8,
-
-                                                        ml: 1,
-                                                        display: 'block',
-                                                        mt: 0.5
-                                                    }}
-                                                >
-                                                </Typography>
-
-                                            </Box>
-
-                                            {/* Footer: Timestamp and Read Receipt */}
-                                            <Box
-                                                display="flex"
-                                                justifyContent="flex-end"
-                                                alignItems="center"
-                                                sx={{ mt: 0.5 }}
-                                            >
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: isMine ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
-                                                        mr: 0.5
-                                                    }}
-                                                >
-                                                    {msg.query_created_date
-                                                        ? new Date(msg.query_created_date).toLocaleDateString('en-IN', {
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                            year: 'numeric'
-                                                        })
-                                                        : ''}
-                                                </Typography>
-
-                                                {/* Read Receipt Icons (Only for sender) */}
-
-                                            </Box>
-                                        </MessageBubble>
-                                    );
-                                })}
-                            </AnimatePresence>
-                        ) : (
-                            <Typography color="text.secondary" align="center" mt={5}>
-                                No discussion yet. Start the conversation!
-                            </Typography>
-                        )}
-
-                        {/* Typing Indicator */}
-                        <AnimatePresence>
-                            {isTyping && (
-                                <TypingIndicator
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    {[0, 1, 2].map((i) => (
-                                        <TypingDot
-                                            key={i}
-                                            variants={dotVariants}
-                                            initial="start"
-                                            animate="end"
-                                            style={{ animationDelay: `${i * 0.15}s` }}
-                                        />
-                                    ))}
-                                </TypingIndicator>
-                            )}
-                        </AnimatePresence>
-
-                        <div ref={messagesEndRef} />
-                    </MessagesContainer>
-
-                    <Divider sx={{ mb: 2 }} />
-
-                    {/* Input Container */}
-                    <Box
-                        component="form"
-                        onSubmit={handleSendMessage}
-                        sx={{
-                            display: 'flex',
-                            gap: 1,
-                            alignItems: 'center',
-                            p: 2
-                        }}
-                    >
-                        {/* Textarea */}
-                        <StyledTextField
-                            name="answerMessage"
-                            placeholder="Write your reply..."
-                            value={form.answerMessage}
-                            onChange={handleChange}
-                            fullWidth
-                            multiline
-                            minRows={2}
-                            maxRows={3}
+                <div className="form-panel">
+                    {/* Back Button */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, mt: 5, flexDirection: "row-reverse" }}>
+                        <Button
                             variant="outlined"
-                            required
+                            onClick={() => navigate(-1)}
+                            startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
                             sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '12px',
-                                    backgroundColor: '#fff',
+                                backgroundColor: 'success.main',
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: 'success.dark',
+                                    transform: 'translateX(-4px)',
+                                    transition: 'all 0.3s ease'
                                 },
                             }}
-                        />
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={!showReplyButton}
-                            endIcon={<SendIcon sx={{ color: '#fff' }} />}
-                            sx={{
-                                borderRadius: 2,
-                                width: 'fit-content',
-                                transition: 'all 0.3s ease',
-                                '&:hover': {
-                                    transform: 'scale(1.05)',
-                                }
-                            }}
                         >
-                            Reply
+                            Back
                         </Button>
                     </Box>
-                </ChatContainer>
+
+
+
+                    {/* Chat Container */}
+                    <ChatContainer >
+                        {/* Chat Header */}
+                        <ChatHeader>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <OnlineBadge
+                                    overlap="circular"
+                                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                    variant="dot"
+                                >
+                                    <Avatar
+                                        sx={{
+                                            width: 40,
+                                            height: 40,
+                                            bgcolor: 'white',
+                                            color: 'primary.dark',
+                                        }}
+                                    >
+                                        {role}
+                                    </Avatar>
+                                </OnlineBadge>
+                                <Box>
+                                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'white' }}>
+                                        Discussion for: Manpower Requisition
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <IconButton sx={{ color: 'white' }} size="small">
+                                <MoreVertIcon />
+                            </IconButton>
+                        </ChatHeader>
+
+                        <Divider sx={{ mb: 2 }} />
+
+                        {/* Messages Container */}
+                        <MessagesContainer>
+                            {chatMessageList && chatMessageList.length > 0 ? (
+                                <AnimatePresence mode="popLayout">
+                                    {sortedChatMessageList.map((msg) => {
+                                        const isMine = Number(msg.author_id) === Number(currentUser.emp_id);
+                                        const isUnreadForMe = false; // Simplified for this logic
+                                        if (!msg.text) return null;
+                                        return (
+                                            <MessageBubble
+                                                key={msg.original_pid}
+                                                ismine={isMine.toString()}
+                                                variants={messageVariants}
+                                                initial="hidden"
+                                                animate="visible"
+                                                exit="exit"
+                                            >
+                                                {/* Sender Name (only for other users) */}
+                                                {!isMine && (
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        sx={{
+                                                            fontWeight: 600,
+                                                            color: 'primary.main'
+                                                        }}
+                                                    >
+                                                        {msg.author_name}
+                                                    </Typography>
+                                                )}
+                                                {/* Message Text */}
+                                                <Box
+                                                    sx={{
+                                                        mt: 0.5,
+                                                        cursor: isUnreadForMe ? 'pointer' : 'default',
+                                                        transition: 'background-color 0.2s ease-in-out',
+                                                        ...((isUnreadForMe) && {
+                                                            p: 1,
+                                                            borderRadius: 1,
+                                                            bgcolor: 'rgba(0, 0, 0, 0.05)',
+                                                            '&:hover': {
+                                                                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                                                            }
+                                                        })
+                                                    }}
+
+                                                >
+                                                    <Typography sx={{ color: isMine ? 'white' : 'inherit' }}>
+                                                        {msg.text}
+                                                    </Typography>
+
+
+                                                    <Typography
+                                                        variant="caption"
+                                                        sx={{
+                                                            fontStyle: 'italic',
+                                                            opacity: 0.8,
+
+                                                            ml: 1,
+                                                            display: 'block',
+                                                            mt: 0.5
+                                                        }}
+                                                    >
+                                                    </Typography>
+
+                                                </Box>
+
+                                                {/* Footer: Timestamp and Read Receipt */}
+                                                <Box
+                                                    display="flex"
+                                                    justifyContent="flex-end"
+                                                    alignItems="center"
+                                                    sx={{ mt: 0.5 }}
+                                                >
+                                                    <Typography
+                                                        variant="caption"
+                                                        sx={{
+                                                            color: isMine ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
+                                                            mr: 0.5
+                                                        }}
+                                                    >
+                                                        {msg.query_created_date
+                                                            ? new Date(msg.query_created_date).toLocaleDateString('en-IN', {
+                                                                day: '2-digit',
+                                                                month: 'short',
+                                                                year: 'numeric'
+                                                            })
+                                                            : ''}
+                                                    </Typography>
+
+                                                    {/* Read Receipt Icons (Only for sender) */}
+
+                                                </Box>
+                                            </MessageBubble>
+                                        );
+                                    })}
+                                </AnimatePresence>
+                            ) : (
+                                <Typography color="text.secondary" align="center" mt={5}>
+                                    No discussion yet. Start the conversation!
+                                </Typography>
+                            )}
+
+                            {/* Typing Indicator */}
+                            <AnimatePresence>
+                                {isTyping && (
+                                    <TypingIndicator
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        {[0, 1, 2].map((i) => (
+                                            <TypingDot
+                                                key={i}
+                                                variants={dotVariants}
+                                                initial="start"
+                                                animate="end"
+                                                style={{ animationDelay: `${i * 0.15}s` }}
+                                            />
+                                        ))}
+                                    </TypingIndicator>
+                                )}
+                            </AnimatePresence>
+
+                            <div ref={messagesEndRef} />
+                        </MessagesContainer>
+
+                        <Divider sx={{ mb: 2 }} />
+
+                        {((user?.emp_id != '1400' && user?.emp_id != '1722') && (selectedRequisition?.director_status !== 'Raise Query' || selectedRequisition?.hr_status !== 'Raise Query')) && (
+                            <>
+                                {/* Input Container */}
+                                <Box
+                                    component="form"
+                                    onSubmit={handleSendMessage}
+                                    sx={{
+                                        display: 'flex',
+                                        gap: 1,
+                                        alignItems: 'center',
+                                        p: 2
+                                    }}
+                                >
+                                    {/* Textarea */}
+                                    <StyledTextField
+                                        name="answerMessage"
+                                        placeholder="Write your reply..."
+                                        value={form.answerMessage}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        multiline
+                                        minRows={2}
+                                        maxRows={3}
+                                        variant="outlined"
+                                        required
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '12px',
+                                                backgroundColor: '#fff',
+                                            },
+                                        }}
+                                    />
+                                    {(user?.emp_id != "12345" && user?.emp_id != "1722" && user?.emp_id != "1400") && (
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            disabled={!showReplyButton}
+                                            endIcon={<SendIcon sx={{ color: '#fff' }} />}
+                                            sx={{
+                                                borderRadius: 2,
+                                                width: 'fit-content',
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    transform: 'scale(1.05)',
+                                                }
+                                            }}
+                                        >
+                                            Reply
+                                        </Button>
+
+                                    )}
+
+
+                                </Box></>
+                        )}
+
+                     
+                    </ChatContainer>
+                </div>
             </div>
-        </div>
         </>
     );
 };
