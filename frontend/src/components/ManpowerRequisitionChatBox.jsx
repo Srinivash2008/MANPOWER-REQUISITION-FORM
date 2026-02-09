@@ -29,8 +29,8 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchChatMessageList, sentChatboxMessage } from '../redux/cases/manpowerrequisitionChatSlice';
-import io from 'socket.io-client';
-import { fetchManpowerRequisitionById, fetchQuery, replyToQuery } from '../redux/cases/manpowerrequisitionSlice';
+import io from 'socket.io-client'; //NOSONAR
+import { addQueryForm, fetchManpowerRequisitionById, fetchQuery, replyToQuery, updateManpowerStatus } from '../redux/cases/manpowerrequisitionSlice';
 // ==================== STYLED COMPONENTS ====================
 
 const ChatContainer = styled(Paper)(({ theme }) => ({
@@ -192,6 +192,7 @@ const ManpowerRequisitionChatBox = () => {
     const currentUser = user;
     const [errors, setErrors] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const [queryText, setQueryText] = useState("");
     const [showReplyButton, setShowReplyButton] = useState(false);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -331,6 +332,40 @@ const ManpowerRequisitionChatBox = () => {
         }
     };
 
+    const handleSendQuery = async (e) => {
+        e.preventDefault();
+        if (!queryText.trim()) return;
+
+        setIsSending(true);
+        const queryAddData = {
+            query_manpower_requisition_pid: id,
+            query_name: queryText,
+            query_created_by: user?.emp_id,
+            query_created_date: new Date().toISOString().split('T')[0],
+            query_created_time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+            query_is_delete: 'Active'
+        };
+        const payload = {
+            manpowerId: id,
+            newStatus: "Raise Query",
+            hr_comments: null,
+            director_comments: null,
+            data: selectedRequisition,
+            isSendMail: true,
+            };
+
+        try {
+            await dispatch(updateManpowerStatus(payload)).unwrap();
+            await dispatch(addQueryForm(queryAddData)).unwrap();
+            // Manually refetch data to show the new message and update status
+            dispatch(fetchChatMessageList(id));
+            dispatch(fetchManpowerRequisitionById(id));
+            dispatch(fetchQuery(id));
+            setQueryText('');
+        } finally {
+            setIsSending(false);
+        }
+    };
 
 
     // Handle send message
@@ -652,7 +687,6 @@ const ManpowerRequisitionChatBox = () => {
                                         >
                                             Reply
                                         </Button>
-
                                     )}
 
 
@@ -660,6 +694,52 @@ const ManpowerRequisitionChatBox = () => {
                         )}
 
                      
+                        {(user?.emp_id === '1400' || user?.emp_id === '1722') && (
+                            <Box
+                                component="form"
+                                onSubmit={handleSendQuery}
+                                sx={{
+                                    display: 'flex',
+                                    gap: 1,
+                                    alignItems: 'center',
+                                    p: 2
+                                }}
+                            >
+                                <StyledTextField
+                                    name="queryText"
+                                    placeholder="Write your query..."
+                                    value={queryText}
+                                    onChange={(e) => setQueryText(e.target.value)}
+                                    fullWidth
+                                    multiline
+                                    minRows={2}
+                                    maxRows={3}
+                                    variant="outlined"
+                                    required
+                                    disabled={isSending || (location.pathname.includes('/Director_chatbox') && selectedRequisition?.director_status === 'Raise Query') || (location.pathname.includes('/HR_chatbox') && selectedRequisition?.hr_status === 'Raise Query')}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '12px',
+                                            backgroundColor: '#fff',
+                                        },
+                                    }}
+                                />
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    disabled={
+                                        isSending ||
+                                        (location.pathname.includes('/Director_chatbox') && !(selectedRequisition?.director_status !== 'Approve' && selectedRequisition?.director_status !== 'Raise Query')) ||
+                                        (location.pathname.includes('/HR_chatbox') && !(selectedRequisition?.hr_status !== 'HR Approve' && selectedRequisition?.hr_status !== 'Raise Query'))
+                                    }
+                                    endIcon={<SendIcon sx={{ color: '#fff' }} />}
+                                    sx={{ borderRadius: 2, width: 'fit-content' }}
+                                >
+                                    Send Query
+                                </Button>
+                            </Box>
+                        )}
+
                     </ChatContainer>
                 </div>
             </div>
