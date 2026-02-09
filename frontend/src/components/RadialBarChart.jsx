@@ -1,8 +1,10 @@
 import React from 'react';
 import { Box, Typography, useTheme, Tooltip } from '@mui/material';
 import { motion } from 'framer-motion';
+import { useSelector } from 'react-redux';
 
 const RadialBarChart = ({ data = [] }) => {
+      const { user } = useSelector((state) => state.auth);
     const theme = useTheme();
     if (!data || data.length === 0) {
         return <Typography>No data available</Typography>;
@@ -87,7 +89,10 @@ const RadialBarChart = ({ data = [] }) => {
                                 {item.count.toLocaleString()}
                             </Typography>
                         </Box>
-                        {(item.status === 'MRF Withdrawn' || item.status === 'Director Approved') && (
+                        {((user?.emp_id === '12345' && item.status === 'MRF Submitted' || item.status === 'Director Approved') ||
+                            (user?.emp_id !== '12345' &&
+                                (item.status === 'MRF Withdrawn' ||
+                                    item.status === 'Director Approved'))) && (
                             <hr style={{
                                 border: 'none',
                                 borderTop: `1px dashed ${theme.palette.divider}`,

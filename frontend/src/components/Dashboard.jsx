@@ -388,7 +388,7 @@ const Dashboard = () => {
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status.replace('MRF ', '')}` })));
         combinedData.push(mrfPending);
         combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status.replace('MRF ', '')}` })));
-        if (withdrawOverall) {
+        if (withdrawOverall && user?.emp_id !== '12345') {
           combinedData.push({ ...withdrawOverall, status: 'MRF Withdrawn' });
         }
 
