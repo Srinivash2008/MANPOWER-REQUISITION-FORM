@@ -34,14 +34,13 @@ import { addQueryForm, fetchManpowerRequisitionById, fetchQuery, replyToQuery, u
 // ==================== STYLED COMPONENTS ====================
 
 const ChatContainer = styled(Paper)(({ theme }) => ({
-    height: '700px',
+    minHeight: '500px', // Ensure a minimum height
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '12px',
     overflow: 'hidden',
     boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
     border: `1px solid ${theme.palette.divider}`,
-    marginBottom: theme.spacing(3),
 }));
 
 const ChatHeader = styled(Box)(({ theme }) => ({
@@ -57,8 +56,8 @@ const ChatHeader = styled(Box)(({ theme }) => ({
 const MessagesContainer = styled(Box)(({ theme }) => ({
     flex: 1,
     overflowY: 'auto',
-    padding: theme.spacing(2),
-    backgroundColor: '#ffffff',
+    padding: theme.spacing(3),
+    backgroundColor: theme.palette.background.default,
     display: 'flex',
     flexDirection: 'column',
     '&::-webkit-scrollbar': {
@@ -82,19 +81,19 @@ const MessageBubble = styled(motion.div)(({ theme, ismine }) => ({
     marginBottom: theme.spacing(2),
     padding: theme.spacing(1.5),
     maxWidth: '85%',
-    backgroundColor: ismine === 'true' ? theme.palette.primary.main : theme.palette.grey[200],
+    backgroundColor: ismine === 'true' ? theme.palette.primary.main : theme.palette.background.paper,
     color: ismine === 'true' ? 'white' : theme.palette.text.primary,
-    borderRadius: '16px 16px 16px 0px',
+    borderRadius: '20px',
     marginLeft: ismine === 'true' ? 'auto' : 0,
     marginRight: ismine === 'true' ? 0 : 'auto',
-    boxShadow: ismine === 'true' ? theme.shadows[3] : theme.shadows[1],
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
     transition: 'all 0.3s ease',
     cursor: 'default',
     '&:hover': {
         transform: 'scale(1.01)',
     },
     ...(ismine === 'true' && {
-        borderBottomRightRadius: '0px',
+        borderBottomRightRadius: '4px',
     }),
     ...(ismine === 'false' && {
         borderBottomLeftRadius: '0px',
@@ -103,7 +102,7 @@ const MessageBubble = styled(motion.div)(({ theme, ismine }) => ({
 
 const InputContainer = styled(Box)(({ theme }) => ({
     padding: theme.spacing(2),
-    backgroundColor: 'white',
+    backgroundColor: theme.palette.background.paper,
     borderTop: `1px solid ${theme.palette.divider}`,
     display: 'flex',
     alignItems: 'center',
@@ -112,16 +111,16 @@ const InputContainer = styled(Box)(({ theme }) => ({
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
     '& .MuiOutlinedInput-root': {
-        borderRadius: '16px',
-        backgroundColor: '#f5f5f5',
+        borderRadius: '20px',
+        backgroundColor: theme.palette.background.default,
         transition: 'all 0.3s ease',
         '&:hover': {
-            backgroundColor: '#ebebeb',
+            backgroundColor: theme.palette.action.hover,
         },
         '&.Mui-focused': {
             backgroundColor: 'white',
-            boxShadow: `0 0 0 3px ${theme.palette.primary.main}15`,
-            '& .MuiOutlinedInput-notchedOutline': {
+            boxShadow: `0 0 0 2px ${theme.palette.primary.main}30`,
+            '& .MuiOutlinedInput-notchedOutline': { //NOSONAR
                 borderColor: theme.palette.primary.main,
                 borderWidth: '2px',
             }
@@ -502,9 +501,7 @@ const ManpowerRequisitionChatBox = () => {
                                     </Typography>
                                 </Box>
                             </Box>
-                            <IconButton sx={{ color: 'white' }} size="small">
-                                <MoreVertIcon />
-                            </IconButton>
+                           
                         </ChatHeader>
 
                         <Divider sx={{ mb: 2 }} />
