@@ -465,9 +465,15 @@ const ManpowerRequisition = () => {
     const matchesDesignation = !designationFilter || manpower.designation === designationFilter;
     const matchesRequirementType = !requirementTypeFilter || manpower.requirement_type === requirementTypeFilter;
     const matchesTatRequest = !tatRequestFilter || manpower.hiring_tat === tatRequestFilter;
-    const matchesDirectorStatus = !directorStatusFilter || manpower.director_status === directorStatusFilter;
-    const matchesStatus = !statusFilter || manpower.status === statusFilter;
-    const matchesHrStatus = !hrStatusFilter || manpower.hr_status === hrStatusFilter;
+    const matchesDirectorStatus = !directorStatusFilter ||
+      (directorStatusFilter === 'Raise Query'
+        ? (manpower.director_status === 'Raise Query' || manpower.director_status === 'FH Replied') : manpower.director_status === directorStatusFilter);
+    const matchesStatus = !statusFilter ||
+      (statusFilter === 'Raise Query'
+        ? (manpower.status === 'Raise Query' || manpower.status === 'FH Replied') : manpower.status === statusFilter);
+    const matchesHrStatus = !hrStatusFilter ||
+      (hrStatusFilter === 'Raise Query'
+        ? (manpower.hr_status === 'Raise Query' || manpower.hr_status === 'FH Replied') : manpower.hr_status === hrStatusFilter);
     const matchesStartDate = !startDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] >= startDateFilter);
     const matchesEndDate = !endDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] <= endDateFilter);
 

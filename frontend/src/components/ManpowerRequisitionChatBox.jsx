@@ -192,7 +192,6 @@ const ManpowerRequisitionChatBox = () => {
     const [errors, setErrors] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [queryText, setQueryText] = useState("");
-    const [showReplyButton, setShowReplyButton] = useState(false);
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -219,18 +218,7 @@ const ManpowerRequisitionChatBox = () => {
     console.log(selectedRequisition,"selectedRequisition")
     const query = useSelector((state) => state.manpowerRequisition.query);
 
-    useEffect(() => {
-        console.log(!showReplyButton, "showReplyButtonshowReplyButtonshowReplyButtonshowReplyButtonshowReplyButton")
-    }, [showReplyButton]);
 
-    useEffect(() => {
-        const adminIds = ["12345", "1400", "1722"];
-        if (user && adminIds.includes(user.emp_id)) {
-            setShowReplyButton(false);
-        } else {
-            setShowReplyButton(selectedRequisition?.status === 'Raise Query');
-        }
-    }, [user, selectedRequisition?.status]);
 
     const [form, setForm] = useState({
         answerMessage: '',
@@ -635,7 +623,7 @@ const ManpowerRequisitionChatBox = () => {
 
                         <Divider sx={{ mb: 2 }} />
 
-                        {((user?.emp_id != '1400' && user?.emp_id != '1722') && (selectedRequisition?.director_status !== 'Raise Query' || selectedRequisition?.hr_status !== 'Raise Query')) && (
+                        {((user?.emp_id != '1400' && user?.emp_id != '1722'&& user?.emp_id != '12345') && (selectedRequisition?.director_status !== 'Raise Query' || selectedRequisition?.hr_status !== 'Raise Query')) && (
                             <>
                                 {/* Input Container */}
                                 <Box
@@ -671,7 +659,11 @@ const ManpowerRequisitionChatBox = () => {
                                         <Button
                                             type="submit"
                                             variant="contained"
-                                            disabled={!showReplyButton}
+                                           disabled={
+                                        isSending ||
+                                        (location.pathname.includes('/Director_chatbox') && selectedRequisition?.director_status !== 'Raise Query') ||
+                                        (location.pathname.includes('/HR_chatbox') && selectedRequisition?.hr_status !== 'HR Approve' && selectedRequisition?.hr_status !== 'Raise Query')
+                                    }
                                             endIcon={<SendIcon sx={{ color: '#fff' }} />}
                                             sx={{
                                                 borderRadius: 2,
@@ -727,7 +719,7 @@ const ManpowerRequisitionChatBox = () => {
                                     disabled={
                                         isSending ||
                                         (location.pathname.includes('/Director_chatbox') && !(selectedRequisition?.director_status !== 'Approve' && selectedRequisition?.director_status !== 'Raise Query')) ||
-                                        (location.pathname.includes('/HR_chatbox') && !(selectedRequisition?.hr_status !== 'HR Approve' && selectedRequisition?.hr_status !== 'Raise Query'))
+                                        (location.pathname.includes('/HR_chatbox') && !(selectedRequisition?.hr_status !== 'HR Approve' && selectedRequisition?.hr_status !== 'Raise Query' && selectedRequisition?.status !== 'Pending' && selectedRequisition?.director_status !== 'Raise Query' && selectedRequisition?.director_status !== 'FH Replied'))
                                     }
                                     endIcon={<SendIcon sx={{ color: '#fff' }} />}
                                     sx={{ borderRadius: 2, width: 'fit-content' }}
