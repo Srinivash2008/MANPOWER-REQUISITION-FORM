@@ -94,7 +94,7 @@ const MRF_Status = () => {
     const handleOpenModal = (item) => {
         const candidates = item.candidate_names.map((name, index) => ({
             name: name,
-            offer_date: item.offer_dates[index] ? new Date(item.offer_dates[index]).toLocaleDateString() : 'N/A',
+            offer_date: item.offer_dates[index] ? new Date(item.offer_dates[index]).toLocaleDateString('en-CA') : 'N/A',
         }));
         setSelectedCandidates(candidates);
         setIsModalOpen(true);

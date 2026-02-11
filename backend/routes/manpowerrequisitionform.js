@@ -1662,11 +1662,21 @@ router.get('/get-mrf-tracking/:id', authMiddleware, async (req, res) => {
         const mrfData = mrfResult[0];
 
         const [trackingResult] = await pool.execute(
-            'SELECT * FROM manpower_requisition_tracking WHERE mrf_id = ? AND is_active = "Active"',
-            [id]
-        );
+    `SELECT 
+        mrf_track_id,
+        mrf_id,
+        DATE_FORMAT(offer_date, '%Y-%m-%d') AS offer_date,
+        candidate_name,
+        created_at,
+        updated_at,
+        is_active
+     FROM manpower_requisition_tracking 
+     WHERE mrf_id = ? AND is_active = 'Active'`,
+    [id]
+);
 
         mrfData.tracking_details = trackingResult;
+        console.log(trackingResult,"trackingResulttrackingResulttrackingResult")
 
         res.json(mrfData);
     } catch (error) {

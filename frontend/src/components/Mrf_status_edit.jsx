@@ -24,6 +24,7 @@ const MRF_Status_Edit = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const { selectedRequisition, loading } = useSelector((state) => state.manpowerRequisition);
+    console.log(selectedRequisition,"selectedRequisitionselectedRequisitionselectedRequisition")
 
     const [formData, setFormData] = useState({
         mrf_closed_date: '',
@@ -38,7 +39,15 @@ const MRF_Status_Edit = () => {
 
     const formatDateForInput = (dateString) => {
         if (!dateString) return '';
-        return dateString.split('T')[0];
+        // Handles both 'YYYY-MM-DDTHH:mm:ss.sssZ' and 'MM/DD/YYYY'
+        if (dateString.includes('T')) {
+            return dateString.split('T')[0];
+        }
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
 
     useEffect(() => {
