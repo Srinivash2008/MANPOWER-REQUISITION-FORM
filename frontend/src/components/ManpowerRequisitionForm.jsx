@@ -1108,7 +1108,7 @@ const ManpowerRequisition = () => {
                                     </IconButton>
                                   </Tooltip>
                               }
-                               {(user.emp_id == "12345" && manpower.hr_status !== "HR Approve")
+                               {(user.emp_id == "12345")
                                 && <Tooltip title="Edit">
                                     <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main',padding: "4px" }}>
                                       <EditDocumentIcon fontSize="small" />
