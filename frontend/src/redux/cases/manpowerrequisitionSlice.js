@@ -192,6 +192,58 @@ export const fetchManagerList = createAsyncThunk(
   }
 );
 
+export const addOrUpdateCandidate = createAsyncThunk(
+  'manpowerRequisition/addOrUpdateCandidate',
+  async (candidateData, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) return rejectWithValue('Authentication token is missing.');
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.post(
+        `${API_URL}/api/mrf/candidate`,
+        candidateData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save candidate.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const updateMrfStatus = createAsyncThunk(
+  'manpowerRequisition/updateMrfStatus',
+  async ({ id, statusData }, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) return rejectWithValue('Authentication token is missing.');
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.put(
+        `${API_URL}/api/mrf/status/${id}`,
+        statusData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update MRF status.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+
+
+
+
+
+
+
+
 export const updateManpowerTracking = createAsyncThunk(
   'manpowerRequisition/updateManpowerTracking',
   async (payload, { rejectWithValue, getState }) => {

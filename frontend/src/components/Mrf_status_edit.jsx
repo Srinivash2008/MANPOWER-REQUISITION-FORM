@@ -13,9 +13,9 @@ import {
 } from '@mui/icons-material'; 
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; 
 import EditIcon from '@mui/icons-material/Edit'; 
-import { fetchMrfTrackingById, updateManpowerTracking, deleteManpowerTrackingCandidate } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchMrfTrackingById, addOrUpdateCandidate, updateMrfStatus, deleteManpowerTrackingCandidate } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -36,6 +36,11 @@ const MRF_Status_Edit = () => {
         dispatch(fetchMrfTrackingById(id));
     }, [dispatch, id]);
 
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        return dateString.split('T')[0];
+    };
+
     useEffect(() => {
         if (selectedRequisition) {
             const existingCandidates = selectedRequisition.tracking_details || [];
@@ -43,15 +48,16 @@ const MRF_Status_Edit = () => {
             const initialCandidates = existingCandidates.map(existing => {
                 return {
                     mrf_track_id: existing.mrf_track_id,
-                    offer_date: existing.offer_date ? existing.offer_date.split('T')[0] : '',
+                    offer_date: formatDateForInput(existing.offer_date),
                     candidate_name: existing.candidate_name || '',
                     isEditing: false,
                     isNew: false,
+                    touched: { offer_date: false, candidate_name: false },
                 };
             });
 
             setFormData({
-                mrf_closed_date: selectedRequisition.mrf_closed_date ? selectedRequisition.mrf_closed_date.split('T')[0] : '',
+                mrf_closed_date: formatDateForInput(selectedRequisition.mrf_closed_date),
                 mrf_track_status: selectedRequisition.mrf_track_status || 'In Process', // NOSONAR
                 candidates: initialCandidates
             });
@@ -63,6 +69,16 @@ const MRF_Status_Edit = () => {
         const updatedCandidates = [...formData.candidates];
         updatedCandidates[index] = { ...updatedCandidates[index], [name]: value };
         setFormData(prev => ({ ...prev, candidates: updatedCandidates }));
+    };
+
+    const handleCandidateBlur = (e, index) => {
+        const { name } = e.target;
+        setFormData(prev => {
+            const updatedCandidates = [...prev.candidates];
+            const currentCandidate = updatedCandidates[index];
+            currentCandidate.touched = { ...currentCandidate.touched, [name]: true };
+            return { ...prev, candidates: updatedCandidates };
+        });
     };
 
     const handleToggleEdit = (index) => {
@@ -88,18 +104,24 @@ const MRF_Status_Edit = () => {
     };
 
     const handleUpdateCandidate = async (index) => {
-        setIsUpdating(true);
         const candidateToUpdate = { ...formData.candidates[index] };
 
-        const payload = {
-            id: id, // This is the MRF ID, not the candidate ID
-            mrf_closed_date: formData.mrf_closed_date,
-            mrf_track_status: formData.mrf_track_status,
-            candidates: [candidateToUpdate], // Send only the candidate being updated/created
+        if (!candidateToUpdate?.candidate_name || !candidateToUpdate?.offer_date) {
+            swal.fire('Validation Error', 'Please fill in both Candidate Name and Offer Date before updating.', 'error');
+            return;
+        }
+
+        setIsUpdating(true);
+
+        const candidatePayload = {
+            mrf_id: id,
+            mrf_track_id: candidateToUpdate.mrf_track_id,
+            candidate_name: candidateToUpdate.candidate_name,
+            offer_date: candidateToUpdate.offer_date,
         };
 
         try {
-            await dispatch(updateManpowerTracking(payload)).unwrap();
+            await dispatch(addOrUpdateCandidate(candidatePayload)).unwrap();
             swal.fire('Success', 'Candidate details updated successfully!', 'success');
             
             // Refetch data to get the latest state from the server
@@ -152,7 +174,7 @@ const MRF_Status_Edit = () => {
                 ...prev,
                 candidates: [
                     ...prev.candidates,
-                    { mrf_track_id: null, offer_date: '', candidate_name: '', isEditing: true, isNew: true }
+                    { mrf_track_id: null, offer_date: '', candidate_name: '', isEditing: true, isNew: true, touched: { offer_date: false, candidate_name: false } }
                 ]
             }));
         }
@@ -183,12 +205,23 @@ const MRF_Status_Edit = () => {
         e.preventDefault();
         setIsUpdating(true);
 
-        const payload = {
-            id: id,
-            ...formData
+        const statusData = {
+            mrf_closed_date: formData.mrf_closed_date,
+            mrf_track_status: formData.mrf_track_status,
         };
 
-        if (payload.mrf_track_status === 'Completed' && !allCandidatesFilled) {
+        if (statusData.mrf_track_status === 'Completed' && !statusData.mrf_closed_date) {
+            setIsUpdating(false);
+            swal.fire({
+                title: 'Cannot Complete MRF',
+                text: 'Please provide the MRF Closed Date before completing.',
+                icon: 'error',
+                confirmButtonColor: '#d33',
+            });
+            return;
+        }
+
+        if (statusData.mrf_track_status === 'Completed' && !allCandidatesFilled) {
             setIsUpdating(false);
             swal.fire({
                 title: 'Cannot Complete MRF',
@@ -199,8 +232,19 @@ const MRF_Status_Edit = () => {
             return;
         }
 
+        if (formData.candidates.length !== selectedRequisition.num_resources) {
+            setIsUpdating(false);
+            swal.fire({
+                title: 'Incomplete Candidate Entries',
+                text: `Please add all ${selectedRequisition.num_resources} candidates before updating the overall status.`,
+                icon: 'error',
+                confirmButtonColor: '#d33',
+            });
+            return;
+        }
+
         try {
-            await dispatch(updateManpowerTracking(payload)).unwrap();
+            await dispatch(updateMrfStatus({ id, statusData })).unwrap();
             setIsUpdating(false);
             swal.fire({ 
                 html: `
@@ -359,8 +403,11 @@ const MRF_Status_Edit = () => {
                                                              label="Offer Date"
                                                              value={candidate.offer_date}
                                                              onChange={(e) => handleInputChange(e, index)}
+                                                             onBlur={(e) => handleCandidateBlur(e, index)}
                                                              InputLabelProps={{ shrink: true }}
                                                              variant="outlined"
+                                                             error={candidate.isEditing && candidate.touched.offer_date && !candidate.offer_date}
+                                                             helperText={candidate.isEditing && candidate.touched.offer_date && !candidate.offer_date ? "Offer date is required." : ""}
                                                              InputProps={{ // NOSONAR
                                                                  readOnly: !candidate.isEditing, // NOSONAR
                                                              }}
@@ -371,7 +418,10 @@ const MRF_Status_Edit = () => {
                                                              label="Candidate Name"
                                                              value={candidate.candidate_name}
                                                              onChange={(e) => handleInputChange(e, index)}
+                                                             onBlur={(e) => handleCandidateBlur(e, index)}
                                                              variant="outlined"
+                                                             error={candidate.isEditing && candidate.touched.candidate_name && !candidate.candidate_name}
+                                                             helperText={candidate.isEditing && candidate.touched.candidate_name && !candidate.candidate_name ? "Candidate name is required." : ""}
                                                              InputProps={{ // NOSONAR
                                                                  readOnly: !candidate.isEditing,
                                                              }}
