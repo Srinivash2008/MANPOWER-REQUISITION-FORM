@@ -51,6 +51,7 @@ const MRF_Status = () => {
     const { user } = useSelector((state) => state.auth);
     const navigate = useNavigate();
     const { data: manpowerRequisitionList, loading } = useSelector((state) => state.manpowerRequisition);
+    console.log(manpowerRequisitionList,"manpowerRequisitionList")
 
     const [trackingData, setTrackingData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);

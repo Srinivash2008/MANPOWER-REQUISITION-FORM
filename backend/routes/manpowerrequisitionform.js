@@ -1523,7 +1523,7 @@ router.get('/get-mrf-tracking/:id', authMiddleware, async (req, res) => {
         const mrfData = mrfResult[0];
 
         const [trackingResult] = await pool.execute(
-            'SELECT * FROM manpower_requisition_tracking WHERE mrf_id = ?',
+            'SELECT * FROM manpower_requisition_tracking WHERE mrf_id = ? AND is_active = "Active"',
             [id]
         );
 
@@ -1540,22 +1540,22 @@ router.get('/mrf-tracking-list/:userId', authMiddleware, async (req, res) => {
         const { userId } = req.params;
 
         let query = `
-            SELECT 
-                mr.id,
-                mr.mrf_number,
-                mr.designation,
-                mr.num_resources,
-                mr.mrf_hr_approve_date,
-                mr.mrf_closed_date,
-                mr.mrf_track_status,
-                ep.emp_name,
-                COUNT(mrt.mrf_track_id) as candidates_count,
-                GROUP_CONCAT(mrt.candidate_name SEPARATOR ', ') AS candidate_names,
-                GROUP_CONCAT(mrt.offer_date SEPARATOR ', ') AS offer_dates
-            FROM manpower_requisition AS mr
-            JOIN employee_personal AS ep ON mr.created_by = ep.employee_id
-            LEFT JOIN manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
-            WHERE mr.isdelete = 'Active' AND mr.hr_status = 'HR Approve'
+            SELECT
+mr.id,
+mr.mrf_number,
+mr.designation,
+mr.num_resources,
+mr.mrf_hr_approve_date,
+mr.mrf_closed_date,
+mr.mrf_track_status,
+ep.emp_name,
+COUNT(CASE WHEN mrt.is_active = 'Active' THEN mrt.mrf_track_id END) as candidates_count,
+GROUP_CONCAT(CASE WHEN mrt.is_active = 'Active' THEN mrt.candidate_name END SEPARATOR ', ') AS candidate_names,
+GROUP_CONCAT(CASE WHEN mrt.is_active = 'Active' THEN mrt.offer_date END SEPARATOR ', ') AS offer_dates
+FROM manpower_requisition AS mr
+JOIN employee_personal AS ep ON mr.created_by = ep.employee_id
+LEFT JOIN manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
+WHERE mr.isdelete = 'Active' AND mr.hr_status = 'HR Approve'
         `;
         const params = [];
 

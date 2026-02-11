@@ -6,7 +6,7 @@ import {
     Numbers as NumbersIcon,
     Person as PersonIcon,
     Badge as BadgeIcon,
-    CalendarToday as CalendarTodayIcon,
+    CalendarToday as CalendarTodayIcon, // NOSONAR
     Update as UpdateIcon,
     Group as GroupIcon,
     PersonAdd as PersonAddIcon
@@ -14,6 +14,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
+import EditIcon from '@mui/icons-material/Edit'; 
 import { fetchMrfTrackingById, updateManpowerTracking } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -24,6 +25,7 @@ const MRF_Status_Edit = () => {
     const { id } = useParams();
     const { selectedRequisition, loading } = useSelector((state) => state.manpowerRequisition);
 
+    const [showAddCandidate, setShowAddCandidate] = useState(false);
     const [formData, setFormData] = useState({
         mrf_closed_date: '',
         mrf_track_status: '',
@@ -37,21 +39,19 @@ const MRF_Status_Edit = () => {
 
     useEffect(() => {
         if (selectedRequisition) {
-            const numResources = selectedRequisition.num_resources || 1;
             const existingCandidates = selectedRequisition.tracking_details || [];
             
-            const initialCandidates = Array.from({ length: numResources }, (_, index) => {
-                const existing = existingCandidates[index];
-                return {
-                    mrf_track_id: existing?.mrf_track_id || null,
-                    offer_date: existing?.offer_date ? existing.offer_date.split('T')[0] : '',
-                    candidate_name: existing?.candidate_name || ''
-                };
-            });
+            const initialCandidates = existingCandidates.map(existing => ({
+                mrf_track_id: existing?.mrf_track_id || null,
+                offer_date: existing?.offer_date ? existing.offer_date.split('T')[0] : '',
+                candidate_name: existing?.candidate_name || '',
+                isEditing: false, 
+                isNew: false, // Mark as not new
+            }));
 
             setFormData({
                 mrf_closed_date: selectedRequisition.mrf_closed_date ? selectedRequisition.mrf_closed_date.split('T')[0] : '',
-                mrf_track_status: selectedRequisition.mrf_track_status || 'In Process',
+                mrf_track_status: selectedRequisition.mrf_track_status || 'In Process', // NOSONAR
                 candidates: initialCandidates
             });
         }
@@ -63,6 +63,110 @@ const MRF_Status_Edit = () => {
         updatedCandidates[index] = { ...updatedCandidates[index], [name]: value };
         setFormData(prev => ({ ...prev, candidates: updatedCandidates }));
     };
+
+    const handleAddCandidateClick = () => {
+        const newCandidate = {
+            mrf_track_id: null,
+            offer_date: '',
+            candidate_name: '',
+            isEditing: true, // Start in edit mode
+            isNew: true, // Mark as a new candidate
+        };
+        setFormData(prev => ({
+            ...prev,
+            candidates: [...prev.candidates, newCandidate]
+        }));
+        setShowAddCandidate(false); // Hide the add button after showing the form
+    };
+
+
+    const handleToggleEdit = (index) => {
+        setFormData(prev => {
+            const updatedCandidates = [...prev.candidates];
+            updatedCandidates[index] = {
+                ...updatedCandidates[index],
+                isEditing: !updatedCandidates[index].isEditing,
+            };
+            return { ...prev, candidates: updatedCandidates };
+        });
+    };
+
+    const handleCancelNewCandidate = (index) => {
+        setFormData(prev => {
+            const updatedCandidates = [...prev.candidates];
+            // If it's a new candidate entry, remove it from the array
+            if (updatedCandidates[index].isNew) {
+                updatedCandidates.splice(index, 1);
+            }
+            return { ...prev, candidates: updatedCandidates };
+        });
+    };
+
+    const handleUpdateCandidate = async (index) => {
+        setIsUpdating(true);
+        const candidateToUpdate = { ...formData.candidates[index] };
+
+        const payload = {
+            id: id,
+            mrf_closed_date: formData.mrf_closed_date,
+            mrf_track_status: formData.mrf_track_status,
+            candidates: [candidateToUpdate], // Send only the candidate being updated/created
+        };
+
+        try {
+            await dispatch(updateManpowerTracking(payload)).unwrap();
+            swal.fire('Success', 'Candidate details updated successfully!', 'success');
+            
+            // Refetch data to get the latest state from the server
+            dispatch(fetchMrfTrackingById(id));
+
+        } catch (error) {
+            swal.fire('Error', error.message || 'Failed to update candidate details.', 'error');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleDeleteCandidate = async (index) => {
+        const candidateToDelete = formData.candidates[index];
+
+        // If it's a new candidate that hasn't been saved, just remove it from the state
+        if (candidateToDelete.isNew) {
+            handleCancelNewCandidate(index);
+            return;
+        }
+
+        const result = await swal.fire({
+            title: 'Are you sure?',
+            text: `Do you want to delete ${candidateToDelete.candidate_name}? You won't be able to revert this!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (result.isConfirmed) {
+            setIsUpdating(true);
+            try {
+                const payload = {
+                    id: candidateToDelete.mrf_track_id,
+                    is_active: 'Inactive'
+                };
+                
+                await dispatch(updateManpowerTracking(payload)).unwrap();
+                swal.fire('Deleted!', 'The candidate has been deleted.', 'success');
+                // Refetch data to update the list
+                dispatch(fetchMrfTrackingById(id));
+            } catch (error) {
+                swal.fire('Error', error.message || 'Failed to delete candidate.', 'error');
+            } finally {
+                setIsUpdating(false);
+            }
+        }
+    };
+
+    const isAnyCandidateEditing = formData.candidates.some(c => c.isEditing);
 
     const allCandidatesFilled = formData.candidates.every(c => c.candidate_name && c.offer_date);
 
@@ -214,26 +318,69 @@ const MRF_Status_Edit = () => {
                                         variant="outlined"
                                     />
                                 </Box>
-                                <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                                <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5, mt: 2 }}>
                                     {formData.candidates.map((candidate, index) => (
                                         <Box key={index}>
                                             <Card variant="outlined" sx={{ p: 2, borderRadius: 2, backgroundColor: '#fafafa' }}>
                                                 <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}><PersonAddIcon sx={{ mr: 1 }}/> Candidate #{index + 1}</Typography>
                                                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                                                    <Box sx={{ flex: 1 }}>
-                                                        <TextField fullWidth type="date" name="offer_date" label="Offer Date" value={candidate.offer_date} onChange={(e) => handleInputChange(e, index)} InputLabelProps={{ shrink: true }} variant="outlined" />
+                                                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                         <TextField
+                                                             fullWidth
+                                                             type="date"
+                                                             name="offer_date"
+                                                             label="Offer Date"
+                                                             value={candidate.offer_date}
+                                                             onChange={(e) => handleInputChange(e, index)}
+                                                             InputLabelProps={{ shrink: true }}
+                                                             variant="outlined"
+                                                             InputProps={{
+                                                                 readOnly: !candidate.isEditing,
+                                                             }}
+                                                         />
+                                                         <TextField
+                                                             fullWidth
+                                                             name="candidate_name"
+                                                             label="Candidate Name"
+                                                             value={candidate.candidate_name}
+                                                             onChange={(e) => handleInputChange(e, index)}
+                                                             variant="outlined"
+                                                             InputProps={{
+                                                                 readOnly: !candidate.isEditing,
+                                                             }}
+                                                         />
                                                     </Box>
-                                                    <Box sx={{ flex: 1 }}>
-                                                        <TextField fullWidth name="candidate_name" label="Candidate Name" value={candidate.candidate_name} onChange={(e) => handleInputChange(e, index)} variant="outlined" />
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        {!candidate.isEditing ? (
+                                                            <Button variant="outlined" startIcon={<EditIcon />} onClick={() => handleToggleEdit(index)}>Edit</Button>
+                                                        ) : (
+                                                            <>
+                                                                <Button variant="contained" startIcon={<UpdateIcon />} onClick={() => handleUpdateCandidate(index)} disabled={isUpdating}>Update</Button>
+                                                                {candidate.isNew && <Button variant="text" color="error" onClick={() => handleCancelNewCandidate(index)}>Cancel</Button>}
+                                                            </>
+                                                        )}
+                                                        {!candidate.isNew && (
+                                                            <IconButton onClick={() => handleDeleteCandidate(index)} disabled={isUpdating || isAnyCandidateEditing} color="error"><DeleteIcon /></IconButton>
+                                                        )}
                                                     </Box>
                                                 </Box>
                                             </Card>
                                         </Box>
                                     ))}
                                 </Box>
+                                {formData.candidates.length < (selectedRequisition?.num_resources || 0) && !formData.candidates.some(c => c.isNew) && (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<PersonAddIcon />}
+                                        onClick={handleAddCandidateClick}
+                                        sx={{ mt: 2, alignSelf: 'flex-start' }}
+                                    >
+                                        Add Candidate
+                                    </Button>
+                                )}
                             </Box>
 
-                            <FormControl fullWidth variant="outlined" sx={{ mt: 2.5 }}>
+                            <FormControl fullWidth variant="outlined" sx={{ mt: 3 }}>
                                 <InputLabel>Status</InputLabel>
                                 <Select
                                     name="mrf_track_status"
@@ -251,13 +398,13 @@ const MRF_Status_Edit = () => {
                         <Button
                             type="submit"
                             variant="contained"
-                            disabled={isUpdating}
+                            disabled={isUpdating || isAnyCandidateEditing} // Disable overall update if any candidate is being edited
                             sx={{
                                 backgroundColor: '#2A7F66',
                                 '&:hover': { backgroundColor: '#1D5947' }
                             }}
                         >
-                            {isUpdating ? <CircularProgress size={24} color="inherit" /> : 'Update'}
+                            {isUpdating ? <CircularProgress size={24} color="inherit" /> : 'Update Overall Status'}
                         </Button>
                     </Box>
                 </Box>
@@ -270,3 +417,4 @@ const MRF_Status_Edit = () => {
 };
 
 export default MRF_Status_Edit;
+                            
