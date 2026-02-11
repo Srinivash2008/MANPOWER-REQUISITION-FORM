@@ -94,7 +94,7 @@ const MRF_Status = () => {
     const handleOpenModal = (item) => {
         const candidates = item.candidate_names.map((name, index) => ({
             name: name,
-            offer_date: item.offer_dates[index] ? new Date(item.offer_dates[index]).toLocaleDateString('en-CA') : 'N/A',
+            offer_date: item.offer_dates[index] ? new Date(item.offer_dates[index]).toLocaleDateString('en-GB') : 'N/A',
         }));
         setSelectedCandidates(candidates);
         setIsModalOpen(true);
@@ -141,8 +141,12 @@ const MRF_Status = () => {
                                         <TableCell>{item.mrf_number || '-'}</TableCell>
                                         <TableCell>{item.emp_name || '-'}</TableCell>
                                         <TableCell>{item.designation || '-'}</TableCell>
-                                        <TableCell>{item.mrf_hr_approve_date ? new Date(item.mrf_hr_approve_date).toLocaleDateString() : '-'}</TableCell>
-                                        <TableCell>{item.mrf_closed_date || '-'}</TableCell>
+                                        <TableCell>
+                                            {item.mrf_hr_approve_date ? new Date(item.mrf_hr_approve_date).toLocaleDateString('en-GB') : '-'}
+                                        </TableCell>
+                                        <TableCell>
+                                            {item.mrf_closed_date ? new Date(item.mrf_closed_date).toLocaleDateString('en-GB') : '-'}
+                                        </TableCell>
                                         <TableCell>
                                             <Chip
                                                 variant="outlined"

@@ -689,8 +689,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             params.push(status, director_comments, approve_date);
             } else if (user?.emp_id === '1722') { // HR
 
-            query += ', hr_status = ?, hr_comments = ?, mrf_hr_approve_date = ?';
-            params.push(status, hr_comments, approve_date);
+            query += ', hr_status = ?, hr_comments = ?, mrf_hr_approve_date = ?, mrf_track_status = ? ';
+            params.push(status, hr_comments, approve_date,'In Process');
             }
 
             if (mrfNumber) {
@@ -1694,8 +1694,8 @@ mr.id,
 mr.mrf_number,
 mr.designation,
 mr.num_resources,
-mr.mrf_hr_approve_date,
-mr.mrf_closed_date,
+DATE_FORMAT(mr.mrf_hr_approve_date, '%Y-%m-%d') AS mrf_hr_approve_date,
+DATE_FORMAT(mr.mrf_closed_date, '%Y-%m-%d') AS mrf_closed_date,
 mr.mrf_track_status,
 ep.emp_name,
 COUNT(CASE WHEN mrt.is_active = 'Active' THEN mrt.mrf_track_id END) as candidates_count,
