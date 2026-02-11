@@ -423,7 +423,7 @@ const Dashboard = () => {
 
         if (pendingOverall) {
           const { status, ...rest } = pendingOverall;
-          combinedData.push({ status: 'MRF Submitted', ...rest });
+          combinedData.push({ status: 'MRF Submitted', ...rest, count: rest.count - (withdrawOverall?.count || 0) });
         }
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status.replace('MRF ', '')}` })));
         combinedData.push(mrfPending);
