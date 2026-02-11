@@ -267,22 +267,22 @@ const ManpowerRequisitionEdit = () => {
                 if (isHr && !value.trim()) newErrors.hrReview = 'HR Review is required for HR.';
                 else delete newErrors.hrReview;
                 break;
-            case 'hr_comments':
-                if (isHr && !value && formData.status !== 'Raise Query') newErrors.hr_comments = 'HR Comments are required for this action.';
-                else delete newErrors.hr_comments;
-                break;
-            case 'director_comments':
-                console.log(value, "valuevalue")
-                if (isDirector && !value && formData.status !== 'Raise Query') newErrors.director_comments = 'Director Comments are required for this action.';
-                else delete newErrors.director_comments;
-                break;
-            case 'query_name':
-                if (formData.status === 'Raise Query' && !value.trim()) {
-                    newErrors.query_name = 'Query text cannot be empty when raising a query.';
-                } else {
-                    delete newErrors.query_name;
-                }
-                break;
+            // case 'hr_comments':
+            //     if (isHr && !value && formData.status !== 'Raise Query') newErrors.hr_comments = 'HR Comments are required for this action.';
+            //     else delete newErrors.hr_comments;
+            //     break;
+            // case 'director_comments':
+            //     console.log(value,"valuevalue")
+            //     if (isDirector && !value && formData.status !== 'Raise Query') newErrors.director_comments = 'Director Comments are required for this action.';
+            //     else delete newErrors.director_comments;
+            //     break;
+            // case 'query_name':
+            //     if (formData.status === 'Raise Query' && !value.trim()) {
+            //         newErrors.query_name = 'Query text cannot be empty when raising a query.';
+            //     } else {
+            //         delete newErrors.query_name;
+            //     }
+            //     break;
             default:
                 break;
         }
@@ -378,7 +378,7 @@ const ManpowerRequisitionEdit = () => {
 
     const handleStatusChange = (event, manpowerId) => {
         const newStatus = event.target.value;
-        console.log(newStatus, "sdfds")
+        console.log(newStatus,"sdfds")
         setManpowerStatus(newStatus);
         setManpowerId(manpowerId);
         setFormData(prev => ({
@@ -428,7 +428,7 @@ const ManpowerRequisitionEdit = () => {
             return;
         }
 
-        if (isHr && formData.status == "FH Replied") {
+         if (isHr && formData.status == "FH Replied") {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
         }
@@ -442,7 +442,7 @@ const ManpowerRequisitionEdit = () => {
                 // tatAgreed: 'TAT Agreed is required for HR Approval.',
                 // deliveryPhase: 'Phase of Delivery is required for HR Approval.',
                 // hrReview: 'HR - Head Review is required for HR Approval.',
-                hr_comments: 'HR Comments are required.'
+                //hr_comments: 'HR Comments are required.'
             };
             let hasHrErrors = false;
             Object.entries(hrFieldsToValidate).forEach(([field, message]) => {
@@ -459,31 +459,31 @@ const ManpowerRequisitionEdit = () => {
             }
         }
 
-        if (isHr && ['Reject', 'On Hold'].includes(formData.status)) {
-            const hrFieldsToValidate = {
-                hr_comments: 'HR Comments are required for HR Status.'
-            };
-            let hasHrErrors = false;
-            Object.entries(hrFieldsToValidate).forEach(([field, message]) => {
-                if (!formData[field]) {
-                    errors[field] = message;
-                    hasHrErrors = true;
-                }
-            });
-        }
+        // if (isHr && ['Reject','On Hold'].includes(formData.status)) {
+        //     const hrFieldsToValidate = {
+        //         hr_comments: 'HR Comments are required for HR Status.'
+        //     };
+        //     let hasHrErrors = false;
+        //     Object.entries(hrFieldsToValidate).forEach(([field, message]) => {
+        //         if (!formData[field]) {
+        //             errors[field] = message;
+        //             hasHrErrors = true;
+        //         }
+        //     });
+        // }
 
-        if (isDirector && ['Approve', 'Reject', 'On Hold'].includes(formData.status)) {
-            const directorFieldsToValidate = {
-                director_comments: 'Director Comments are required for Director Status.'
-            };
-            let hasDirectorErrors = false;
-            Object.entries(directorFieldsToValidate).forEach(([field, message]) => {
-                if (!formData[field]) {
-                    errors[field] = message;
-                    hasDirectorErrors = true;
-                }
-            });
-        }
+        // if (isDirector && ['Approve', 'Reject','On Hold'].includes(formData.status)) {
+        //     const directorFieldsToValidate = {
+        //         director_comments: 'Director Comments are required for Director Status.'
+        //     };
+        //     let hasDirectorErrors = false;
+        //     Object.entries(directorFieldsToValidate).forEach(([field, message]) => {
+        //         if (!formData[field]) {
+        //             errors[field] = message;
+        //             hasDirectorErrors = true;
+        //         }
+        //     });
+        // }
 
 
         const tempErrors = {};
@@ -521,7 +521,7 @@ const ManpowerRequisitionEdit = () => {
             }
         }
         let isSendMail = false;
-        console.log(formData.current_status,"current_statuscurrent_statuscurrent_status")
+        console.log(formData,"director_statusdirector_statusdirector_statusdirector_status")
         switch (formData.current_status) {
             case 'Draft':
                 if(user.emp_id != "1722" && user.emp_id != "1400"){
@@ -553,13 +553,14 @@ const ManpowerRequisitionEdit = () => {
                 break;
         }
         console.log("isSendMail After Switch Case", isSendMail);
-
+        console.log(formData.directorstatus,"formData.directorstatusformData.directorstatus",user.emp_id,"user.emp_iduser.emp_id")
 
         try {
             await dispatch(updateManpowerRequisition({ id, data })).unwrap();
 
             if (manpowerStatus) {
                 // console.log(manpowerStatus,"manpowerStatus")
+                if((user.emp_id != "1722" && formData.directorstatus != "Approve" )){
                 await dispatch(updateManpowerStatus({
                     manpowerId,
                     newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
@@ -568,6 +569,8 @@ const ManpowerRequisitionEdit = () => {
                     data : selectedRequisition,
                     isSendMail
                 })).unwrap();
+                }
+                
             }
 
             if (manpowerStatus === "Raise Query" && queryText) {
@@ -628,7 +631,7 @@ const ManpowerRequisitionEdit = () => {
         <div className="page-wrapper">
             <div className="form-panel">
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, mt: 5, flexDirection: "row-reverse" }}>
-                    <Button
+                     <Button
                         variant="outlined"
                         onClick={() => navigate(-1)}
                         startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
@@ -822,7 +825,7 @@ const ManpowerRequisitionEdit = () => {
                             <h3 className="section-title"><FiLayers /> Experience & Compensation</h3>
                             <div className="section-grid multi-col">
                                 <div>
-                                    <label className="form-label">Experience (Min - Max)<span className="required-star">*</span></label>
+                                    <label className="form-label">Experience<span className="required-star">*</span></label>
                                     <input name="experience" className={`form-input ${getFieldClassName('experience')}`} value={formData.experience} onChange={handleInputChange} onBlur={handleBlur} />
                                     {renderError('experience')}
                                 </div>
@@ -1010,10 +1013,10 @@ const ManpowerRequisitionEdit = () => {
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
                                             ]}
-
+                                            
                                             {isHr && [
                                                 //  <MenuItem value="Pending">Select the Status</MenuItem>,
-                                                <MenuItem value="Pending" key="pending">Select the Status</MenuItem>,
+                                                <MenuItem value="Pending"  key="pending">Select the Status</MenuItem>,
                                                 <MenuItem key="HR Approve" value="HR Approve">HR Approved</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Rejected</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
@@ -1037,7 +1040,6 @@ const ManpowerRequisitionEdit = () => {
                                             variant="outlined"
                                             size="small"
                                             name="query_name"
-                                            required
                                             error={!!(touched.query_name && errors.query_name)}
                                             helperText={touched.query_name && errors.query_name}
                                         />
@@ -1047,14 +1049,14 @@ const ManpowerRequisitionEdit = () => {
                                     <>
                                         {(isDirector && manpowerStatus != "Raise Query") && (
                                             <div style={{ marginTop: '1rem' }}>
-                                                <label className="form-label">Director Comments<span className="required-star">*</span></label>
+                                                <label className="form-label">Director Comments<span className="required-star"></span></label>
                                                 <TextField fullWidth multiline rows={3} label="Enter your comments here" name="director_comments" value={formData.director_comments || ''} onChange={handleInputChange} variant="outlined" size="small" />
                                                 {renderError('director_comments')}
                                             </div>
                                         )}
                                         {(isHr && manpowerStatus != "Raise Query") && (
                                             <div style={{ marginTop: '1rem' }}>
-                                                <label className="form-label">HR Comments<span className="required-star">*</span></label>
+                                                <label className="form-label">HR Comments<span className="required-star"></span></label>
                                                 <TextField fullWidth multiline rows={3} label="Enter your comments here" name="hr_comments" value={formData.hr_comments || ''} onChange={handleInputChange} variant="outlined" size="small" />
                                                 {renderError('hr_comments')}
                                             </div>
@@ -1112,7 +1114,7 @@ const ManpowerRequisitionEdit = () => {
                             exit: "exit",
                             style: { borderRadius: '16px', padding: '1.5rem' }
                         }}
-                    >
+                    > 
                         <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}>
                             <HelpOutlineIcon color="primary" sx={{ fontSize: '3rem', mb: 1 }} />
                             <br />

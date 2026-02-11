@@ -137,7 +137,12 @@ const Dashboard = () => {
     onHold: parseInt(mfrCounts?.overall?.on_hold_count) || 0,
     draft: parseInt(mfrCounts?.overall?.draft_count) || 0,
     withdraw: parseInt(mfrCounts?.overall?.withdraw_count) || 0,
-    total: parseInt(mfrCounts?.overall?.total_count) || 0
+    total: parseInt(mfrCounts?.overall?.total_count) || 0,
+    dir_pending_count: parseInt(mfrCounts?.overall?.dir_pending_count) || 0,
+    hrpending_count : parseInt(mfrCounts?.overall?.hrpending_count) || 0,
+    hrapproved_count : parseInt(mfrCounts?.overall?.hrapproved_count) || 0,
+    FH_total_count : parseInt(mfrCounts?.overall?.FH_total_count) || 0,
+    FH_completed_count : parseInt(mfrCounts?.overall?.FH_completed_count) || 0
   };
 
   // Recalculate counts based on the displayed (filtered) MRF list
@@ -156,6 +161,11 @@ const Dashboard = () => {
     draft: displayedMrfList.filter(m => m.status === 'Draft').length,
     withdraw: displayedMrfList.filter(m => m.status === 'Withdraw').length,
     total: displayedMrfList.length,
+    dir_hr_total_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw').length,
+    dir_hr_pending_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw' && m.hr_status === 'Pending' && m.director_status === 'Pending').length,
+    dir_hrpending_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw' && m.hr_status === 'Pending' && m.director_status === 'Approve').length,
+    // approved_completed: displayedMrfList.filter(m => mrf_closed_date !== 'NULL' || mrf_closed_date !== '').length,
+    approved_completed : 0,
   };
   const dirCounts = {
     pending: parseInt(mfrCounts?.director_status?.pending_count) || 0,
@@ -248,7 +258,7 @@ const Dashboard = () => {
     onHold: parseInt(mfrCounts?.hr_status?.on_hold_count) || 0,
   };
 
-  console.log(hrCounts, "hrCounts")
+  console.log(hrCounts,"hrCounts")
 
   const hrStatusMetrics = [
     { status: 'MRF Pending', count: hrCounts.pending, icon: (props) => <PendingIcon {...props} />, color: 'warning' },
@@ -292,43 +302,73 @@ const Dashboard = () => {
   const managerOptions = activeFhList.map(fh => fh.ReportingManager).filter(Boolean);
 
   // --- Data for FHDashboard (using baseCounts) ---
-  const fhPendingStatuses = [
-    { status: 'MRF Submitted', count: baseCounts.pending, color: 'secondary' },
-    { status: 'MRF On Hold', count: baseCounts.onHold, color: 'tertitary' },
-    { status: 'Director Query/Replied', count: baseCounts.directorRaiseQuery, color: 'info' },
-    { status: 'HR Query/Replied', count: baseCounts.hrRaiseQuery, color: 'info' },
-    { status: 'MRF Draft', count: baseCounts.draft, color: 'error' }
-  ].filter(m => m.count > 0);
-  const fhTotalPending = fhPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
+   const fhPendingStatuses = [
+    { status: 'MRF Submitted', count: baseCounts.FH_total_count, color: 'secondary' },
+    { status: 'Pending with Director', count: baseCounts.dir_pending_count, color: 'tertitary' },
+    { status: 'Pending with HR', count: baseCounts.hrpending_count, color: 'info' },
+    { status: 'Approved MRF', count: baseCounts.hrapproved_count, color: 'info' },
+    { status: 'Completed MRF', count: baseCounts.FH_completed_count, color: 'error' }
+  ].filter(m => m.count >= 0);
+  const fhTotalPending = baseCounts.FH_total_count;
 
   // --- Data for AdminDashboard (using filtered counts) ---
   let adminPendingStatuses;
   switch (user?.emp_id) {
     case '1722':
-      adminPendingStatuses = [
+       adminPendingStatuses = [
         {
-          status: 'MRF Approved',
-          count: counts.approved_HR,
-          color: 'success',
+          status: 'MRF submitted by FH',
+          count: counts.dir_hr_total_count,
+          color: 'secondary',
         },
         {
-          status: 'MRF FH Replied',
-          count: counts.fhReplied,
+          status: 'Pending with Director',
+          count: counts.dir_hr_pending_count,
+          color: 'tertitary',
+        },
+        {
+          status: 'Pending with HR',
+          count: counts.dir_hrpending_count,
           color: 'info',
+        },
+         {
+          status: 'Approved MRF',
+          count: counts.approved,
+          color: 'success',
+        },
+         {
+          status: 'Completed MRF',
+          count: counts.approved_completed,
+          color: 'error',
         },
       ];
-      break;
+       break;
     case '1400':
-      adminPendingStatuses = [
+       adminPendingStatuses = [
         {
-          status: 'MRF Submitted',
-          count: counts.pending,
-          color: 'success',
+          status: 'MRF submitted by FH',
+          count: counts.dir_hr_total_count,
+          color: 'secondary',
         },
         {
-          status: 'MRF FH Replied',
-          count: counts.fhReplied,
+          status: 'Pending with Director',
+          count: counts.dir_hr_pending_count,
+          color: 'tertitary',
+        },
+        {
+          status: 'Pending with HR',
+          count: counts.dir_hrpending_count,
           color: 'info',
+        },
+         {
+          status: 'Approved MRF',
+          count: counts.approved,
+          color: 'success',
+        },
+         {
+          status: 'Completed MRF',
+          count: counts.approved_completed,
+          color: 'error',
         },
       ];
       break;
@@ -388,7 +428,7 @@ const Dashboard = () => {
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status.replace('MRF ', '')}` })));
         combinedData.push(mrfPending);
         combinedData = combinedData.concat(hrStatusMetrics.map(m => ({ ...m, status: `HR ${m.status.replace('MRF ', '')}` })));
-        if (withdrawOverall && user?.emp_id !== '12345') {
+         if (withdrawOverall && user?.emp_id !== '12345') {
           combinedData.push({ ...withdrawOverall, status: 'MRF Withdrawn' });
         }
 

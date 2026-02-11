@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { styled, useTheme } from '@mui/material/styles';
 import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
-    Avatar, InputLabel, Input,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
+  Avatar, InputLabel, Input,
     Divider,
     Backdrop,
     FormHelperText
@@ -56,7 +56,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     backgroundColor: '#2A7F66', // darkAccent
     color: theme.palette.common.white,
     fontWeight: theme.typography.fontWeightBold,
-    whiteSpace: "nowrap",
+    whiteSpace: "nowrap", //NOSONAR
     padding: theme.spacing(1.5, 2),
     border: `1px solid #C0D1C8`, // lightBorder
     textAlign: "center",
@@ -70,7 +70,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.body}`]: {
     fontSize: theme.typography.body2.fontSize,
     minWidth: 80,
-    whiteSpace: "nowrap",
+    whiteSpace: "nowrap", //NOSONAR
     padding: theme.spacing(1.5, 2),
     border: `1px solid #E0E0E0`,
     textAlign: "center",
@@ -313,7 +313,7 @@ const ManpowerRequisition = () => {
   const location = useLocation();
   const { user, token } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
-  const status = useSelector((state) => state.manpowerRequisition.status);
+ const status = useSelector((state) => state.manpowerRequisition.status);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
@@ -1008,16 +1008,14 @@ const ManpowerRequisition = () => {
                   <TableHead className="custom-header">
                     <TableRow>
                       <StyledTableCell>S.No</StyledTableCell>
-                      <StyledTableCell>Name</StyledTableCell>
-                      <StyledTableCell>Department</StyledTableCell>
-                      <StyledTableCell>Status of Employment</StyledTableCell>
+                      <StyledTableCell>Name / <br />Department</StyledTableCell>
+                      {/* <StyledTableCell>Department</StyledTableCell> */}
+                      <StyledTableCell>Status of <br />Employment</StyledTableCell>
                       <StyledTableCell>Designation</StyledTableCell>
-                      <StyledTableCell>Requirement Type</StyledTableCell>
+                      <StyledTableCell>Requirement <br />Type</StyledTableCell>
                       <StyledTableCell>TAT Request</StyledTableCell>
-                      <StyledTableCell>Created Date</StyledTableCell>
-                      <StyledTableCell>Current Status</StyledTableCell>
-                      <StyledTableCell>Director Status</StyledTableCell>
-                      <StyledTableCell>HR Status</StyledTableCell>
+                      <StyledTableCell>Created<br /> Date</StyledTableCell>
+                      <StyledTableCell>Overall Status</StyledTableCell>
                       <StyledTableCell>Action</StyledTableCell>
                     </TableRow>
                   </TableHead>
@@ -1026,70 +1024,106 @@ const ManpowerRequisition = () => {
                       paginatedManpower.map((manpower, index) => (
                         <StyledTableRow key={manpower.id} status={manpower.status}>
                           <StyledTableCell component="th" scope="row">{page * rowsPerPage + index + 1}</StyledTableCell>
-                          <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
-                          <StyledTableCell>{manpower.department_name}</StyledTableCell>
+                          <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}<br />{manpower.department_name}</StyledTableCell>
                           <StyledTableCell>{manpower.employment_status}</StyledTableCell>
                           <StyledTableCell>{manpower.designation}</StyledTableCell>
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                           <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
-                          <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
-                          <StyledTableCell><StatusBadge status={manpower.director_status !== "Pending" ? manpower.director_status : "-"} /></StyledTableCell>
-                          <StyledTableCell><StatusBadge status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"} /></StyledTableCell>
+                          <StyledTableCell>
+                              <Box sx={{ display: "grid",gridTemplateColumns: "max-content 6px auto",rowGap: 0.6,columnGap: 0.5,alignItems: "center",}}>
+                                  <Box fontWeight={600} textAlign="left">Current Status</Box>
+                                  <Box fontWeight={600} textAlign="left">:</Box>
+                                  <Box textAlign="left">
+                                    <StatusBadge status={manpower.status} />
+                                  </Box>
+
+                                  <Box fontWeight={600} textAlign="left">Director Status</Box>
+                                  <Box fontWeight={600} textAlign="left">:</Box>
+                                  <Box textAlign="left">
+                                    <StatusBadge
+                                      status={manpower.director_status !== "Pending" ? manpower.director_status : "-"}
+                                    />
+                                     {user.emp_id != "1722" && <Tooltip title="Director Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"Director_chatbox")} sx={{ color: '#3e5624',padding: "1%" }}><MessageIcon fontSize="small" /></IconButton></Tooltip>}
+                                  </Box>
+
+                                  <Box fontWeight={600} textAlign="left">HR Status</Box>
+                                  <Box fontWeight={600} textAlign="left">:</Box>
+                                  <Box textAlign="left">
+                                    <StatusBadge
+                                      status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"}
+                                    />
+                                {user.emp_id != "1400" && <Tooltip title="HR Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"HR_chatbox")} sx={{ color: '#3e5624',padding: "1%" }}><MessageIcon fontSize="small"  /></IconButton></Tooltip>}
+
+                                  </Box>
+
+                                 {manpower.hr_status === "HR Approve" &&
+                                      manpower.mrf_hr_approve_date &&
+                                      manpower.mrf_hr_approve_date !== "NULL" &&
+                                      !isNaN(new Date(manpower.mrf_hr_approve_date).getTime()) && (
+                                    <>
+                                      <Box></Box>
+                                      <Box></Box>
+                                      <Box textAlign="left">
+                                        {new Date(manpower.mrf_hr_approve_date).toLocaleDateString()}
+                                      </Box>
+                                    </>
+                                  )}
+                                </Box>
+                              </StyledTableCell>
                           
                           <StyledTableCell>
                             <Tooltip title="View">
-                              <IconButton onClick={() => handleViewClick(manpower.id)} sx={{ color: 'info.main' }}>
-                                <PreviewIcon />
-                              </IconButton>
-
+                              <IconButton onClick={() => handleViewClick(manpower.id)} sx={{ color: 'info.main' ,padding: "4px"}}>
+                                <PreviewIcon fontSize="small" />
+                            </IconButton>
+                            </Tooltip>
                               {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
                                 <Tooltip title="Update Status">
-                                  <IconButton onClick={() => handleOpenStatusModal(manpower)} sx={{ color: 'secondary.main' }}>
-                                    <PublishedWithChangesIcon />
+                                  <IconButton onClick={() => handleOpenStatusModal(manpower)} sx={{ color: 'secondary.main',padding: "4px" }}>
+                                    <PublishedWithChangesIcon fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
                               )}
 
-                            </Tooltip>
+                          
                               {(isDirector && manpower.director_status !== "Approve")
                                 && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
-                                      <EditDocumentIcon />
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main',padding: "4px" }}>
+                                      <EditDocumentIcon fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
                               }
                               {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
                                 && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
-                                      <EditDocumentIcon />
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main',padding: "4px" }}>
+                                      <EditDocumentIcon fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
                               }
                               {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
                                 && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
-                                      <EditDocumentIcon />
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' ,padding: "4px"}}>
+                                      <EditDocumentIcon fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
                               }
                                {(user.emp_id == "12345" && manpower.hr_status !== "HR Approve")
                                 && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' }}>
-                                      <EditDocumentIcon />
+                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main',padding: "4px" }}>
+                                      <EditDocumentIcon fontSize="small" />
                                     </IconButton>
                                   </Tooltip>
                               }
 
                               {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
                                 <Tooltip title="Withdraw">
-                                  <IconButton onClick={() => handleWithdrawClick(manpower.id)} sx={{ color: 'warning.main' }}>
-                                    <UndoIcon />
+                                  <IconButton onClick={() => handleWithdrawClick(manpower.id)} sx={{ color: 'warning.main',padding: "4px" }}>
+                                    <UndoIcon fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
                               )}
-                                {user.emp_id != "1722" && <Tooltip title="Director Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"Director_chatbox")} sx={{ color: 'secondary.main' }}><MessageIcon /></IconButton></Tooltip>}
-                                {user.emp_id != "1400" && <Tooltip title="HR Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"HR_chatbox")} sx={{ color: 'secondary.main' }}><MessageIcon /></IconButton></Tooltip>}
+                                
                           </StyledTableCell>
                         </StyledTableRow>
                       ))

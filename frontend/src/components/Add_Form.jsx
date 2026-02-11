@@ -201,12 +201,14 @@ const App_Form = () => {
             case 'experience':
                 if (!value) newErrors.experience = 'Experience is required.';
                 else if(value < 1) newErrors.experience = 'Experience must be at least 1 year.';
-               
+                // else if(value < 1) newErrors.experience = 'Experience must be at least 1 year.';
+                // else if(value > 25) newErrors.experience = 'Experience must be at most 25 years.';
                 else delete newErrors.experience;
                 break;
             case 'ctcRange':
                 if (!value) newErrors.ctcRange = 'Approx. CTC Range is required.';
                 else if (value < 1) newErrors.ctcRange = 'Approx. CTC Range must be at least 1 Lakh.';
+                // else if (value < 1) newErrors.ctcRange = 'Approx. CTC Range must be at least 1 Lakh.';
                 // else if (value > 50) newErrors.ctcRange = 'Approx. CTC Range must be at most 50 Lakh.';
                 else delete newErrors.ctcRange;
                 break;
@@ -853,16 +855,16 @@ const App_Form = () => {
                             <h3 className="section-title"><FiLayers /> Experience & Compensation</h3>
                             <div className="section-grid multi-col">
                                 <div>
-                                    <label className="form-label">Experience (Min - Max)<span className="required-star">*</span></label>
+                                    <label className="form-label">Experience <span className="required-star">*</span></label>
                                     <input
                                         type="text"
                                         name="experience"
                                         value={formData.experience}
                                         onChange={handleInputChange}
-                                        onBlur={handleBlur} 
-                                        onKeyPress={(e) => {if (!/[0-9\.\-]/.test(e.key)) { e.preventDefault(); }}}
+                                        onBlur={handleBlur}
+                                        onKeyPress={(e) => {if (!/[0-9.\-]/.test(e.key)) { e.preventDefault(); }}}
                                         className={`form-input ${getFieldClassName('experience')}`}
-                                        placeholder="e.g., 1-25 years"
+                                        placeholder="experience"
                                     />
                                     {renderError('experience')}
                                 </div>
@@ -874,9 +876,9 @@ const App_Form = () => {
                                         value={formData.ctcRange}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        onKeyPress={(e) => {if (!/[0-9\.\-]/.test(e.key)) { e.preventDefault(); }}}
+                                        onKeyPress={(e) => {if (!/[0-9.\-]/.test(e.key)) { e.preventDefault(); }}}
                                         className={`form-input ${getFieldClassName('ctcRange')}`}
-                                        placeholder="e.g., 8-12 LPA"
+                                        placeholder="CTC Range"
                                     />
                                     {renderError('ctcRange')}
                                 </div>

@@ -45,7 +45,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
         backgroundColor: '#2A7F66', // darkAccent
         color: theme.palette.common.white,
         fontWeight: theme.typography.fontWeightBold,
-        whiteSpace: "nowrap",
+        whiteSpace: "nowrap", //NOSONAR
         padding: theme.spacing(1.5, 2),
         border: `1px solid #C0D1C8`, // lightBorder
         textAlign: "center",
@@ -59,7 +59,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.body}`]: {
         fontSize: theme.typography.body2.fontSize,
         minWidth: 80,
-        whiteSpace: "nowrap",
+        whiteSpace: "nowrap", //NOSONAR
         padding: theme.spacing(1.5, 2),
         border: `1px solid #E0E0E0`,
         textAlign: "center",

@@ -76,7 +76,9 @@ header button.logout {
 header button.logout:hover {
   background-color: #b91c1c;
 }
-
+.css-7obysr-MuiTableCell-root.MuiTableCell-head {
+  padding: 6px 6px !important;
+}
 /* Footer */
 footer {
   background-color: #ffffff;

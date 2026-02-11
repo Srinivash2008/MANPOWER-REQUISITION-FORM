@@ -1,4 +1,4 @@
-import React from 'react';
+
 import {
   Grid,
   Box,
@@ -120,9 +120,9 @@ const FHDashboard = ({
               <DonutChart data={pendingStatuses} total={totalPending} size={120} strokeWidth={13} />
             </Box>
             <Box>
-              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 0.5 }}>Action Required</Typography>
+              <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 0.5 }}>MRF Details</Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
-                {totalPending.toLocaleString()} forms require attention.
+                {totalPending.toLocaleString()} MRF require attention.
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {pendingStatuses.map((p) => {
@@ -137,15 +137,20 @@ const FHDashboard = ({
                         onClick={() => {
                           let statusParam = p.status.replace('MRF ', '');
                           const lowerStatus = statusParam.toLowerCase();
-
-                          if (lowerStatus.includes('query')) {
-                            statusParam = 'Raise Query';
-                          } else if (lowerStatus.includes('on-hold') || lowerStatus.includes('on hold')) {
-                            statusParam = 'On Hold';
-                          } else if (lowerStatus.includes('submitted')) {
-                            statusParam = 'Pending';
+                          console.log(lowerStatus,"lowerStatus")
+                          if(lowerStatus == "submitted"){
+                            statusParam = ""
+                          }else if(lowerStatus == "pending with director"){
+                            statusParam = "director_status=Pending"
+                          }else if(lowerStatus == "pending with hr"){
+                            statusParam = "director_status=Approve&hr_status=Pending"
+                          }else if(lowerStatus == "approved mrf"){
+                            statusParam = "status=HR Approve"
+                          }else if(lowerStatus == "completed mrf"){
+                            statusParam = ""
                           }
-                          navigate(`/mrf-list?status=${statusParam}`);
+                          console.log(statusParam,"statusParam");
+                          navigate(`/mrf-list?${statusParam}`);
                         }}
                         sx={{
                           cursor: 'pointer',

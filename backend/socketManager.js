@@ -158,8 +158,6 @@ const emitQualityApproveDiscussionMessage = () => {
   }
 };
 
-
-
 const emitManpowerRequisitionRefresh = () => {
   if(io) {
     //console.log('[Socket] Emitting emailtemplate-refresh event.');

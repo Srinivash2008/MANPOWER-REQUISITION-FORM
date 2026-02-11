@@ -76,19 +76,19 @@ const RadialBarChart = ({ data = [] }) => {
                 {data.map((item, index) => (
                     <React.Fragment key={item.status}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Box sx={{
-                                width: 14,
-                                height: 14,
-                                borderRadius: '4px',
-                                bgcolor: item.color ? theme.palette[item.color]?.main : colors[index % colors.length],
-                            }} />
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                {item.status}
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', ml: 'auto' }}>
-                                {item.count.toLocaleString()}
-                            </Typography>
-                        </Box>
+                        <Box sx={{
+                            width: 14,
+                            height: 14,
+                            borderRadius: '4px',
+                            bgcolor: item.color ? theme.palette[item.color]?.main : colors[index % colors.length],
+                        }} />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {item.status}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary', ml: 'auto' }}>
+                            {item.count.toLocaleString()}
+                        </Typography>
+                    </Box>
                         {((user?.emp_id === '12345' && item.status === 'MRF Submitted' || item.status === 'Director Approved') ||
                             (user?.emp_id !== '12345' &&
                                 (item.status === 'MRF Withdrawn' ||
