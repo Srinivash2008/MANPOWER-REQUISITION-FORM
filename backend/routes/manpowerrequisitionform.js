@@ -1577,6 +1577,35 @@ WHERE mr.isdelete = 'Active' AND mr.hr_status = 'HR Approve'
     }
 });
 
+/**
+ * @desc Soft delete a candidate from MRF tracking
+ * @route PUT /api/mrf/delete-candidate-tracking/:track_id
+ * @access Private
+ */
+router.put('/delete-candidate-tracking/:track_id', authMiddleware, async (req, res) => {
+    const { track_id } = req.params;
+
+    if (!track_id) {
+        return res.status(400).json({ message: 'Candidate tracking ID is required.' });
+    }
+
+    try {
+        const [result] = await pool.execute(
+            'UPDATE manpower_requisition_tracking SET is_active = ? WHERE mrf_track_id = ?',
+            ['Inactive', track_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Candidate not found.' });
+        }
+
+        res.status(200).json({ message: 'Candidate marked as inactive successfully.' });
+    } catch (error) {
+        console.error('Error soft-deleting candidate:', error);
+        res.status(500).json({ message: 'Server error while deleting candidate.' });
+    }
+});
+
 
 // router.get('/uploadFiles/submittedArticlesFile/:filename', (req, res) => {
 //     const filename = req.params.filename;

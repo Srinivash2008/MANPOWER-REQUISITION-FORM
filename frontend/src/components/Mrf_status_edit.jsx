@@ -15,7 +15,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit'; 
-import { fetchMrfTrackingById, updateManpowerTracking } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchMrfTrackingById, updateManpowerTracking, deleteManpowerTrackingCandidate } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -107,7 +107,7 @@ const MRF_Status_Edit = () => {
         const candidateToUpdate = { ...formData.candidates[index] };
 
         const payload = {
-            id: id,
+            id: id, // This is the MRF ID, not the candidate ID
             mrf_closed_date: formData.mrf_closed_date,
             mrf_track_status: formData.mrf_track_status,
             candidates: [candidateToUpdate], // Send only the candidate being updated/created
@@ -149,13 +149,8 @@ const MRF_Status_Edit = () => {
         if (result.isConfirmed) {
             setIsUpdating(true);
             try {
-                const payload = {
-                    id: candidateToDelete.mrf_track_id,
-                    is_active: 'Inactive'
-                };
-                
-                await dispatch(updateManpowerTracking(payload)).unwrap();
-                swal.fire('Deleted!', 'The candidate has been deleted.', 'success');
+                await dispatch(deleteManpowerTrackingCandidate(candidateToDelete.mrf_track_id)).unwrap();
+                swal.fire('Deleted!', 'The candidate has been marked as inactive.', 'success');
                 // Refetch data to update the list
                 dispatch(fetchMrfTrackingById(id));
             } catch (error) {
@@ -306,17 +301,17 @@ const MRF_Status_Edit = () => {
                             </Typography>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                                <Box>
-                                    <TextField
-                                        fullWidth
-                                        type="date"
-                                        name="mrf_closed_date"
-                                        label="MRF Closed Date"
-                                        value={formData.mrf_closed_date}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, mrf_closed_date: e.target.value }))}
-                                        InputLabelProps={{ shrink: true }}
-                                        variant="outlined"
-                                    />
+                              
+
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4, mb: 2 }}>
+                                 
+                                    {formData.candidates.length < (selectedRequisition?.num_resources || 0) && !formData.candidates.some(c => c.isNew) && (
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<PersonAddIcon />}
+                                            onClick={handleAddCandidateClick}
+                                        >Add Candidate</Button>
+                                    )}
                                 </Box>
                                 <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5, mt: 2 }}>
                                     {formData.candidates.map((candidate, index) => (
@@ -368,16 +363,18 @@ const MRF_Status_Edit = () => {
                                         </Box>
                                     ))}
                                 </Box>
-                                {formData.candidates.length < (selectedRequisition?.num_resources || 0) && !formData.candidates.some(c => c.isNew) && (
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<PersonAddIcon />}
-                                        onClick={handleAddCandidateClick}
-                                        sx={{ mt: 2, alignSelf: 'flex-start' }}
-                                    >
-                                        Add Candidate
-                                    </Button>
-                                )}
+                                  <Box>
+                                    <TextField
+                                        fullWidth
+                                        type="date"
+                                        name="mrf_closed_date"
+                                        label="MRF Closed Date"
+                                        value={formData.mrf_closed_date}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, mrf_closed_date: e.target.value }))}
+                                        InputLabelProps={{ shrink: true }}
+                                        variant="outlined"
+                                    />
+                                </Box>
                             </Box>
 
                             <FormControl fullWidth variant="outlined" sx={{ mt: 3 }}>

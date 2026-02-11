@@ -630,6 +630,34 @@ export const replyToQuery = createAsyncThunk(
   }
 );
 
+export const deleteManpowerTrackingCandidate = createAsyncThunk(
+  'manpowerRequisition/deleteManpowerTrackingCandidate',
+  async (trackId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+      const response = await axios.put(
+        `${API_URL}/api/mrf/delete-candidate-tracking/${trackId}`,
+        {}, // No body is needed for this request
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      return { trackId, ...response.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to delete candidate.';
+      return rejectWithValue({ trackId, error: errorMessage });
+    }
+  }
+);
+
 export const fetchQuery = createAsyncThunk(
   'manpowerRequisition/fetchQuery',
   async (id, { rejectWithValue, getState }) => {
@@ -974,6 +1002,22 @@ const manpowerrequisitionSlice = createSlice({
       .addCase(fetchQuery.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
+      })
+      // Handle deleteManpowerTrackingCandidate
+      .addCase(deleteManpowerTrackingCandidate.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(deleteManpowerTrackingCandidate.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        if (state.selectedRequisition && state.selectedRequisition.tracking_details) {
+          state.selectedRequisition.tracking_details = state.selectedRequisition.tracking_details.filter(
+            (candidate) => candidate.mrf_track_id !== action.payload.trackId
+          );
+        }
+      })
+      .addCase(deleteManpowerTrackingCandidate.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload.error;
       });
   }
 });
