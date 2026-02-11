@@ -88,7 +88,7 @@ const ManpowerRequisitionEdit = () => {
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
     const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
- 
+
 
     useEffect(() => {
         dispatch(fetchManpowerRequisitionById(id));
@@ -141,7 +141,7 @@ const ManpowerRequisitionEdit = () => {
                 hr_comments: selectedRequisition.hr_comments || "",
                 director_comments: selectedRequisition.director_comments || "",
                 status: selectedRequisition.status || "",
-                current_status : selectedRequisition.status || "",
+                current_status: selectedRequisition.status || "",
                 created_at: selectedRequisition.created_at || "",
                 Director_Query_Answer: selectedRequisition.Director_Query_Answer || "",
                 HR_Query_Answer: selectedRequisition.HR_Query_Answer || ""
@@ -378,7 +378,7 @@ const ManpowerRequisitionEdit = () => {
 
     const handleStatusChange = (event, manpowerId) => {
         const newStatus = event.target.value;
-        console.log(newStatus,"sdfds")
+        console.log(newStatus, "sdfds")
         setManpowerStatus(newStatus);
         setManpowerId(manpowerId);
         setFormData(prev => ({
@@ -428,7 +428,7 @@ const ManpowerRequisitionEdit = () => {
             return;
         }
 
-         if (isHr && formData.status == "FH Replied") {
+        if (isHr && formData.status == "FH Replied") {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
         }
@@ -521,16 +521,16 @@ const ManpowerRequisitionEdit = () => {
             }
         }
         let isSendMail = false;
-        console.log(formData,"director_statusdirector_statusdirector_statusdirector_status")
+        console.log(formData, "director_statusdirector_statusdirector_statusdirector_status")
         switch (formData.current_status) {
             case 'Draft':
-                if(user.emp_id != "1722" && user.emp_id != "1400"){
+                if (user.emp_id != "1722" && user.emp_id != "1400") {
                     isSendMail = true;
                 }
-                else{
+                else {
                     isSendMail = false;
                 }
-                
+
                 break;
             case 'Pending':
                 if (user.emp_id == "1400") {
@@ -553,24 +553,24 @@ const ManpowerRequisitionEdit = () => {
                 break;
         }
         console.log("isSendMail After Switch Case", isSendMail);
-        console.log(formData.directorstatus,"formData.directorstatusformData.directorstatus",user.emp_id,"user.emp_iduser.emp_id")
+        console.log(formData.directorstatus, "formData.directorstatusformData.directorstatus", user.emp_id, "user.emp_iduser.emp_id")
 
         try {
             await dispatch(updateManpowerRequisition({ id, data })).unwrap();
 
             if (manpowerStatus) {
                 // console.log(manpowerStatus,"manpowerStatus")
-                if((user.emp_id != "1722" && formData.directorstatus != "Approve" )){
-                await dispatch(updateManpowerStatus({
-                    manpowerId,
-                    newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
-                    hr_comments: formData.hr_comments,
-                    director_comments: formData.director_comments,
-                    data : selectedRequisition,
-                    isSendMail
-                })).unwrap();
+                if ((user.emp_id != "1722" && formData.directorstatus != "Approve")) {
+                    await dispatch(updateManpowerStatus({
+                        manpowerId,
+                        newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
+                        hr_comments: formData.hr_comments,
+                        director_comments: formData.director_comments,
+                        data: selectedRequisition,
+                        isSendMail
+                    })).unwrap();
                 }
-                
+
             }
 
             if (manpowerStatus === "Raise Query" && queryText) {
@@ -631,7 +631,7 @@ const ManpowerRequisitionEdit = () => {
         <div className="page-wrapper">
             <div className="form-panel">
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, mt: 5, flexDirection: "row-reverse" }}>
-                     <Button
+                    <Button
                         variant="outlined"
                         onClick={() => navigate(-1)}
                         startIcon={<ArrowBackIcon sx={{ color: 'white' }} />}
@@ -965,6 +965,19 @@ const ManpowerRequisitionEdit = () => {
                                 </div>
                             </div>
                         )}
+                        {user.emp_id == '12345' && selectedRequisition?.status == 'HR Approve' &&
+                            <div className="form-section">
+                                <h3 className="section-title"><FiEdit3 /> HR Use Only</h3>
+                                <div className="section-grid multi-col">
+                                    <div>
+                                        <label className="form-label">MRF Number</label>
+                                        <input name="mrfNumber" className={`form-input`} value={formData.mrfNumber} onChange={handleInputChange} onBlur={handleBlur} />
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        }
 
                         {((isDirector || isHr) && selectedRequisition && selectedRequisition.status === 'FH Replied') && (
                             <div className="form-section">
@@ -1013,10 +1026,10 @@ const ManpowerRequisitionEdit = () => {
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
                                                 <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
                                             ]}
-                                            
+
                                             {isHr && [
                                                 //  <MenuItem value="Pending">Select the Status</MenuItem>,
-                                                <MenuItem value="Pending"  key="pending">Select the Status</MenuItem>,
+                                                <MenuItem value="Pending" key="pending">Select the Status</MenuItem>,
                                                 <MenuItem key="HR Approve" value="HR Approve">HR Approved</MenuItem>,
                                                 <MenuItem key="Reject" value="Reject">Rejected</MenuItem>,
                                                 <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
@@ -1114,7 +1127,7 @@ const ManpowerRequisitionEdit = () => {
                             exit: "exit",
                             style: { borderRadius: '16px', padding: '1.5rem' }
                         }}
-                    > 
+                    >
                         <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}>
                             <HelpOutlineIcon color="primary" sx={{ fontSize: '3rem', mb: 1 }} />
                             <br />
