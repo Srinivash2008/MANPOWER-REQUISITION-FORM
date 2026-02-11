@@ -25,7 +25,6 @@ const MRF_Status_Edit = () => {
     const { id } = useParams();
     const { selectedRequisition, loading } = useSelector((state) => state.manpowerRequisition);
 
-    const [showAddCandidate, setShowAddCandidate] = useState(false);
     const [formData, setFormData] = useState({
         mrf_closed_date: '',
         mrf_track_status: '',
@@ -41,13 +40,15 @@ const MRF_Status_Edit = () => {
         if (selectedRequisition) {
             const existingCandidates = selectedRequisition.tracking_details || [];
             
-            const initialCandidates = existingCandidates.map(existing => ({
-                mrf_track_id: existing?.mrf_track_id || null,
-                offer_date: existing?.offer_date ? existing.offer_date.split('T')[0] : '',
-                candidate_name: existing?.candidate_name || '',
-                isEditing: false, 
-                isNew: false, // Mark as not new
-            }));
+            const initialCandidates = existingCandidates.map(existing => {
+                return {
+                    mrf_track_id: existing.mrf_track_id,
+                    offer_date: existing.offer_date ? existing.offer_date.split('T')[0] : '',
+                    candidate_name: existing.candidate_name || '',
+                    isEditing: false,
+                    isNew: false,
+                };
+            });
 
             setFormData({
                 mrf_closed_date: selectedRequisition.mrf_closed_date ? selectedRequisition.mrf_closed_date.split('T')[0] : '',
@@ -63,22 +64,6 @@ const MRF_Status_Edit = () => {
         updatedCandidates[index] = { ...updatedCandidates[index], [name]: value };
         setFormData(prev => ({ ...prev, candidates: updatedCandidates }));
     };
-
-    const handleAddCandidateClick = () => {
-        const newCandidate = {
-            mrf_track_id: null,
-            offer_date: '',
-            candidate_name: '',
-            isEditing: true, // Start in edit mode
-            isNew: true, // Mark as a new candidate
-        };
-        setFormData(prev => ({
-            ...prev,
-            candidates: [...prev.candidates, newCandidate]
-        }));
-        setShowAddCandidate(false); // Hide the add button after showing the form
-    };
-
 
     const handleToggleEdit = (index) => {
         setFormData(prev => {
@@ -158,6 +143,18 @@ const MRF_Status_Edit = () => {
             } finally {
                 setIsUpdating(false);
             }
+        }
+    };
+
+    const handleAddCandidate = () => {
+        if (formData.candidates.length < selectedRequisition.num_resources) {
+            setFormData(prev => ({
+                ...prev,
+                candidates: [
+                    ...prev.candidates,
+                    { mrf_track_id: null, offer_date: '', candidate_name: '', isEditing: true, isNew: true }
+                ]
+            }));
         }
     };
 
@@ -303,66 +300,6 @@ const MRF_Status_Edit = () => {
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                               
 
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4, mb: 2 }}>
-                                 
-                                    {formData.candidates.length < (selectedRequisition?.num_resources || 0) && !formData.candidates.some(c => c.isNew) && (
-                                        <Button
-                                            variant="contained"
-                                            startIcon={<PersonAddIcon />}
-                                            onClick={handleAddCandidateClick}
-                                        >Add Candidate</Button>
-                                    )}
-                                </Box>
-                                <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5, mt: 2 }}>
-                                    {formData.candidates.map((candidate, index) => (
-                                        <Box key={index}>
-                                            <Card variant="outlined" sx={{ p: 2, borderRadius: 2, backgroundColor: '#fafafa' }}>
-                                                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}><PersonAddIcon sx={{ mr: 1 }}/> Candidate #{index + 1}</Typography>
-                                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                                                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                         <TextField
-                                                             fullWidth
-                                                             type="date"
-                                                             name="offer_date"
-                                                             label="Offer Date"
-                                                             value={candidate.offer_date}
-                                                             onChange={(e) => handleInputChange(e, index)}
-                                                             InputLabelProps={{ shrink: true }}
-                                                             variant="outlined"
-                                                             InputProps={{
-                                                                 readOnly: !candidate.isEditing,
-                                                             }}
-                                                         />
-                                                         <TextField
-                                                             fullWidth
-                                                             name="candidate_name"
-                                                             label="Candidate Name"
-                                                             value={candidate.candidate_name}
-                                                             onChange={(e) => handleInputChange(e, index)}
-                                                             variant="outlined"
-                                                             InputProps={{
-                                                                 readOnly: !candidate.isEditing,
-                                                             }}
-                                                         />
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        {!candidate.isEditing ? (
-                                                            <Button variant="outlined" startIcon={<EditIcon />} onClick={() => handleToggleEdit(index)}>Edit</Button>
-                                                        ) : (
-                                                            <>
-                                                                <Button variant="contained" startIcon={<UpdateIcon />} onClick={() => handleUpdateCandidate(index)} disabled={isUpdating}>Update</Button>
-                                                                {candidate.isNew && <Button variant="text" color="error" onClick={() => handleCancelNewCandidate(index)}>Cancel</Button>}
-                                                            </>
-                                                        )}
-                                                        {!candidate.isNew && (
-                                                            <IconButton onClick={() => handleDeleteCandidate(index)} disabled={isUpdating || isAnyCandidateEditing} color="error"><DeleteIcon /></IconButton>
-                                                        )}
-                                                    </Box>
-                                                </Box>
-                                            </Card>
-                                        </Box>
-                                    ))}
-                                </Box>
                                   <Box>
                                     <TextField
                                         fullWidth
@@ -389,6 +326,86 @@ const MRF_Status_Edit = () => {
                                     <MenuItem value="Completed">Completed</MenuItem>
                                 </Select>
                             </FormControl>
+                            
+                                
+                                <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5, mt: 2 }}>
+                                    {formData.candidates.map((candidate, index) => (
+                                        <Box key={index}>
+                                            <Card 
+                                                variant="outlined" 
+                                                sx={{ 
+                                                    p: 2, 
+                                                    borderRadius: 2, 
+                                                    backgroundColor: candidate.isNew ? '#E8F5E9' : '#fafafa',
+                                                    transition: 'all 0.3s ease-in-out',
+                                                    boxShadow: candidate.isNew ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                                                }}
+                                            >
+                                                <Typography 
+                                                    variant="subtitle1" 
+                                                    fontWeight="bold" 
+                                                    sx={{ 
+                                                        mb: 2, 
+                                                        display: 'flex', 
+                                                        alignItems: 'center',
+                                                        color: candidate.isNew && !candidate.isEditing ? 'text.disabled' : 'text.primary'
+                                                    }}><PersonAddIcon sx={{ mr: 1 }}/> Candidate #{index + 1}</Typography>
+                                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                                                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                         <TextField
+                                                             fullWidth
+                                                             type="date"
+                                                             name="offer_date"
+                                                             label="Offer Date"
+                                                             value={candidate.offer_date}
+                                                             onChange={(e) => handleInputChange(e, index)}
+                                                             InputLabelProps={{ shrink: true }}
+                                                             variant="outlined"
+                                                             InputProps={{ // NOSONAR
+                                                                 readOnly: !candidate.isEditing, // NOSONAR
+                                                             }}
+                                                         />
+                                                         <TextField
+                                                             fullWidth
+                                                             name="candidate_name"
+                                                             label="Candidate Name"
+                                                             value={candidate.candidate_name}
+                                                             onChange={(e) => handleInputChange(e, index)}
+                                                             variant="outlined"
+                                                             InputProps={{ // NOSONAR
+                                                                 readOnly: !candidate.isEditing,
+                                                             }}
+                                                         />
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        {!candidate.isEditing ? (
+                                                            <Button variant="outlined" startIcon={<EditIcon />} onClick={() => handleToggleEdit(index)}>Edit</Button>
+                                                        ) : (
+                                                            <>
+                                                                <Button variant="contained" startIcon={<UpdateIcon />} onClick={() => handleUpdateCandidate(index)} disabled={isUpdating}>Update</Button>
+                                                                {candidate.isNew && <Button variant="text" color="error" onClick={() => handleCancelNewCandidate(index)}>Cancel</Button>}
+                                                            </>
+                                                        )}
+                                                        {!candidate.isNew && (
+                                                            <IconButton onClick={() => handleDeleteCandidate(index)} disabled={isUpdating || isAnyCandidateEditing} color="error"><DeleteIcon /></IconButton>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+                                            </Card>
+                                        </Box>
+                                    ))}
+                                </Box>
+                                {formData.candidates.length < selectedRequisition.num_resources && (
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                        <Button
+                                            variant="dashed"
+                                            onClick={handleAddCandidate}
+                                            disabled={isAnyCandidateEditing}
+                                        >
+                                            <PersonAddIcon sx={{ mr: 1 }} /> {formData.candidates.length === 0 ? 'Add Candidate' : 'Add Another Candidate'}
+                                        </Button>
+                                    </Box>
+                                )}
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
