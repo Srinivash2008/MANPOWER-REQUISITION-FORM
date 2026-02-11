@@ -27,6 +27,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout, logoutUser } from "../../redux/auth/authSlice";
 import Logo from "../../assets/images/logo_MRF_new.png";
 import Swal from "sweetalert2";
+import { jwtDecode } from "jwt-decode";
 //import { fetchTodayLogin, shiftUpdateUser } from "../../redux/cases/caseEntrySlice";
 
 const useHeaderStyles = () => {
@@ -221,9 +222,20 @@ const Header = () => {
   const isDirector = user?.emp_id == "1400";
   useEffect(() => {
     if (!token) {
-      navigate('/login');
+      handleLogout();
+    } else {
+      try {
+        const decodedToken = jwtDecode(token);
+        if (decodedToken.exp * 1000 < Date.now()) {
+          Swal.fire("Session Expired", "Your session has expired. Please log in again.", "warning");
+          handleLogout();
+        }
+      } catch (error) {
+        console.error("Invalid token:", error);
+        handleLogout();
+      }
     }
-  }, [token, navigate]);
+  }, [token, navigate, dispatch, location.pathname]);
 
   //const { userLoginStatus } = useSelector((state) => state.caseEntry);
 
