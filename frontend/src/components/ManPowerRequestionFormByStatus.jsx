@@ -45,27 +45,29 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
         backgroundColor: '#2A7F66', // darkAccent
         color: theme.palette.common.white,
         fontWeight: theme.typography.fontWeightBold,
-        whiteSpace: "nowrap", //NOSONAR
+        whiteSpace: "nowrap",
         padding: theme.spacing(1.5, 2),
         border: `1px solid #C0D1C8`, // lightBorder
         textAlign: "center",
         width: "auto",
         minWidth: 80,
         '&:first-of-type': {
-            width: "80px",
-            minWidth: "80px",
+            width: "40px",
+            minWidth: "40px",
+            padding: theme.spacing(1.5, 1),
         },
     },
     [`&.${tableCellClasses.body}`]: {
-        fontSize: theme.typography.body2.fontSize,
+        fontSize: '0.7rem',
         minWidth: 80,
-        whiteSpace: "nowrap", //NOSONAR
+        whiteSpace: "nowrap",
         padding: theme.spacing(1.5, 2),
         border: `1px solid #E0E0E0`,
         textAlign: "center",
         '&:first-of-type': {
-            width: "80px",
-            minWidth: "80px",
+            width: "40px",
+            minWidth: "40px",
+            padding: theme.spacing(1.5, 1),
         },
     },
 }));

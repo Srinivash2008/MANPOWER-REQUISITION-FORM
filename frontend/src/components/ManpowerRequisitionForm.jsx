@@ -63,20 +63,22 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     width: "auto",
     minWidth: 80,
     '&:first-of-type': {
-      width: "80px",
-      minWidth: "80px",
+      width: "40px",
+      minWidth: "40px",
+      padding: theme.spacing(1.5, 1),
     },
   },
   [`&.${tableCellClasses.body}`]: {
-    fontSize: theme.typography.body2.fontSize,
+    fontSize: '0.7rem',
     minWidth: 80,
     whiteSpace: "nowrap", //NOSONAR
     padding: theme.spacing(1.5, 2),
     border: `1px solid #E0E0E0`,
     textAlign: "center",
     '&:first-of-type': {
-      width: "80px",
-      minWidth: "80px",
+      width: "40px",
+      minWidth: "40px",
+      padding: theme.spacing(1.5, 1),
     },
   },
 }));
@@ -1007,16 +1009,16 @@ const ManpowerRequisition = () => {
                 <Table sx={{ minWidth: 700 }}>
                   <TableHead className="custom-header">
                     <TableRow>
-                      <StyledTableCell>S.No</StyledTableCell>
-                      <StyledTableCell>Name / <br />Department</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>S.No</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Name / <br />Department</StyledTableCell>
                       {/* <StyledTableCell>Department</StyledTableCell> */}
-                      <StyledTableCell>Status of <br />Employment</StyledTableCell>
-                      <StyledTableCell>Designation</StyledTableCell>
-                      <StyledTableCell>Requirement <br />Type</StyledTableCell>
-                      <StyledTableCell>TAT Request</StyledTableCell>
-                      <StyledTableCell>Created<br /> Date</StyledTableCell>
-                      <StyledTableCell>Overall Status</StyledTableCell>
-                      <StyledTableCell>Action</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Status of <br />Employment</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Designation</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Requirement <br />Type</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>TAT Request</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Created<br /> Date</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Overall Status</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Action</StyledTableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1026,7 +1028,11 @@ const ManpowerRequisition = () => {
                           <StyledTableCell component="th" scope="row">{page * rowsPerPage + index + 1}</StyledTableCell>
                           <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}<br />{manpower.department_name}</StyledTableCell>
                           <StyledTableCell>{manpower.employment_status}</StyledTableCell>
-                          <StyledTableCell>{manpower.designation}</StyledTableCell>
+                          <StyledTableCell>
+                            <Tooltip title={manpower.designation} arrow>
+                              <Typography noWrap sx={{ maxWidth: '150px', textOverflow: 'ellipsis', overflow: 'hidden', margin: '0 auto', fontSize: '0.7rem'}}>{manpower.designation}</Typography>
+                            </Tooltip>
+                          </StyledTableCell>
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                           <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
