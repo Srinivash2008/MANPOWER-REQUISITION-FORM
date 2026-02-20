@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import MessageIcon from '@mui/icons-material/Message';
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList, my_requisitions } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList, my_requisitions, fetchManpowerRequisitionFH } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import { withdrawManpowerRequisition } from '../redux/cases/manpowerrequisitionSlice';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -347,6 +347,7 @@ const ManpowerRequisition = () => {
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
   const [statusModalErrors, setStatusModalErrors] = useState({});
 
+  const [functionalHeadFilter, setFunctionalHeadFilter] = useState("");
   // Filter States
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [employmentStatusFilter, setEmploymentStatusFilter] = useState("");
@@ -366,6 +367,7 @@ const ManpowerRequisition = () => {
   useEffect(() => {
     if (token) {
       dispatch(fetchManagerList());
+      dispatch(fetchManpowerRequisitionFH());
     }
   }, [token, dispatch]);
 
@@ -387,7 +389,7 @@ const ManpowerRequisition = () => {
   }, [location.search]);
 
 
-  const { managerList } = useSelector((state) => state.manpowerRequisition);
+  const { managerList, selectedRequisitionFH: manpowerRequisitionFHList } = useSelector((state) => state.manpowerRequisition);
 
   // --- Role-based visibility flags ---
   const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
@@ -436,6 +438,7 @@ const ManpowerRequisition = () => {
   // const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
   const clearFilters = () => {
+    setFunctionalHeadFilter("");
     setSearchTerm("");
     setDepartmentFilter("");
     setEmploymentStatusFilter("");
@@ -462,6 +465,7 @@ const ManpowerRequisition = () => {
       (manpower?.hr_status && manpower.hr_status.toLowerCase().includes(lowerSearchTerm)) ||
       (manpower?.created_at && new Date(manpower.created_at).toLocaleDateString().toLowerCase().includes(lowerSearchTerm));
 
+    const matchesFunctionalHead = !functionalHeadFilter || String(manpower.created_by) === String(functionalHeadFilter);
     const matchesDepartment = !departmentFilter || manpower.department_name === departmentFilter;
     const matchesEmploymentStatus = !employmentStatusFilter || manpower.employment_status === employmentStatusFilter;
     const matchesDesignation = !designationFilter || manpower.designation === designationFilter;
@@ -479,7 +483,7 @@ const ManpowerRequisition = () => {
     const matchesStartDate = !startDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] >= startDateFilter);
     const matchesEndDate = !endDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] <= endDateFilter);
 
-    return matchesSearchTerm && matchesDepartment && matchesEmploymentStatus && matchesDesignation && matchesRequirementType && matchesTatRequest && matchesDirectorStatus && matchesStatus && matchesHrStatus && matchesStartDate && matchesEndDate;
+    return matchesSearchTerm && matchesFunctionalHead && matchesDepartment && matchesEmploymentStatus && matchesDesignation && matchesRequirementType && matchesTatRequest && matchesDirectorStatus && matchesStatus && matchesHrStatus && matchesStartDate && matchesEndDate;
   });
 
   const paginatedManpower =
@@ -500,6 +504,7 @@ const ManpowerRequisition = () => {
     const { name, value } = e.target;
     setPage(0);
     switch (name) {
+      case "functionalHeadFilter": setFunctionalHeadFilter(value); break;
       case "departmentFilter": setDepartmentFilter(value); break;
       case "employmentStatusFilter": setEmploymentStatusFilter(value); break;
       case "designationFilter": setDesignationFilter(value); break;
@@ -862,6 +867,31 @@ const ManpowerRequisition = () => {
               border: '1px solid rgba(42, 127, 102, 0.1)',
               mb: 3
             }}>
+              {(user.emp_id == "1722" || user.emp_id == "1400") && (
+                <FormControl variant="standard" fullWidth>
+                  <InputLabel>Functional Head</InputLabel>
+                  <Select
+                    name="functionalHeadFilter"
+                    value={functionalHeadFilter}
+                    onChange={handleFilterChange}
+                    
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: 240, // Approx 5 items
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value=""><em>All Functional Heads</em></MenuItem>
+                    {manpowerRequisitionFHList?.filter(fh => fh.employee_id != 1400).map((fh) => (
+                      <MenuItem key={fh.employee_id} value={fh.employee_id}>
+                        {fh.ReportingManager}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Department</InputLabel>
                 <Select name="departmentFilter" value={departmentFilter} onChange={handleFilterChange}>
