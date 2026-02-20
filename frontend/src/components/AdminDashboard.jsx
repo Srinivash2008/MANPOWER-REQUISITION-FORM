@@ -224,7 +224,7 @@ const AdminDashboard = ({
                 managerStatusCounts.map(manager => (
                   <Box
                     key={manager.name}
-                    onClick={() => navigate(`/reports?functional_head=${manager.employee_id}`)}
+                    onClick={() => navigate(`/mrf-list?functional_head=${manager.employee_id}`)}
                     sx={{
                       mb: 2.5, p: 1.5, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, cursor: 'pointer',
                       transition: 'all 0.2s ease-in-out',
