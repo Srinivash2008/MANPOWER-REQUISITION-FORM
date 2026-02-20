@@ -126,6 +126,7 @@ const Dashboard = () => {
   })();
 
   // Convert string values to numbers and calculate dynamic values
+  console.log(displayedMrfList,"displayedMrfList")
   console.log(mfrCounts?.overall,"mfrCounts?.overallmfrCounts?.overall")
   const baseCounts = {
     pending: parseInt(mfrCounts?.overall?.pending_count) || 0,
@@ -307,7 +308,8 @@ const Dashboard = () => {
     { status: 'Pending with Director', count: baseCounts.dir_pending_count, color: 'tertitary' },
     { status: 'Pending with HR', count: baseCounts.hrpending_count, color: 'info' },
     { status: 'Approved MRF', count: baseCounts.hrapproved_count, color: 'info' },
-    { status: 'Completed MRF', count: baseCounts.FH_completed_count, color: 'error' }
+    { status: 'Completed MRF', count: baseCounts.FH_completed_count, color: 'error' },
+     { status: 'Rejected MRF', count: baseCounts.rejected, color: 'error' }
   ].filter(m => m.count >= 0);
   const fhTotalPending = baseCounts.FH_total_count;
 
@@ -341,6 +343,11 @@ const Dashboard = () => {
           count: counts.approved_completed,
           color: 'error',
         },
+         {
+          status: 'Rejected MRF',
+          count: counts.rejected,
+          color: 'error',
+        },
       ];
        break;
     case '1400':
@@ -368,6 +375,11 @@ const Dashboard = () => {
          {
           status: 'Completed MRF',
           count: counts.approved_completed,
+          color: 'error',
+        },
+        {
+          status: 'Rejected MRF',
+          count: counts.rejected,
           color: 'error',
         },
       ];

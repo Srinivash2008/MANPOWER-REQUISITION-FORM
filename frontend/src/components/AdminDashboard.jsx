@@ -148,6 +148,8 @@ const AdminDashboard = ({
                             statusParam = "director_status=Approve&hr_status=Pending"
                           }else if(lowerStatus == "approved mrf"){
                             statusParam = "status=HR Approve"
+                          }else if(lowerStatus == "rejected mrf"){
+                            statusParam = "status=Reject"
                           }else if(lowerStatus == "completed mrf"){
                             statusParam = ""
                           }
