@@ -376,6 +376,8 @@ const ManpowerRequisition = () => {
     const directorStatus = params.get('director_status');
     const currentStatus = params.get('status');
     const hrStatus = params.get('hr_status');
+    const functional_head = params.get('functional_head');
+    
 
     if (directorStatus) {
       setDirectorStatusFilter(directorStatus);
@@ -386,6 +388,10 @@ const ManpowerRequisition = () => {
     if (hrStatus) {
       setHrStatusFilter(hrStatus);
     }
+    if (functional_head){
+      setFunctionalHeadFilter(functional_head);
+    }
+
   }, [location.search]);
 
 
