@@ -146,7 +146,7 @@ const FHDashboard = ({
                             statusParam = "director_status=Approve&hr_status=Pending"
                           }else if(lowerStatus == "approved mrf"){
                             statusParam = "status=HR Approve"
-                          }else if(lowerStatus == "Rejected MRF"){
+                          }else if(lowerStatus == "rejected mrf"){
                             statusParam = "status=Reject"
                           }
                           else if(lowerStatus == "completed mrf"){

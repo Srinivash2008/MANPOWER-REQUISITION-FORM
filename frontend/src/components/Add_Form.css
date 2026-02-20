@@ -538,3 +538,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.css-ig3uy-MuiTableCell-root.MuiTableCell-body{
+ padding: 12px 2px !important;
+}
