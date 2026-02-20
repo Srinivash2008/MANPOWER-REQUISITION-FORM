@@ -195,6 +195,7 @@ const StatusBadge = ({ status }) => {
   const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
 
   return <Chip label={displayStatus} size="small" sx={{...sx, '& .MuiChip-label': {
+    fontSize:'0.7 rem !important',
         color: 'white'
       }}} />;
 };

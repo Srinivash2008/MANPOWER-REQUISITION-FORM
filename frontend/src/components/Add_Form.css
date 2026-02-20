@@ -542,3 +542,6 @@
 .css-ig3uy-MuiTableCell-root.MuiTableCell-body{
  padding: 12px 2px !important;
 }
+.css-19l6kvs-MuiChip-root .MuiChip-label{
+  font-size: 0.7rem !important;
+}
