@@ -126,7 +126,6 @@ const Dashboard = () => {
   })();
 
   // Convert string values to numbers and calculate dynamic values
-  console.log(displayedMrfList,"displayedMrfList")
   console.log(mfrCounts?.overall,"mfrCounts?.overallmfrCounts?.overall")
   const baseCounts = {
     pending: parseInt(mfrCounts?.overall?.pending_count) || 0,
@@ -152,7 +151,7 @@ const Dashboard = () => {
     fhReplied: displayedMrfList.filter(m => m.status === 'FH Replied').length,
 
     hrApproved: displayedMrfList.filter(m => m.status === 'HR Approve').length,
-    approved: displayedMrfList.filter(m => m.status === 'Approve' || m.status === 'HR Approve').length,
+    approved: displayedMrfList.filter(m => (m.status === 'Approve' || m.status === 'HR Approve') && m.mrf_track_status !== 'Completed').length,
     approved_HR: displayedMrfList.filter(m => m.status === 'Approve').length,
     rejected: displayedMrfList.filter(m => m.status === 'Reject').length,
     onHold: displayedMrfList.filter(m => m.status === 'On Hold').length,
@@ -165,8 +164,8 @@ const Dashboard = () => {
     dir_hr_total_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw').length,
     dir_hr_pending_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw' && m.hr_status === 'Pending' && m.director_status === 'Pending').length,
     dir_hrpending_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw' && m.hr_status === 'Pending' && m.director_status === 'Approve').length,
-    // approved_completed: displayedMrfList.filter(m => mrf_closed_date !== 'NULL' || mrf_closed_date !== '').length,
-    approved_completed : 0,
+    approved_completed: displayedMrfList.filter(m => m.mrf_track_status === 'Completed').length,
+   // approved_completed : 0,
   };
   const dirCounts = {
     pending: parseInt(mfrCounts?.director_status?.pending_count) || 0,
@@ -317,8 +316,8 @@ const Dashboard = () => {
   let adminPendingStatuses;
   switch (user?.emp_id) {
     case '1722':
-       adminPendingStatuses = [
-        {
+      adminPendingStatuses = [
+         {
           status: 'MRF submitted by FH',
           count: counts.dir_hr_total_count,
           color: 'secondary',
@@ -351,8 +350,8 @@ const Dashboard = () => {
       ];
        break;
     case '1400':
-       adminPendingStatuses = [
-        {
+      adminPendingStatuses = [
+         {
           status: 'MRF submitted by FH',
           count: counts.dir_hr_total_count,
           color: 'secondary',
@@ -394,7 +393,8 @@ const Dashboard = () => {
       );
       break;
   }
-  const adminTotalPending = adminPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
+  //const adminTotalPending = adminPendingStatuses.reduce((sum, metric) => sum + metric.count, 0);
+  const adminTotalPending = counts.dir_hr_total_count;
 
   const totalApproved = counts.approved;
 
@@ -435,7 +435,7 @@ const Dashboard = () => {
 
         if (pendingOverall) {
           const { status, ...rest } = pendingOverall;
-          combinedData.push({ status: 'MRF Submitted', ...rest, count: rest.count - (withdrawOverall?.count || 0) });
+          combinedData.push({ status: 'MRF Submitted', ...rest });
         }
         combinedData = combinedData.concat(dirStatusMetrics.map(m => ({ ...m, status: `Director ${m.status.replace('MRF ', '')}` })));
         combinedData.push(mrfPending);

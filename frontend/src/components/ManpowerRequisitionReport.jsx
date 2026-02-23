@@ -58,6 +58,12 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:hover': {
     backgroundColor: '#E9F5F2', // A slightly darker green for hover
   },
+    // ...(status === 'Draft' && {
+    //     backgroundColor: '#5096f842 !important', // A light grey for Draft
+    // }),
+    // ...(status === 'Withdraw' && {
+    //     backgroundColor: '#fbbe2455  !important', // A light orange for Withdraw
+    // }),
 }));
 
 const StatusBadge = ({ status }) => {
@@ -770,12 +776,11 @@ const ManpowerRequisitionReport = () => {
                 <TableHead className="custom-header">
                   <TableRow>
                     <StyledTableCell style={{ fontSize: '0.7rem'}}>S.No</StyledTableCell>
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Name</StyledTableCell>
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Department</StyledTableCell>
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Status of Employment</StyledTableCell>
-                    <StyledTableCell style={{ fontSize: '0.7rem'}} >Designation</StyledTableCell>
+                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Name / <br />Department</StyledTableCell>
+                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Status of <br />Employment</StyledTableCell>
+                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Designation</StyledTableCell>
                     {/* <StyledTableCell>No of Resources</StyledTableCell> */}
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Requirement Type</StyledTableCell>
+                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Requirement <br />Type</StyledTableCell>
                     {/* <StyledTableCell>Resigned Employee</StyledTableCell> */}
                     {/* <StyledTableCell>Reason for Additional Resources</StyledTableCell> */}
                     <StyledTableCell style={{ fontSize: '0.7rem'}}>TAT Request</StyledTableCell>
@@ -784,10 +789,8 @@ const ManpowerRequisitionReport = () => {
                       <StyledTableCell>CTC Range</StyledTableCell>
                       <StyledTableCell>Specific Info</StyledTableCell>
                       <StyledTableCell>MRF Number</StyledTableCell> */}
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Created Date</StyledTableCell>
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Current Status</StyledTableCell>
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Director Status</StyledTableCell>
-                    <StyledTableCell style={{ fontSize: '0.7rem'}}>HR Status</StyledTableCell>
+                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Created<br /> Date</StyledTableCell>
+                    <StyledTableCell style={{ fontSize: '0.7rem'}}>Overall Status</StyledTableCell>
 
                     <StyledTableCell style={{ fontSize: '0.7rem'}}>
                       Action
@@ -801,8 +804,7 @@ const ManpowerRequisitionReport = () => {
                         <StyledTableCell component="th" scope="row">
                           {page * rowsPerPage + index + 1}
                         </StyledTableCell>
-                        <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}</StyledTableCell>
-                        <StyledTableCell>{manpower.department_name}</StyledTableCell>
+                        <StyledTableCell>{manpower.created_by === 0 ? "-" : `${manpower.emp_name}`}<br />{manpower.department_name}</StyledTableCell>
                         <StyledTableCell>{manpower.employment_status}</StyledTableCell>
                         <StyledTableCell>{manpower.designation}</StyledTableCell>
                         {/* <StyledTableCell>{manpower.num_resources}</StyledTableCell> */}
@@ -815,9 +817,44 @@ const ManpowerRequisitionReport = () => {
                         <StyledTableCell>{manpower.specific_info}</StyledTableCell>
                         <StyledTableCell>{manpower.mrf_number}</StyledTableCell> */}
                         <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
-                        <StyledTableCell><StatusBadge status={manpower.status} /></StyledTableCell>
-                        <StyledTableCell><StatusBadge status={manpower.director_status == "Pending" ? "-" : manpower.director_status} /></StyledTableCell>
-                        <StyledTableCell><StatusBadge status={manpower.hr_status == "Pending" ? "-" : manpower.hr_status} /></StyledTableCell>
+                         <StyledTableCell>
+                          <Box sx={{ display: "grid",gridTemplateColumns: "max-content 6px auto",rowGap: 0.6,columnGap: 0.5,alignItems: "center",}}>
+                              <Box fontWeight={600} textAlign="left">Current Status</Box>
+                              <Box fontWeight={600} textAlign="left">:</Box>
+                              <Box textAlign="left">
+                                <StatusBadge status={manpower.status} />
+                              </Box>
+
+                              <Box fontWeight={600} textAlign="left">Director Status</Box>
+                              <Box fontWeight={600} textAlign="left">:</Box>
+                              <Box textAlign="left">
+                                <StatusBadge
+                                  status={manpower.director_status !== "Pending" ? manpower.director_status : "-"}
+                                />
+                              </Box>
+
+                              <Box fontWeight={600} textAlign="left">HR Status</Box>
+                              <Box fontWeight={600} textAlign="left">:</Box>
+                              <Box textAlign="left">
+                                <StatusBadge
+                                  status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"}
+                                />
+                              </Box>
+
+                              {manpower.hr_status === "HR Approve" &&
+                                      manpower.mrf_hr_approve_date &&
+                                      manpower.mrf_hr_approve_date !== "NULL" &&
+                                      !isNaN(new Date(manpower.mrf_hr_approve_date).getTime()) && (
+                                <>
+                                  <Box></Box>
+                                  <Box></Box>
+                                  <Box textAlign="left">
+                                    {new Date(manpower.mrf_hr_approve_date).toLocaleDateString()}
+                                  </Box>
+                                </>
+                              )}
+                            </Box>
+                          </StyledTableCell>
 
                         <StyledTableCell>
                           <Tooltip title="View Manpower" arrow placement="top">
