@@ -4,9 +4,9 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Box, Typography, CircularProgress, Alert, Select, MenuItem, FormControl, Button, tableCellClasses, TextField, Grid, TablePagination, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, Menu, ToggleButtonGroup, ToggleButton, Card, CardContent, CardActions,
   Avatar, InputLabel, Input,
-    Divider,
-    Backdrop,
-    FormHelperText
+  Divider,
+  Backdrop,
+  FormHelperText
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import MessageIcon from '@mui/icons-material/Message';
@@ -84,20 +84,20 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledTableRow = styled(TableRow, {
-    shouldForwardProp: (prop) => prop !== 'status',
+  shouldForwardProp: (prop) => prop !== 'status',
 })(({ theme, status }) => ({
-    '&:nth-of-type(even)': {
-        backgroundColor: '#F3FAF8', // lightGreenBg
-    },
-    '&:hover': {
-        backgroundColor: '#E9F5F2', // A slightly darker green for hover
-    },
-    // ...(status === 'Draft' && {
-    //     backgroundColor: '#5096f842 !important', // A light grey for Draft
-    // }),
-    // ...(status === 'Withdraw' && {
-    //     backgroundColor: '#fbbe2455  !important', // A light orange for Withdraw
-    // }),
+  '&:nth-of-type(even)': {
+    backgroundColor: '#F3FAF8', // lightGreenBg
+  },
+  '&:hover': {
+    backgroundColor: '#E9F5F2', // A slightly darker green for hover
+  },
+  // ...(status === 'Draft' && {
+  //     backgroundColor: '#5096f842 !important', // A light grey for Draft
+  // }),
+  // ...(status === 'Withdraw' && {
+  //     backgroundColor: '#fbbe2455  !important', // A light orange for Withdraw
+  // }),
 }));
 
 const modalVariants = {
@@ -170,7 +170,7 @@ const StatusBadge = ({ status }) => {
       color: '#fff',
     },
     'Draft': {
-       backgroundColor: '#060606ff', // A very light grey
+      backgroundColor: '#060606ff', // A very light grey
       color: '#6c757d',
       border: `1px solid #dee2e6`
     },
@@ -194,10 +194,12 @@ const StatusBadge = ({ status }) => {
 
   const sx = { ...style, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' };
 
-  return <Chip label={displayStatus} size="small" sx={{...sx, '& .MuiChip-label': {
-    fontSize:'0.7 rem !important',
-        color: 'white'
-      }}} />;
+  return <Chip label={displayStatus} size="small" sx={{
+    ...sx, '& .MuiChip-label': {
+      fontSize: '0.7 rem !important',
+      color: 'white'
+    }
+  }} />;
 };
 
 const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, onMenuClick }) => {
@@ -304,7 +306,7 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
                 </Box>
               </Grid>
             </Grid>
-          </CardContent>          
+          </CardContent>
         </Card>
       </motion.div>
     </Box>
@@ -316,7 +318,7 @@ const ManpowerRequisition = () => {
   const location = useLocation();
   const { user, token } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
- const status = useSelector((state) => state.manpowerRequisition.status);
+  const status = useSelector((state) => state.manpowerRequisition.status);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
@@ -342,7 +344,7 @@ const ManpowerRequisition = () => {
   const [currentManpowerId, setCurrentManpowerId] = useState(null);
   const selectedRequisition = useSelector((state) => state.manpowerRequisition.selectedRequisition);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [statusFormData, setStatusFormData] = useState({ status: '', comments: '',currentStatus : ''});
+  const [statusFormData, setStatusFormData] = useState({ status: '', comments: '', currentStatus: '' });
   const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
   const [queryText, setQueryText] = useState("");
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
@@ -378,7 +380,7 @@ const ManpowerRequisition = () => {
     const currentStatus = params.get('status');
     const hrStatus = params.get('hr_status');
     const functional_head = params.get('functional_head');
-    
+
 
     if (directorStatus) {
       setDirectorStatusFilter(directorStatus);
@@ -389,7 +391,7 @@ const ManpowerRequisition = () => {
     if (hrStatus) {
       setHrStatusFilter(hrStatus);
     }
-    if (functional_head){
+    if (functional_head) {
       setFunctionalHeadFilter(functional_head);
     }
 
@@ -420,13 +422,13 @@ const ManpowerRequisition = () => {
   // }, [status, user, dispatch]);
 
   useEffect(() => {
-   
-      dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-    
+
+    dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+
   }, [dispatch, user?.emp_id]);
 
   useEffect(() => {
-     if (location.pathname === '/my-requisitions') {
+    if (location.pathname === '/my-requisitions') {
       dispatch(my_requisitions(user?.emp_id));
     }
   }, [dispatch, location.pathname, user?.emp_id]);
@@ -548,7 +550,7 @@ const ManpowerRequisition = () => {
   };
   const handleMenuClose = () => setAnchorEl(null);
 
-    const handleChatboxClick = (id,type) => {
+  const handleChatboxClick = (id, type) => {
     navigate(`/${type}/${id}`);
   }
 
@@ -632,59 +634,59 @@ const ManpowerRequisition = () => {
     if (!statusFormData.status) {
       errors.status = 'Please select a status.';
     }
-   
 
-     if (Object.keys(errors).length > 0) {
+
+    if (Object.keys(errors).length > 0) {
       setStatusModalErrors(errors);
       return;
     }
-    
 
 
 
-    
-      setStatusModalErrors({});
-        let isSendMail = false;
 
-       console.log(statusFormData?.current_status,"statusFormData?.current_statusstatusFormData?.current_status")
-        switch (statusFormData?.current_status) {
-            case 'Draft':
-                if(user.emp_id != "1722" && user.emp_id != "1400"){
-                    isSendMail = true;
-                }
-                else{
-                    isSendMail = false;
-                }
-                
-                break;
-            case 'Pending':
-                if (user.emp_id == "1400") {
-                    isSendMail = true;
-                } else {
-                    isSendMail = false;
-                }
-                break;
-            case 'Approve':
-                if (user.emp_id == "1722") {
-                    isSendMail = true;
-                }
-                else {
-                    isSendMail = false;
-                }
-                break;
-            case 'FH Replied':
-               if (user.emp_id == "1400" || user.emp_id == "1722") {
-                    isSendMail = true;
-                } else {
-                    isSendMail = false;
-                }
-                break;
 
-            default:
-                isSendMail = false;
-                break;
+    setStatusModalErrors({});
+    let isSendMail = false;
+
+    console.log(statusFormData?.current_status, "statusFormData?.current_statusstatusFormData?.current_status")
+    switch (statusFormData?.current_status) {
+      case 'Draft':
+        if (user.emp_id != "1722" && user.emp_id != "1400") {
+          isSendMail = true;
         }
-        
+        else {
+          isSendMail = false;
+        }
+
+        break;
+      case 'Pending':
+        if (user.emp_id == "1400") {
+          isSendMail = true;
+        } else {
+          isSendMail = false;
+        }
+        break;
+      case 'Approve':
+        if (user.emp_id == "1722") {
+          isSendMail = true;
+        }
+        else {
+          isSendMail = false;
+        }
+        break;
+      case 'FH Replied':
+        if (user.emp_id == "1400" || user.emp_id == "1722") {
+          isSendMail = true;
+        } else {
+          isSendMail = false;
+        }
+        break;
+
+      default:
+        isSendMail = false;
+        break;
+    }
+
 
 
     const payload = {
@@ -698,8 +700,8 @@ const ManpowerRequisition = () => {
 
     console.log("isSendMail After Switch Case", isSendMail);
     console.log(payload, "payloadpayloadpayloadpayloadpayload");
-    console.log(statusFormData.status,"statusFormData.statusstatusFormData.status")
-    console.log(statusFormData?.current_status,"current_statuscurrent_status")
+    console.log(statusFormData.status, "statusFormData.statusstatusFormData.status")
+    console.log(statusFormData?.current_status, "current_statuscurrent_status")
 
     try {
       setIsStatusUpdating(true);
@@ -725,6 +727,58 @@ const ManpowerRequisition = () => {
     }
     setIsStatusUpdating(false);
   };
+
+  const handleApproveClick = (manpower) => {
+    swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to approve this requisition?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: theme.palette.success.main,
+      cancelButtonColor: theme.palette.error.main,
+      confirmButtonText: "Yes, approve it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setIsStatusUpdating(true);
+        let newStatus = '';
+        // let isSendMail = false;
+
+        // if (isDirector) {
+        //   newStatus = 'Approve';
+        //   if (manpower.status === 'Pending' || manpower.status === 'FH Replied') {
+        //     isSendMail = true;
+        //   }
+        // } else if (isHr) {
+        //   newStatus = 'HR Approve';
+        //   if (manpower.status === 'Approve') {
+        //     isSendMail = true;
+        //   }
+        // }
+        console.log(manpower,"manpower")
+
+        const payload = {
+          manpowerId: manpower.id,
+          newStatus: isDirector ? 'Approve' : 'HR Approve',
+          hr_comments: isHr ? 'Approved' : null,
+          director_comments: isDirector ? 'Approved' : null,
+          data: manpower,
+          isSendMail: true
+        };
+
+        try {
+          await dispatch(updateManpowerStatus(payload)).unwrap();
+          swal.fire('Approved!', 'The requisition has been approved.', 'success');
+          dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+        } catch (error) {
+          swal.fire('Error', error.message || 'Failed to approve status.', 'error');
+        } finally {
+          setIsStatusUpdating(false);
+        }
+      }
+    });
+  };
+
+
 
   //   const handleStatusChange = (event, manpowerId) => {
   //     const newStatus = event.target.value;
@@ -874,14 +928,14 @@ const ManpowerRequisition = () => {
               border: '1px solid rgba(42, 127, 102, 0.1)',
               mb: 3
             }}>
-              {(user.emp_id == "1722" || user.emp_id == "1400") && (
+              {(user?.emp_id == "1722" || user?.emp_id == "1400") && (
                 <FormControl variant="standard" fullWidth>
                   <InputLabel>Functional Head</InputLabel>
                   <Select
                     name="functionalHeadFilter"
                     value={functionalHeadFilter}
                     onChange={handleFilterChange}
-                    
+
                     MenuProps={{
                       PaperProps: {
                         style: {
@@ -902,19 +956,19 @@ const ManpowerRequisition = () => {
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Department</InputLabel>
                 <Select name="departmentFilter" value={departmentFilter} onChange={handleFilterChange}>
-                  
+
                   {getUniqueValues('department_name').map(dept => <MenuItem key={dept} value={dept}>{dept}</MenuItem>)}
                 </Select>
               </FormControl>
- 
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Employment Status</InputLabel>
                 <Select name="employmentStatusFilter" value={employmentStatusFilter} onChange={handleFilterChange}>
-                  
+
                   {getUniqueValues('employment_status').map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
                 </Select>
               </FormControl>
- 
+
               {/* <FormControl variant="standard" fullWidth>
                 <InputLabel>Designation</InputLabel>
                 <Select name="designationFilter" value={designationFilter} onChange={handleFilterChange}>
@@ -922,31 +976,31 @@ const ManpowerRequisition = () => {
                   {getUniqueValues('designation').map(desg => <MenuItem key={desg} value={desg}>{desg}</MenuItem>)}
                 </Select>
               </FormControl> */}
- 
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Requirement Type</InputLabel>
                 <Select name="requirementTypeFilter" value={requirementTypeFilter} onChange={handleFilterChange}>
-                  
+
                   {getUniqueValues('requirement_type').map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
                 </Select>
               </FormControl>
- 
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel>TAT Request</InputLabel>
                 <Select name="tatRequestFilter" value={tatRequestFilter} onChange={handleFilterChange}>
-                  
+
                   {getUniqueValues('hiring_tat').map(tat => <MenuItem key={tat} value={tat}>{tat}</MenuItem>)}
                 </Select>
               </FormControl>
- 
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Director Status</InputLabel>
                 <Select name="directorStatusFilter" value={directorStatusFilter} onChange={handleFilterChange}>
-                  
+
                   {directorStatuses.map(status => <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>)}
                 </Select>
               </FormControl>
- 
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Current Status</InputLabel>
                 <Select name="statusFilter" value={statusFilter} onChange={handleFilterChange}>
@@ -958,11 +1012,11 @@ const ManpowerRequisition = () => {
               <FormControl variant="standard" fullWidth>
                 <InputLabel>HR Status</InputLabel>
                 <Select name="hrStatusFilter" value={hrStatusFilter} onChange={handleFilterChange}>
-                  
+
                   {hrStatuses.map(status => <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>)}
                 </Select>
               </FormControl>
- 
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Start Date</InputLabel>
                 <Input
@@ -977,7 +1031,7 @@ const ManpowerRequisition = () => {
                   }}
                 />
               </FormControl>
- 
+
               <FormControl variant="standard" fullWidth>
                 <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>End Date</InputLabel>
                 <Input
@@ -1046,16 +1100,16 @@ const ManpowerRequisition = () => {
                 <Table sx={{ minWidth: 700 }}>
                   <TableHead className="custom-header">
                     <TableRow>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>S.No</StyledTableCell>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Name / <br />Department</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>S.No</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Name / <br />Department</StyledTableCell>
                       {/* <StyledTableCell>Department</StyledTableCell> */}
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Status of <br />Employment</StyledTableCell>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Designation</StyledTableCell>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Requirement <br />Type</StyledTableCell>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>TAT Request</StyledTableCell>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Created<br /> Date</StyledTableCell>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Overall Status</StyledTableCell>
-                      <StyledTableCell style={{ fontSize: '0.7rem'}}>Action</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Status of <br />Employment</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Designation</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Requirement <br />Type</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>TAT Request</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Created<br /> Date</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Overall Status</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Action</StyledTableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1067,106 +1121,116 @@ const ManpowerRequisition = () => {
                           <StyledTableCell>{manpower.employment_status}</StyledTableCell>
                           <StyledTableCell>
                             <Tooltip title={manpower.designation} arrow>
-                              <Typography noWrap sx={{ maxWidth: '150px', textOverflow: 'ellipsis', overflow: 'hidden', margin: '0 auto', fontSize: '0.7rem'}}>{manpower.designation}</Typography>
+                              <Typography noWrap sx={{ maxWidth: '150px', textOverflow: 'ellipsis', overflow: 'hidden', margin: '0 auto', fontSize: '0.7rem' }}>{manpower.designation}</Typography>
                             </Tooltip>
                           </StyledTableCell>
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                           <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
                           <StyledTableCell>
-                              <Box sx={{ display: "grid",gridTemplateColumns: "max-content 6px auto",rowGap: 0.6,columnGap: 0.5,alignItems: "center",}}>
-                                  <Box fontWeight={600} textAlign="left">Current Status</Box>
-                                  <Box fontWeight={600} textAlign="left">:</Box>
-                                  <Box textAlign="left">
-                                    <StatusBadge status={manpower.status} />
-                                  </Box>
+                            <Box sx={{ display: "grid", gridTemplateColumns: "max-content 6px auto", rowGap: 0.6, columnGap: 0.5, alignItems: "center", }}>
+                              <Box fontWeight={600} textAlign="left">Current Status</Box>
+                              <Box fontWeight={600} textAlign="left">:</Box>
+                              <Box textAlign="left">
+                                <StatusBadge status={manpower.status} />
+                              </Box>
 
-                                  <Box fontWeight={600} textAlign="left">Director Status</Box>
-                                  <Box fontWeight={600} textAlign="left">:</Box>
-                                  <Box textAlign="left">
-                                    <StatusBadge
-                                      status={manpower.director_status !== "Pending" ? manpower.director_status : "-"}
-                                    />
-                                     {user.emp_id != "1722" && <Tooltip title="Director Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"Director_chatbox")} sx={{ color: '#3e5624',padding: "1%" }}><MessageIcon fontSize="small" /></IconButton></Tooltip>}
-                                  </Box>
+                              <Box fontWeight={600} textAlign="left">Director Status</Box>
+                              <Box fontWeight={600} textAlign="left">:</Box>
+                              <Box textAlign="left">
+                                <StatusBadge
+                                  status={manpower.director_status !== "Pending" ? manpower.director_status : "-"}
+                                />
+                                {user.emp_id != "1722" && <Tooltip title="Director Query's"><IconButton onClick={() => handleChatboxClick(manpower.id, "Director_chatbox")} sx={{ color: '#3e5624', padding: "1%" }}><MessageIcon fontSize="small" /></IconButton></Tooltip>}
+                              </Box>
 
-                                  <Box fontWeight={600} textAlign="left">HR Status</Box>
-                                  <Box fontWeight={600} textAlign="left">:</Box>
-                                  <Box textAlign="left">
-                                    <StatusBadge
-                                      status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"}
-                                    />
-                                {user.emp_id != "1400" && <Tooltip title="HR Query's"><IconButton onClick={() => handleChatboxClick(manpower.id,"HR_chatbox")} sx={{ color: '#3e5624',padding: "1%" }}><MessageIcon fontSize="small"  /></IconButton></Tooltip>}
+                              <Box fontWeight={600} textAlign="left">HR Status</Box>
+                              <Box fontWeight={600} textAlign="left">:</Box>
+                              <Box textAlign="left">
+                                <StatusBadge
+                                  status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"}
+                                />
+                                {user.emp_id != "1400" && <Tooltip title="HR Query's"><IconButton onClick={() => handleChatboxClick(manpower.id, "HR_chatbox")} sx={{ color: '#3e5624', padding: "1%" }}><MessageIcon fontSize="small" /></IconButton></Tooltip>}
 
-                                  </Box>
+                              </Box>
 
-                                 {manpower.hr_status === "HR Approve" &&
-                                      manpower.mrf_hr_approve_date &&
-                                      manpower.mrf_hr_approve_date !== "NULL" &&
-                                      !isNaN(new Date(manpower.mrf_hr_approve_date).getTime()) && (
-                                    <>
-                                      <Box></Box>
-                                      <Box></Box>
-                                      <Box textAlign="left">
-                                        {new Date(manpower.mrf_hr_approve_date).toLocaleDateString()}
-                                      </Box>
-                                    </>
-                                  )}
-                                </Box>
-                              </StyledTableCell>
-                          
+                              {manpower.hr_status === "HR Approve" &&
+                                manpower.mrf_hr_approve_date &&
+                                manpower.mrf_hr_approve_date !== "NULL" &&
+                                !isNaN(new Date(manpower.mrf_hr_approve_date).getTime()) && (
+                                  <>
+                                    <Box></Box>
+                                    <Box></Box>
+                                    <Box textAlign="left">
+                                      {new Date(manpower.mrf_hr_approve_date).toLocaleDateString()}
+                                    </Box>
+                                  </>
+                                )}
+                            </Box>
+                          </StyledTableCell>
+
                           <StyledTableCell>
                             <Tooltip title="View">
-                              <IconButton onClick={() => handleViewClick(manpower.id)} sx={{ color: 'info.main' ,padding: "4px"}}>
+                              <IconButton onClick={() => handleViewClick(manpower.id)} sx={{ color: 'info.main', padding: "4px" }}>
                                 <PreviewIcon fontSize="small" />
-                            </IconButton>
+                              </IconButton>
                             </Tooltip>
-                              {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
-                                <Tooltip title="Update Status">
-                                  <IconButton onClick={() => handleOpenStatusModal(manpower)} sx={{ color: 'secondary.main',padding: "4px" }}>
-                                    <PublishedWithChangesIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
+                            {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
+                              <Tooltip title="Update Status">
+                                <IconButton onClick={() => handleOpenStatusModal(manpower)} sx={{ color: 'secondary.main', padding: "4px" }}>
+                                  <PublishedWithChangesIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
 
-                          
-                              {(isDirector && manpower.director_status !== "Approve")
-                                && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main',padding: "4px" }}>
-                                      <EditDocumentIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                              }
-                              {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
-                                && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main',padding: "4px" }}>
-                                      <EditDocumentIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                              }
-                              {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
-                                && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main' ,padding: "4px"}}>
-                                      <EditDocumentIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                              }
-                               {(user.emp_id == "12345")
-                                && <Tooltip title="Edit">
-                                    <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main',padding: "4px" }}>
-                                      <EditDocumentIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                              }
 
-                              {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
-                                <Tooltip title="Withdraw">
-                                  <IconButton onClick={() => handleWithdrawClick(manpower.id)} sx={{ color: 'warning.main',padding: "4px" }}>
-                                    <UndoIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                                
+
+                            {(isDirector && manpower.director_status !== "Approve")
+                              && <Tooltip title="Edit">
+                                <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
+                                  <EditDocumentIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            }
+                            {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
+                              && <Tooltip title="Edit">
+                                <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
+                                  <EditDocumentIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            }
+                            {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
+                              && <Tooltip title="Edit">
+                                <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
+                                  <EditDocumentIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            }
+                            {(user.emp_id == "12345")
+                              && <Tooltip title="Edit">
+                                <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
+                                  <EditDocumentIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            }
+
+                            {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
+                              <Tooltip title="Approve">
+                                <IconButton onClick={() => handleApproveClick(manpower)} sx={{ color: 'success.main', padding: "4px" }}>
+                                  <CheckCircleOutlineIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+
+
+                            {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
+                              <Tooltip title="Withdraw">
+                                <IconButton onClick={() => handleWithdrawClick(manpower.id)} sx={{ color: 'warning.main', padding: "4px" }}>
+                                  <UndoIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+
                           </StyledTableCell>
                         </StyledTableRow>
                       ))
@@ -1183,15 +1247,15 @@ const ManpowerRequisition = () => {
             ) : (
               <Box sx={{ pt: 2 }}>
                 {paginatedManpower.length > 0 ? (
-                <Box sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)', // 2 cards on small screens
-                    md: 'repeat(3, 1fr)'  // 3 cards on medium and larger screens
-                  },
-                  gap: 3
-                }}>
+                  <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      sm: 'repeat(2, 1fr)', // 2 cards on small screens
+                      md: 'repeat(3, 1fr)'  // 3 cards on medium and larger screens
+                    },
+                    gap: 3
+                  }}>
                     {paginatedManpower.map((manpower, index) => (
                       <ManpowerCard
                         key={manpower.id}
@@ -1478,100 +1542,100 @@ const ManpowerRequisition = () => {
       )}
 
       {isStatusModalOpen && (
-          <AnimatePresence>
-              <Dialog
-                  open={isStatusModalOpen}
-                  onClose={handleCloseStatusModal}
-                  maxWidth="sm"
-                  fullWidth
-                  PaperProps={{
-                      component: motion.div,
-                      variants: modalVariants,
-                      initial: "hidden",
-                      animate: "visible",
-                      exit: "exit",
-                  }}
-              >
-                  <DialogTitle sx={{ borderBottom: `1px solid ${theme.palette.divider}`, pb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <PublishedWithChangesIcon color="primary" />
-                          <Typography variant="h6" component="div">Update Requisition Status</Typography>
-                      </Box>
-                  </DialogTitle>
-                  <DialogContent sx={{ pt: '20px !important', pb: 2 }}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          <FormControl fullWidth variant="outlined" error={!!statusModalErrors.status}>
-                              <InputLabel id="status-select-label">Status</InputLabel>
-                              <Select
-                                  labelId="status-select-label"
-                                  label="Status"
-                                  name="status"
-                                  value={statusFormData.status}
-                                  onChange={handleStatusFormChange}
-                                  
-                              >
-                                  {isDirector && (
-                                       <MenuItem value="" disabled>Select the Status</MenuItem>,
-                                      [
-                                          <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
-                                          <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
-                                          <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
-                                          <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
-                                      ]
-                                  )}
-                                  {isHr && (
-                                      <MenuItem value="" disabled>Select the Status</MenuItem>,
-                                      [
-                                          <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
-                                          <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
-                                          <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
-                                          <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
-                                      ]
-                                  )}
-                              </Select>
-                              {statusModalErrors.status && (
-                                <FormHelperText>{statusModalErrors.status}</FormHelperText>
-                              )}
-                          </FormControl>
-                          {statusFormData.status === 'Raise Query' ? (
-                              <TextField
-                                  fullWidth
-                                  multiline
-                                  rows={3}
-                                  label="Query"
-                                  value={queryText}
-                                  onChange={(e) => {
-                                    setQueryText(e.target.value);
-                                    if (statusModalErrors.query) {
-                                      setStatusModalErrors(prev => ({...prev, query: ''}));
-                                    }
-                                  }}
-                                  variant="outlined"
-                                  error={!!statusModalErrors.query}
-                                  helperText={statusModalErrors.query}
-                              />
-                          ) : (
-                            <TextField
-                              fullWidth
-                              multiline
-                              rows={3}
-                              label="Comments"
-                              name="comments"
-                              value={statusFormData.comments}
-                              onChange={handleStatusFormChange}
-                              variant="outlined"
-                              error={!!statusModalErrors.comments}
-                              helperText={statusModalErrors.comments}
-                            />
-                          )}
-                      </Box>
-                  </DialogContent>
-                  <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-                      <Button onClick={handleCloseStatusModal} color="secondary">Cancel</Button>
-                      <Button onClick={handleStatusUpdate} variant="contained" color="primary">Update</Button>
-                  </DialogActions>
-              </Dialog>
-          </AnimatePresence>
+        <AnimatePresence>
+          <Dialog
+            open={isStatusModalOpen}
+            onClose={handleCloseStatusModal}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+              component: motion.div,
+              variants: modalVariants,
+              initial: "hidden",
+              animate: "visible",
+              exit: "exit",
+            }}
+          >
+            <DialogTitle sx={{ borderBottom: `1px solid ${theme.palette.divider}`, pb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <PublishedWithChangesIcon color="primary" />
+                <Typography variant="h6" component="div">Update Requisition Status</Typography>
+              </Box>
+            </DialogTitle>
+            <DialogContent sx={{ pt: '20px !important', pb: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <FormControl fullWidth variant="outlined" error={!!statusModalErrors.status}>
+                  <InputLabel id="status-select-label">Status</InputLabel>
+                  <Select
+                    labelId="status-select-label"
+                    label="Status"
+                    name="status"
+                    value={statusFormData.status}
+                    onChange={handleStatusFormChange}
+
+                  >
+                    {isDirector && (
+                      <MenuItem value="" disabled>Select the Status</MenuItem>,
+                      [
+                        <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
+                        <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
+                        <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
+                        <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
+                      ]
+                    )}
+                    {isHr && (
+                      <MenuItem value="" disabled>Select the Status</MenuItem>,
+                      [
+                        <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
+                        <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
+                        <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
+                        <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
+                      ]
+                    )}
+                  </Select>
+                  {statusModalErrors.status && (
+                    <FormHelperText>{statusModalErrors.status}</FormHelperText>
+                  )}
+                </FormControl>
+                {statusFormData.status === 'Raise Query' ? (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Query"
+                    value={queryText}
+                    onChange={(e) => {
+                      setQueryText(e.target.value);
+                      if (statusModalErrors.query) {
+                        setStatusModalErrors(prev => ({ ...prev, query: '' }));
+                      }
+                    }}
+                    variant="outlined"
+                    error={!!statusModalErrors.query}
+                    helperText={statusModalErrors.query}
+                  />
+                ) : (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Comments"
+                    name="comments"
+                    value={statusFormData.comments}
+                    onChange={handleStatusFormChange}
+                    variant="outlined"
+                    error={!!statusModalErrors.comments}
+                    helperText={statusModalErrors.comments}
+                  />
+                )}
+              </Box>
+            </DialogContent>
+            <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+              <Button onClick={handleCloseStatusModal} color="secondary">Cancel</Button>
+              <Button onClick={handleStatusUpdate} variant="contained" color="primary">Update</Button>
+            </DialogActions>
+          </Dialog>
+        </AnimatePresence>
       )}
 
       <Backdrop
