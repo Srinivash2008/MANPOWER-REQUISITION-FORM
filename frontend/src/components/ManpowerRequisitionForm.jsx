@@ -482,14 +482,23 @@ const ManpowerRequisition = () => {
     const matchesRequirementType = !requirementTypeFilter || manpower.requirement_type === requirementTypeFilter;
     const matchesTatRequest = !tatRequestFilter || manpower.hiring_tat === tatRequestFilter;
     const matchesDirectorStatus = !directorStatusFilter ||
-      (directorStatusFilter === 'Raise Query'
-        ? (manpower.director_status === 'Raise Query' || manpower.director_status === 'FH Replied') : manpower.director_status === directorStatusFilter);
+      (directorStatusFilter === 'Pending'
+        ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.director_status)
+        : (directorStatusFilter === 'Raise Query'
+          ? ['Raise Query', 'FH Replied'].includes(manpower.director_status)
+          : manpower.director_status === directorStatusFilter));
     const matchesStatus = !statusFilter ||
-      (statusFilter === 'Raise Query'
-        ? (manpower.status === 'Raise Query' || manpower.status === 'FH Replied') : manpower.status === statusFilter);
+      (statusFilter === 'Pending'
+        ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.status)
+        : (statusFilter === 'Raise Query'
+          ? ['Raise Query', 'FH Replied'].includes(manpower.status)
+          : manpower.status === statusFilter));
     const matchesHrStatus = !hrStatusFilter ||
-      (hrStatusFilter === 'Raise Query'
-        ? (manpower.hr_status === 'Raise Query' || manpower.hr_status === 'FH Replied') : manpower.hr_status === hrStatusFilter);
+      (hrStatusFilter === 'Pending'
+        ? (manpower.director_status === 'Approve' && ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.hr_status))
+        : (hrStatusFilter === 'Raise Query'
+          ? ['Raise Query', 'FH Replied'].includes(manpower.hr_status)
+          : manpower.hr_status === hrStatusFilter));
     const matchesStartDate = !startDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] >= startDateFilter);
     const matchesEndDate = !endDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] <= endDateFilter);
 
