@@ -27,6 +27,7 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import EditSquareIcon from '@mui/icons-material/EditSquare';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
 import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import "react-quill-new/dist/quill.snow.css";
@@ -499,6 +500,7 @@ const ManpowerRequisition = () => {
     rowsPerPage === -1
       ? filteredManpower
       : filteredManpower.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+      console.log(paginatedManpower,"paginatedManpower")
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -730,9 +732,10 @@ const ManpowerRequisition = () => {
 
   const handleApproveClick = (manpower) => {
     swal.fire({
-      title: "Are you sure?",
-      text: "Do you want to approve this requisition?",
-      icon: 'question',
+      title: "Are you sure",
+      text: "Do you want to approve this requisition",
+      iconHtml: `<img src="/validation/question.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
+      icon: '',
       showCancelButton: true,
       confirmButtonColor: theme.palette.success.main,
       cancelButtonColor: theme.palette.error.main,
@@ -930,6 +933,7 @@ const ManpowerRequisition = () => {
             }}>
               {(user?.emp_id == "1722" || user?.emp_id == "1400") && (
                 <FormControl variant="standard" fullWidth>
+                  
                   <InputLabel>Functional Head</InputLabel>
                   <Select
                     name="functionalHeadFilter"
@@ -1178,7 +1182,7 @@ const ManpowerRequisition = () => {
                             {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
                               <Tooltip title="Update Status">
                                 <IconButton onClick={() => handleOpenStatusModal(manpower)} sx={{ color: 'secondary.main', padding: "4px" }}>
-                                  <PublishedWithChangesIcon fontSize="small" />
+                                  <PublishedWithChangesIcon fontSize="small" style={{color:'#316a31'}} />
                                 </IconButton>
                               </Tooltip>
                             )}
@@ -1214,10 +1218,10 @@ const ManpowerRequisition = () => {
                               </Tooltip>
                             }
 
-                            {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
+                            {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve" && manpower.director_status != "Reject") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
                               <Tooltip title="Approve">
                                 <IconButton onClick={() => handleApproveClick(manpower)} sx={{ color: 'success.main', padding: "4px" }}>
-                                  <CheckCircleOutlineIcon fontSize="small" />
+                                  <DoneAllIcon fontSize="small" style={{color:'#07741b'}} />
                                 </IconButton>
                               </Tooltip>
                             )}
