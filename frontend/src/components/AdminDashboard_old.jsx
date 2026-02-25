@@ -151,7 +151,7 @@ const AdminDashboard = ({
                           }else if(lowerStatus == "rejected mrf"){
                             statusParam = "status=Reject"
                           }else if(lowerStatus == "completed mrf"){
-                            statusParam = "isStatus=Completed"
+                            statusParam = ""
                           }
                           console.log(statusParam,"statusParam");
                           navigate(`/mrf-list?${statusParam}`);

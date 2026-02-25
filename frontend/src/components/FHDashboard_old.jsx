@@ -1,4 +1,4 @@
-import React from 'react';
+
 import {
   Grid,
   Box,
@@ -150,7 +150,7 @@ const FHDashboard = ({
                             statusParam = "status=Reject"
                           }
                           else if(lowerStatus == "completed mrf"){
-                            statusParam = "isStatus=Completed"
+                            statusParam = ""
                           }
                           console.log(statusParam,"statusParam");
                           navigate(`/mrf-list?${statusParam}`);

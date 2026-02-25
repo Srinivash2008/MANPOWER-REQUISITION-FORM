@@ -1,0 +1,547 @@
+/* Add_Form.css */
+
+/* --- Page Wrapper --- */
+.page-wrapper {
+  /* background-color: #ffffff; */
+  padding-top: 4%;
+  display: flex;
+  /* Use flexbox to center the form panel */
+  justify-content: center;
+  /* Center horizontally */
+}
+
+.info-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2a7f66;
+  /* darkAccent from Login.jsx */
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.info-subtitle {
+  font-size: 1rem;
+  color: #666666;
+  /* mediumText from Login.jsx */
+  line-height: 1.6;
+}
+
+/* --- Right Form Panel (Scrollable) --- */
+.form-panel {
+  width: 100%;
+  max-width: 1200px;
+  /* Set a max-width for larger screens */
+  padding: 2rem 3rem;
+  overflow-y: auto;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding: 1rem;
+  background-color: #f3faf8;
+  border-radius: 12px;
+}
+
+/* --- Grid Layout --- */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* Single column */
+  gap: 2rem;
+}
+
+/* --- Sections --- */
+.form-section {
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #c0d1c8;
+  /* lightBorder from Login.jsx */
+  border-left: 5px solid #2a7f66;
+  /* darkAccent from Login.jsx */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.form-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(42, 127, 102, 0.12);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #2a7f66;
+  /* darkAccent from Login.jsx */
+  margin-bottom: 1.5rem;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* Default to single column inside sections */
+  gap: 1.25rem;
+}
+
+/* For sections with multiple items per row */
+.section-grid.multi-col {
+  grid-template-columns: 1fr 1fr;
+}
+
+.section-grid.multi-cols {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* --- Form Elements --- */
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #333333;
+  /* darkText from Login.jsx */
+}
+
+.required-star {
+  color: #d32f2f;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #c0d1c8;
+  /* lightBorder from Login.jsx */
+  background-color: #ffffff;
+  font-size: 0.95rem;
+  color: #333333;
+  /* Set text color to dark grey */
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #2a7f66;
+  /* darkAccent from Login.jsx */
+  box-shadow: 0 0 0 3px rgba(42, 127, 102, 0.2);
+}
+
+.form-display-text {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f9f9;
+  font-size: 0.95rem;
+  color: #555;
+  min-height: 45px; /* Match input height */
+  display: flex;
+  align-items: center;
+}
+
+.form-display-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f9f9;
+  font-size: 0.95rem;
+  color: #555;
+  min-height: 100px;
+  white-space: pre-wrap; /* To respect newlines */
+  word-wrap: break-word;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%232a7f66%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.65em auto;
+  padding-right: 2.5rem;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* --- Custom Radio Button Styles --- */
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* --- Submit Button --- */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.draft-button {
+
+  /* width: 100%; */
+  padding: 0.9rem;
+  margin-top: 2rem;
+  border: 1px solid #28a745;
+  /* Green border */
+  color: #28a745;
+  /* Green text to match the border */
+  border-radius: 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background-color: #ffffff;
+  /* darkAccent from Login.jsx */
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.draft-button:hover {
+ transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(42, 127, 102, 0.3);
+  background-color: #226a55;
+  color: #ffffff;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 0.9rem;
+  margin-top: 2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: white;
+  background-color: #2a7f66;
+  /* darkAccent from Login.jsx */
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.form-actions .submit-button {
+  width: auto;
+  /* Override width when in flex container */
+  padding: 0.9rem 1.5rem;
+}
+
+.submit-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(42, 127, 102, 0.3);
+  background-color: #226a55;
+  /* Darker shade of accent */
+}
+
+/* --- Custom Checkbox Styles --- */
+
+/* Hide the default browser checkbox */
+.checkbox-label input[type="checkbox"] {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Create a custom checkbox appearance */
+.custom-checkbox {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  /* Slightly larger for a better look */
+  height: 18px;
+  background-color: #fff;
+  border: 2px solid #C0D1C8;
+  /* Light green border from your theme */
+  border-radius: 4px;
+  /* Softly rounded corners for a modern square look */
+  margin-right: 12px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Style the checkmark (tick) */
+.custom-checkbox::after {
+  content: '';
+  position: absolute;
+  display: none;
+  /* Position and style the tick mark */
+  left: 5px;
+  top: 1px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+/* Show the checkmark and change background when the hidden checkbox is checked */
+.checkbox-label input[type="checkbox"]:checked~.custom-checkbox {
+  background-color: #2A7F66;
+  /* Dark accent color from your theme */
+  border-color: #2A7F66;
+}
+
+.checkbox-label input[type="checkbox"]:checked~.custom-checkbox::after {
+  display: block;
+}
+
+/* Hide the default browser radio button */
+.radio-label input[type="radio"] {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Create a custom radio button appearance */
+.custom-radio {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: #fff;
+  border: 2px solid #C0D1C8;
+  border-radius: 50%;
+  /* Make it a circle */
+  margin-right: 12px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Style the inner dot */
+.custom-radio::after {
+  content: '';
+  position: absolute;
+  display: none;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+}
+
+/* Show the inner dot and change background when the hidden radio is checked */
+.radio-label input[type="radio"]:checked~.custom-radio {
+  background-color: #2A7F66;
+  /* Accent color for the checked state */
+  border-color: #2A7F66;
+}
+
+.radio-label input[type="radio"]:checked~.custom-radio::after {
+  display: block;
+  /* Show the inner dot */
+}
+
+
+/* --- Custom File Uploader Styles --- */
+.file-uploader-custom {
+  height: 120px;
+  border: 2px dashed #c0d1c8;
+  /* lightBorder */
+  border-radius: 8px;
+  background-color: #f3faf8;
+  /* lightGreenBg */
+  color: #666666;
+  /* mediumText */
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.file-uploader-custom:hover,
+.file-uploader-custom.is-active {
+  border-color: #2a7f66;
+  /* darkAccent */
+  background-color: #e9f5f2;
+}
+
+.file-uploader-custom span {
+  font-weight: 500;
+}
+
+.upload-instruction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  pointer-events: none;
+  /* Allow drag events to pass through to the parent */
+}
+
+.file-types {
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 400;
+}
+
+/* Styles for displaying the uploaded file */
+.file-display-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 10px;
+  /* Add space between uploader and card */
+  background-color: #e9f5f2;
+  border: 1px solid #c0d1c8;
+  border-radius: 6px;
+}
+
+.file-icon {
+  color: #2a7f66;
+  font-size: 1.2rem;
+  margin-right: 10px;
+}
+
+.file-name {
+  flex-grow: 1;
+  font-size: 0.9rem;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remove-file-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0 0 0 10px;
+  display: flex;
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    /* Stack columns on smaller screens */
+  }
+
+  .form-panel {
+    padding: 1.5rem;
+  }
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  margin-top: 4px;
+}
+
+/* --- Modern Swal Styles --- */
+.modern-swal-popup {
+  border-radius: 16px !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07) !important;
+}
+
+.modern-swal-title {
+  color: #2a7f66 !important; /* darkAccent */
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+}
+
+.modern-swal-text {
+  color: #666666 !important; /* mediumText */
+}
+
+/* Customize the success icon colors */
+.swal2-success-circular-line-left,
+.swal2-success-circular-line-right,
+.swal2-success-fix {
+  background-color: transparent !important;
+}
+
+.swal2-success-line-tip,
+.swal2-success-line-long {
+  background-color: #2a7f66 !important; /* darkAccent */
+}
+
+/* --- Professional File Display --- */
+.professional-file-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 8px;
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.professional-file-display:hover {
+  border-color: #2a7f66;
+  box-shadow: 0 2px 8px rgba(42, 127, 102, 0.1);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.file-info-icon {
+  color: #2a7f66;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.file-info-name {
+  font-weight: 500;
+  color: #343a40;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.css-ig3uy-MuiTableCell-root.MuiTableCell-body{
+ padding: 12px 2px !important;
+}
+.css-19l6kvs-MuiChip-root .MuiChip-label{
+  font-size: 0.7rem !important;
+}
