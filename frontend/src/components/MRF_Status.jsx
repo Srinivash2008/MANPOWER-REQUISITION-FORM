@@ -410,7 +410,7 @@ const MRF_Status = () => {
                                 background: 'linear-gradient(135deg, #2A7F66 0%, #1D5947 100%)', color: 'white',
                                 borderTopLeftRadius: '12px', borderTopRightRadius: '12px',
                             }}>
-                                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Candidate Details</Typography>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white'}}>Candidate Details</Typography>
                                 <IconButton onClick={() => setIsModalOpen(false)} sx={{ color: 'white' }}>
                                     <CloseIcon />
                                 </IconButton>
