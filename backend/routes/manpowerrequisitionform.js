@@ -1366,11 +1366,7 @@ router.post('/candidate', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Candidate not found or no changes made.' });
         }
 
-        res.status(200).json({ 
-            message: 'Candidate saved successfully.',
-            mrf_track_id: mrf_track_id || newCandidateId
-        });
-
+        
         // Send email notification about the new/updated joiner
         try {
             const [mrfDetails] = await pool.execute(
@@ -1423,11 +1419,18 @@ router.post('/candidate', authMiddleware, async (req, res) => {
                         </div>`
                 };
                 await transporter.sendMail(mailOptions);
+                res.status(200).json({ 
+                    message: 'Candidate saved successfully.',
+                    mrf_track_id: mrf_track_id || newCandidateId
+                });
+
             }
         } catch (emailError) {
             console.error('Error sending candidate update email:', emailError);
             // We don't block the main response for this, just log the error.
         }
+
+
     } catch (error) {
         console.error('Error saving candidate:', error);
         res.status(500).json({ message: 'Server error while saving candidate.' });
@@ -1445,13 +1448,22 @@ router.put('/status/:id', authMiddleware, async (req, res) => {
 
     try {
         // Update the main MRF record
+        // await pool.execute(
+        //     'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ? WHERE id = ?',
+        //     [mrf_closed_date || null, mrf_track_status || 'In Process', id]
+        // );
         await pool.execute(
-            'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ? WHERE id = ?',
-            [mrf_closed_date || null, mrf_track_status || 'In Process', id]
-        );
+    'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ?, joined_date = ? WHERE id = ?',
+    [
+        mrf_closed_date || null,
+        mrf_track_status || 'In Process',
+        mrf_track_status === 'Joined' ? new Date().toISOString().split('T')[0] : null,
+        id
+    ]
+);
 
         // If status is 'Completed', fetch candidates and send email
-        if (mrf_track_status === 'Completed') {
+        if (mrf_track_status === 'Offered') {
             const [candidates] = await pool.execute(
                 'SELECT candidate_name, offer_date FROM manpower_requisition_tracking WHERE mrf_id = ? AND is_active = "Active"',
                 [id]
@@ -1528,10 +1540,19 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'MRF not found.' });
         }
         // Update manpower_requisition table
+        // await pool.execute(
+        //     'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ? WHERE id = ?',
+        //     [mrf_closed_date || null, mrf_track_status || null, id]
+        // );
         await pool.execute(
-            'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ? WHERE id = ?',
-            [mrf_closed_date || null, mrf_track_status || null, id]
-        );
+    'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ?, joined_date = ? WHERE id = ?',
+    [
+        mrf_closed_date || null,
+        mrf_track_status || 'In Process',
+        mrf_track_status === 'Joined' ? new Date().toISOString().split('T')[0] : null,
+        id
+    ]
+);
 
         if (candidates && candidates.length > 0) {
             for (const candidate of candidates) {
@@ -1559,7 +1580,7 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
             }
         }
 
-        if (mrf_track_status === 'Completed' && candidates && candidates.length > 0) {
+        if (mrf_track_status === 'Offered' && candidates && candidates.length > 0) {
             const [mrfDetails] = await pool.execute(
                 `SELECT mr.created_by, mr.mrf_number, mr.designation, ep.emp_name as hiring_manager_name, ep.mail_id as hiring_manager_email
                  FROM manpower_requisition mr

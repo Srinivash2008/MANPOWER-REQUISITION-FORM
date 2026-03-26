@@ -25,6 +25,7 @@ const mrfRoutes = require('./routes/manpowerrequisitionform'); // For MRF form d
 const manpowerrequisitionRoutes = require('./routes/manpowerrequisitionform');
 
 const authMiddleware = require('./middleware/auth'); // Middleware to verify JWT tokens
+const { startMrfReminderCron } = require('./cron/mrfReminder');
 
 
 
@@ -110,7 +111,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-
+startMrfReminderCron();
 app.get('/api/dashboard-data', authMiddleware, async (req, res) => {
   try {
     // req.user.emp_id comes from JWT payload. We map it to database's 'employee_id' column.

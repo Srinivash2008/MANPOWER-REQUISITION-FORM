@@ -198,10 +198,21 @@ const MRF_Status_Edit = () => {
         // Re-evaluate `allCandidatesFilled` inside the handler to ensure it's up-to-date
         const allFilled = formData.candidates.every(c => c.candidate_name && c.offer_date);
 
-        if (newStatus === 'Completed' && !allFilled) {
+         // Block Joined if current status is not Offered
+    if (newStatus === 'Joined' && selectedRequisition.mrf_track_status !== 'Offered') {
+        swal.fire({
+            title: 'Invalid Status Change',
+            text: 'You can only mark as Joined after the status is set to Offered.',
+            icon: 'warning',
+            confirmButtonColor: '#2A7F66',
+        });
+        return;
+    }
+
+        if (newStatus === 'Offered' && !allFilled) {
             swal.fire({
                 title: 'Incomplete Details',
-                text: 'Please fill in the offer date and name for all candidates before marking as completed.',
+                text: 'Please fill in the offer date and name for all candidates before marking as Offered.',
                 icon: 'warning',
                 confirmButtonColor: '#2A7F66',
             });
@@ -219,7 +230,7 @@ const MRF_Status_Edit = () => {
             mrf_track_status: formData.mrf_track_status,
         };
 
-        if (statusData.mrf_track_status === 'Completed' && !statusData.mrf_closed_date) {
+        if (statusData.mrf_track_status === 'Offered' && !statusData.mrf_closed_date) {
             setIsUpdating(false);
             swal.fire({
                 title: 'Cannot Complete MRF',
@@ -230,7 +241,7 @@ const MRF_Status_Edit = () => {
             return;
         }
 
-        if (statusData.mrf_track_status === 'Completed' && !allCandidatesFilled) {
+        if (statusData.mrf_track_status === 'Offered' && !allCandidatesFilled) {
             setIsUpdating(false);
             swal.fire({
                 title: 'Cannot Complete MRF',
@@ -376,7 +387,8 @@ const MRF_Status_Edit = () => {
                                     label="Status"
                                 >
                                     <MenuItem value="In Process">In Process</MenuItem>
-                                    <MenuItem value="Completed">Completed</MenuItem>
+                                    <MenuItem value="Offered">Offered</MenuItem>
+                                    <MenuItem value="Joined">Joined</MenuItem>
                                 </Select>
                             </FormControl>
                             
