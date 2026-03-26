@@ -273,7 +273,21 @@ const MRF_Status = () => {
 
                                             {/* Replacement — wraps */}
                                             <TableCell align="center" sx={{ fontSize: 12, px: 1, minWidth: 80, width: '90px' }}>
-                                                {item.requirement_type === 'Replacement' ? item.replacement_detail || '-' : '-'}
+                                               {item.requirement_type === 'Replacement' && item.replacement_detail ? (
+                                                <Tooltip title={item.replacement_detail} arrow placement="top">
+                                                    <span style={{
+                                                        display: 'inline-block',
+                                                        maxWidth: '130px',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                        verticalAlign: 'middle',
+                                                        cursor: 'pointer'
+                                                    }}>
+                                                        {item.replacement_detail}
+                                                    </span>
+                                                </Tooltip>
+                                            ) : '-'}
                                             </TableCell>
 
                                             {/* MRF Start Date — nowrap */}
