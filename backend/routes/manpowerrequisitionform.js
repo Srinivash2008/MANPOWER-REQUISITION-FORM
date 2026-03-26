@@ -1710,23 +1710,38 @@ router.get('/mrf-tracking-list/:userId', authMiddleware, async (req, res) => {
         const { userId } = req.params;
 
         let query = `
-            SELECT
-mr.id,
-mr.mrf_number,
-mr.designation,
-mr.num_resources,
-DATE_FORMAT(mr.mrf_hr_approve_date, '%Y-%m-%d') AS mrf_hr_approve_date,
-DATE_FORMAT(mr.mrf_closed_date, '%Y-%m-%d') AS mrf_closed_date,
-mr.mrf_track_status,
-ep.emp_name,
-COUNT(CASE WHEN mrt.is_active = 'Active' THEN mrt.mrf_track_id END) as candidates_count,
-GROUP_CONCAT(CASE WHEN mrt.is_active = 'Active' THEN mrt.candidate_name END SEPARATOR ', ') AS candidate_names,
-GROUP_CONCAT(CASE WHEN mrt.is_active = 'Active' THEN mrt.offer_date END SEPARATOR ', ') AS offer_dates
-FROM manpower_requisition AS mr
-JOIN employee_personal AS ep ON mr.created_by = ep.employee_id
-LEFT JOIN manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
-WHERE mr.isdelete = 'Active' AND mr.hr_status = 'HR Approve'
-        `;
+    SELECT
+        mr.id,
+        mr.mrf_number,
+        mr.designation,
+        mr.num_resources,
+        mr.requirement_type,
+        mr.replacement_detail,
+        DATE_FORMAT(mr.mrf_hr_approve_date, '%Y-%m-%d') AS mrf_hr_approve_date,
+        DATE_FORMAT(mr.mrf_closed_date, '%Y-%m-%d') AS mrf_closed_date,
+        DATE_FORMAT(mr.joined_date, '%Y-%m-%d') AS joined_date,
+        CASE
+            WHEN mr.mrf_track_status = 'Joined' 
+                THEN DATEDIFF(mr.joined_date, mr.mrf_hr_approve_date)
+            ELSE 
+                DATEDIFF(CURDATE(), mr.mrf_hr_approve_date)
+        END AS tat_days,
+        mr.mrf_track_status,
+        ep.emp_name,
+        COUNT(CASE WHEN mrt.is_active = 'Active' THEN mrt.mrf_track_id END) as candidates_count,
+        GROUP_CONCAT(CASE WHEN mrt.is_active = 'Active' THEN mrt.candidate_name END SEPARATOR ', ') AS candidate_names,
+        GROUP_CONCAT(CASE WHEN mrt.is_active = 'Active' THEN mrt.offer_date END SEPARATOR ', ') AS offer_dates,
+        CASE 
+            WHEN mr.hiring_tat_fastag = 1 THEN '60'
+            WHEN mr.hiring_tat_normal_cat1 = 1 THEN '90'
+            WHEN mr.hiring_tat_normal_cat2 = 1 THEN '120'
+            ELSE NULL
+        END AS MRF_date_limit
+    FROM manpower_requisition AS mr
+    JOIN employee_personal AS ep ON mr.created_by = ep.employee_id
+    LEFT JOIN manpower_requisition_tracking AS mrt ON mr.id = mrt.mrf_id
+    WHERE mr.isdelete = 'Active' AND mr.hr_status = 'HR Approve'
+`;
         const params = [];
 
         // If the user is not an admin/director/hr, only show their own MRFs

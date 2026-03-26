@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Paper, Typography, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, tableCellClasses, styled, IconButton, Modal, Fade, TablePagination,
-    List, ListItem, ListItemText, Chip, Avatar, FormControl, InputLabel, Select, MenuItem
+    List, ListItem, ListItemText, Chip, Avatar, FormControl, InputLabel, Select, MenuItem, Tooltip
 } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMrfTrackingList } from '../redux/cases/manpowerrequisitionSlice';
@@ -11,7 +11,6 @@ import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
 
-// Simplified row styling - removed row-level green background logic
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
     '&:nth-of-type(odd)': {
         backgroundColor: theme.palette.action.hover,
@@ -72,6 +71,9 @@ const MRF_Status = () => {
                 candidate_names: item.candidate_names ? item.candidate_names.split(', ') : [],
                 candidates_count: item.candidates_count || 0,
                 offer_dates: item.offer_dates ? item.offer_dates.split(', ') : [],
+                joined_date: item.joined_date || '',
+                tat_days: item.tat_days != null ? item.tat_days : null,
+                MRF_date_limit: item.MRF_date_limit || null,
                 isEditing: false,
             })));
         }
@@ -82,18 +84,24 @@ const MRF_Status = () => {
         setPage(0);
     };
 
-    // Logic for Badge styling based on status
+    // Badge styling based on status
     const getBadgeStyles = (status) => {
         switch (status) {
+            case 'Offered':
+                return {
+                    bgcolor: '#1565c0',
+                    color: '#fff !important'
+                };
+            case 'Joined':
+                return {
+                    bgcolor: '#2e7d32',
+                    color: '#fff !important'
+                };
             case 'In Process':
                 return {
-                    bgcolor: '#ed6c02', // Orange (Warning color)
-                    color: '#fff !important' // White text
+                    bgcolor: '#ed6c02',
+                    color: '#fff !important'
                 };
-            case 'Offered':
-                return { bgcolor: '#1565c0', color: '#fff !important' }; // Blue
-            case 'Joined':
-                return { bgcolor: '#2e7d32', color: '#fff !important' }; // Green
             default:
                 return {
                     bgcolor: '#eeeeee',
@@ -159,69 +167,116 @@ const MRF_Status = () => {
                                 <StyledTableCell>MRF Number</StyledTableCell>
                                 <StyledTableCell>Hiring Manager</StyledTableCell>
                                 <StyledTableCell>Position</StyledTableCell>
+                                <StyledTableCell>Replacement</StyledTableCell>
                                 <StyledTableCell>MRF Start Date</StyledTableCell>
                                 <StyledTableCell>MRF Closed Date</StyledTableCell>
                                 <StyledTableCell>Candidates</StyledTableCell>
+                                <StyledTableCell align="center">TAT</StyledTableCell>
                                 <StyledTableCell align="center">Status</StyledTableCell>
                                 <StyledTableCell align="center">Action</StyledTableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {loading ? (
-                                <TableRow><TableCell colSpan={9} align="center">Loading...</TableCell></TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={11} align="center">Loading...</TableCell>
+                                </TableRow>
                             ) : paginatedData.length > 0 ? (
-                                paginatedData.map((item, index) => (
-                                    <StyledTableRow key={item.id}>
-                                        <TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                                        <TableCell>{item.mrf_number || '-'}</TableCell>
-                                        <TableCell>{item.emp_name || '-'}</TableCell>
-                                        <TableCell>{item.designation || '-'}</TableCell>
-                                        <TableCell>
-                                            {item.mrf_hr_approve_date ? new Date(item.mrf_hr_approve_date).toLocaleDateString('en-GB') : '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            {item.mrf_closed_date ? new Date(item.mrf_closed_date).toLocaleDateString('en-GB') : '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                variant="outlined"
-                                                color="primary"
-                                                label={`${item.candidates_count} / ${item.num_resources}`}
-                                                onClick={() => handleOpenModal(item)}
-                                                disabled={item.candidates_count === 0}
-                                                sx={{ fontWeight: 'bold', cursor: item.candidates_count > 0 ? 'pointer' : 'default' }}
-                                            />
-                                        </TableCell>
-                                        <TableCell align="center">
-                                            {/* Badge Design Section */}
-                                            <Chip
-                                                label={item.mrf_track_status || '-'}
-                                                size="small"
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    minWidth: '100px',
-                                                    borderRadius: '6px',
-                                                    ...getBadgeStyles(item.mrf_track_status),
-                                                    // Target the internal label span specifically
-                                                    '& .MuiChip-label': {
-                                                        color: 'white !important',
-                                                    }
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell align="center">
-                                            <IconButton
-                                                onClick={() => navigate(`/mrf_status_edit/${item.id}`)}
-                                                size="small"
-                                                sx={{ color: 'primary.main' }}
-                                            >
-                                                <EditDocumentIcon />
-                                            </IconButton>
-                                        </TableCell>
-                                    </StyledTableRow>
-                                ))
+                                paginatedData.map((item, index) => {
+                                    const limitDays = item.MRF_date_limit ? parseInt(item.MRF_date_limit) : null;
+                                    const isOverdue = limitDays && item.tat_days > limitDays;
+
+                                    return (
+                                        <StyledTableRow
+                                            key={item.id}
+                                            sx={isOverdue ? { backgroundColor: '#ffebee !important' } : {}}
+                                        >
+                                            <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
+                                            <TableCell align="center">{item.mrf_number || '-'}</TableCell>
+                                            <TableCell align="center">{item.emp_name || '-'}</TableCell>
+                                            <TableCell align="center">{item.designation || '-'}</TableCell>
+                                            <TableCell align="center">
+                                                {item.requirement_type === 'Replacement' ? item.replacement_detail || '-' : '-'}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                {item.mrf_hr_approve_date ? new Date(item.mrf_hr_approve_date).toLocaleDateString('en-GB') : '-'}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                {item.mrf_closed_date ? new Date(item.mrf_closed_date).toLocaleDateString('en-GB') : '-'}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Chip
+                                                    variant="outlined"
+                                                    color="primary"
+                                                    label={`${item.candidates_count} / ${item.num_resources}`}
+                                                    onClick={() => handleOpenModal(item)}
+                                                    disabled={item.candidates_count === 0}
+                                                    sx={{ fontWeight: 'bold', cursor: item.candidates_count > 0 ? 'pointer' : 'default' }}
+                                                />
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                {item.tat_days != null ? (
+                                                    <Tooltip
+                                                        title={
+                                                            limitDays
+                                                                ? isOverdue
+                                                                    ? `Limit Exceeded by ${item.tat_days - limitDays} Days (Total Limit: ${limitDays} Days)`
+                                                                    : `${limitDays - item.tat_days} Days Remaining (Total Limit: ${limitDays} Days)`
+                                                                : ''
+                                                        }
+                                                        arrow
+                                                    >
+                                                        <Chip
+                                                            label={`${item.tat_days} Days`}
+                                                            size="small"
+                                                            sx={{
+                                                                fontWeight: 'bold',
+                                                                bgcolor: isOverdue ? '#d32f2f' : '#e0f2f1',
+                                                                color: isOverdue ? '#fff' : '#2A7F66',
+                                                                '& .MuiChip-label': {
+                                                                    color: isOverdue ? '#fff' : '#2A7F66',
+                                                                },
+                                                                borderRadius: '6px',
+                                                                minWidth: '80px',
+                                                                cursor: 'pointer',
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                ) : '-'}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Chip
+                                                    label={item.mrf_track_status || '-'}
+                                                    size="small"
+                                                    sx={{
+                                                        fontWeight: 'bold',
+                                                        minWidth: '100px',
+                                                        borderRadius: '6px',
+                                                        ...getBadgeStyles(item.mrf_track_status),
+                                                        '& .MuiChip-label': {
+                                                            color: 'white !important',
+                                                        }
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell align="center">
+
+                                                <IconButton
+                                                    onClick={() => navigate(`/mrf_status_edit/${item.id}`)}
+                                                    size="small"
+                                                    sx={{ color: 'primary.main' }}
+                                                >
+                                                    <EditDocumentIcon />
+                                                </IconButton>
+
+                                            </TableCell>
+                                        </StyledTableRow>
+                                    );
+                                })
                             ) : (
-                                <TableRow><TableCell colSpan={9} align="center">No data found.</TableCell></TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={11} align="center">No data found.</TableCell>
+                                </TableRow>
                             )}
                         </TableBody>
                     </Table>
@@ -253,7 +308,11 @@ const MRF_Status = () => {
                                     {selectedCandidates.map((candidate, idx) => (
                                         <ListItem key={idx} sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}>
                                             <Avatar sx={{ bgcolor: 'primary.light', mr: 2 }}><PersonIcon /></Avatar>
-                                            <ListItemText primary={candidate.name} secondary={`Offer Date: ${candidate.offer_date}`} primaryTypographyProps={{ fontWeight: '600' }} />
+                                            <ListItemText
+                                                primary={candidate.name}
+                                                secondary={`Offer Date: ${candidate.offer_date}`}
+                                                primaryTypographyProps={{ fontWeight: '600' }}
+                                            />
                                         </ListItem>
                                     ))}
                                 </List>
