@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Paper, Typography, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, tableCellClasses, styled, IconButton, Modal, Fade, TablePagination,
-    List, ListItem, ListItemText, Chip, Avatar, FormControl, InputLabel, Select, MenuItem, Tooltip
+    List, ListItem, ListItemText, Chip, Avatar, FormControl, InputLabel, Select, MenuItem, Tooltip,
+    Button
 } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMrfTrackingList } from '../redux/cases/manpowerrequisitionSlice';
@@ -10,6 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
+import * as XLSX from 'xlsx';
+import swal from 'sweetalert2';
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
     '&:nth-of-type(odd)': {
@@ -20,14 +23,24 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
+// Head cells: nowrap. Body cells: allow wrap, small font, tight padding.
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
         backgroundColor: '#2A7F66',
         color: theme.palette.common.white,
         fontWeight: 'bold',
+        fontSize: 11,
+        padding: '8px 6px',
+        whiteSpace: 'normal',
+        wordBreak: 'break-word',
+        lineHeight: 1.2,
+        textAlign: 'center',
     },
     [`&.${tableCellClasses.body}`]: {
-        fontSize: 14,
+        fontSize: 12,
+        padding: '8px',
+        whiteSpace: 'normal',      // allow wrapping
+        wordBreak: 'break-word',
     },
 }));
 
@@ -84,29 +97,16 @@ const MRF_Status = () => {
         setPage(0);
     };
 
-    // Badge styling based on status
     const getBadgeStyles = (status) => {
         switch (status) {
             case 'Offered':
-                return {
-                    bgcolor: '#1565c0',
-                    color: '#fff !important'
-                };
+                return { bgcolor: '#1565c0', color: '#fff !important' };
             case 'Joined':
-                return {
-                    bgcolor: '#2e7d32',
-                    color: '#fff !important'
-                };
+                return { bgcolor: '#2e7d32', color: '#fff !important' };
             case 'In Process':
-                return {
-                    bgcolor: '#ed6c02',
-                    color: '#fff !important'
-                };
+                return { bgcolor: '#ed6c02', color: '#fff !important' };
             default:
-                return {
-                    bgcolor: '#eeeeee',
-                    color: '#000'
-                };
+                return { bgcolor: '#eeeeee', color: '#000' };
         }
     };
 
@@ -120,6 +120,38 @@ const MRF_Status = () => {
         page * rowsPerPage + rowsPerPage
     );
 
+    const handleExport = () => {
+        if (filteredData.length === 0) {
+            swal.fire({
+                title: 'No Data',
+                text: 'There is no data to export.',
+                icon: 'warning',
+                confirmButtonColor: '#2A7F66',
+            });
+            return;
+        }
+
+        const exportData = filteredData.map((item, index) => ({
+            'S.No': index + 1,
+            'MRF Number': item.mrf_number || '-',
+            'Hiring Manager': item.emp_name || '-',
+            'Position': item.designation || '-',
+            'Replacement Detail': item.requirement_type === 'Replacement' ? item.replacement_detail || '-' : '-',
+            'MRF Start Date': item.mrf_hr_approve_date ? new Date(item.mrf_hr_approve_date).toLocaleDateString('en-GB') : '-',
+            'MRF Closed Date': item.mrf_closed_date ? new Date(item.mrf_closed_date).toLocaleDateString('en-GB') : '-',
+            'Candidates': `${item.candidates_count} / ${item.num_resources}`,
+            'TAT (Days)': item.tat_days != null ? `${item.tat_days} Days` : '-',
+            'TAT Limit': item.MRF_date_limit || '-',
+            'Status': item.mrf_track_status || '-',
+            'Candidate Names': item.candidate_names ? item.candidate_names.join(', ') : '-',
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'MRF Tracking');
+        XLSX.writeFile(workbook, `MRF_Tracking_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.xlsx`);
+    };
+
     const handleOpenModal = (item) => {
         const candidates = item.candidate_names.map((name, index) => ({
             name: name,
@@ -130,8 +162,10 @@ const MRF_Status = () => {
     };
 
     return (
-        <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-            <Paper sx={{ p: 3, borderRadius: '12px', mt: 10 }}>
+        <Box sx={{ p: { xs: 2, sm: 4 }, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: '12px', mt: 10 }}>
+
+                {/* Header Row */}
                 <Box sx={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -144,42 +178,68 @@ const MRF_Status = () => {
                         MRF Tracking Status
                     </Typography>
 
-                    <FormControl size="small" sx={{ minWidth: 200 }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                            value={statusFilter}
-                            label="Status"
-                            onChange={handleFilterChange}
+                    {/* Export + Filter grouped on right */}
+                    <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        flexWrap: 'wrap',
+                        justifyContent: { xs: 'center', sm: 'flex-end' }
+                    }}>
+                        <Button
+                            variant="contained"
+                            onClick={handleExport}
+                            sx={{
+                                backgroundColor: '#2A7F66',
+                                '&:hover': { backgroundColor: '#1D5947' },
+                                textTransform: 'none',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                fontSize: 13,
+                            }}
                         >
-                            <MenuItem value="All">All</MenuItem>
-                            <MenuItem value="In Process">In Process</MenuItem>
-                            <MenuItem value="Offered">Offered</MenuItem>
-                            <MenuItem value="Joined">Joined</MenuItem>
-                        </Select>
-                    </FormControl>
+                            Export to Excel
+                        </Button>
+
+                        <FormControl size="small" sx={{ minWidth: 160 }}>
+                            <InputLabel>Status</InputLabel>
+                            <Select
+                                value={statusFilter}
+                                label="Status"
+                                onChange={handleFilterChange}
+                            >
+                                <MenuItem value="All">All</MenuItem>
+                                <MenuItem value="In Process">In Process</MenuItem>
+                                <MenuItem value="Offered">Offered</MenuItem>
+                                <MenuItem value="Joined">Joined</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>
                 </Box>
 
+                {/* Table — no overflowX so no horizontal scroll */}
                 <TableContainer>
-                    <Table>
+                    <Table size="small">
                         <TableHead>
                             <TableRow>
-                                <StyledTableCell>S.No</StyledTableCell>
-                                <StyledTableCell>MRF Number</StyledTableCell>
-                                <StyledTableCell>Hiring Manager</StyledTableCell>
-                                <StyledTableCell>Position</StyledTableCell>
-                                <StyledTableCell>Replacement</StyledTableCell>
-                                <StyledTableCell>MRF Start Date</StyledTableCell>
-                                <StyledTableCell>MRF Closed Date</StyledTableCell>
-                                <StyledTableCell>Candidates</StyledTableCell>
+                                <StyledTableCell align="center">S.No</StyledTableCell>
+                                <StyledTableCell align="center">MRF Number</StyledTableCell>
+                                <StyledTableCell align="center">Hiring Manager</StyledTableCell>
+                                <StyledTableCell align="center">Position</StyledTableCell>
+                                <StyledTableCell align="center">Replacement</StyledTableCell>
+                                <StyledTableCell align="center">MRF Start Date</StyledTableCell>
+                                <StyledTableCell align="center">MRF Closed Date</StyledTableCell>
+                                <StyledTableCell align="center">Candidates</StyledTableCell>
                                 <StyledTableCell align="center">TAT</StyledTableCell>
                                 <StyledTableCell align="center">Status</StyledTableCell>
+                                <StyledTableCell align="center">Candidate Names</StyledTableCell>
                                 <StyledTableCell align="center">Action</StyledTableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={11} align="center">Loading...</TableCell>
+                                    <TableCell colSpan={12} align="center">Loading...</TableCell>
                                 </TableRow>
                             ) : paginatedData.length > 0 ? (
                                 paginatedData.map((item, index) => {
@@ -191,30 +251,60 @@ const MRF_Status = () => {
                                             key={item.id}
                                             sx={isOverdue ? { backgroundColor: '#ffebee !important' } : {}}
                                         >
-                                            <TableCell align="center">{page * rowsPerPage + index + 1}</TableCell>
-                                            <TableCell align="center">{item.mrf_number || '-'}</TableCell>
-                                            <TableCell align="center">{item.emp_name || '-'}</TableCell>
-                                            <TableCell align="center">{item.designation || '-'}</TableCell>
-                                            <TableCell align="center">
+                                            {/* S.No */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap', width: '60px' }}>
+                                                {page * rowsPerPage + index + 1}
+                                            </TableCell>
+
+                                            {/* MRF Number */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap', width: '80px' }}>
+                                                {item.mrf_number || '-'}
+                                            </TableCell>
+
+                                            {/* Hiring Manager — wraps */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, minWidth: 80, width: '100px' }}>
+                                                {item.emp_name || '-'}
+                                            </TableCell>
+
+                                            {/* Position — wraps */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, minWidth: 80, width: '90px' }}>
+                                                {item.designation || '-'}
+                                            </TableCell>
+
+                                            {/* Replacement — wraps */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, minWidth: 80, width: '90px' }}>
                                                 {item.requirement_type === 'Replacement' ? item.replacement_detail || '-' : '-'}
                                             </TableCell>
-                                            <TableCell align="center">
+
+                                            {/* MRF Start Date — nowrap */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap', width: '85px' }}>
                                                 {item.mrf_hr_approve_date ? new Date(item.mrf_hr_approve_date).toLocaleDateString('en-GB') : '-'}
                                             </TableCell>
-                                            <TableCell align="center">
+
+                                            {/* MRF Closed Date — nowrap */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap', width: '85px' }}>
                                                 {item.mrf_closed_date ? new Date(item.mrf_closed_date).toLocaleDateString('en-GB') : '-'}
                                             </TableCell>
-                                            <TableCell align="center">
+
+                                            {/* Candidates chip — nowrap */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap',width: '100px' }}>
                                                 <Chip
                                                     variant="outlined"
                                                     color="primary"
                                                     label={`${item.candidates_count} / ${item.num_resources}`}
                                                     onClick={() => handleOpenModal(item)}
                                                     disabled={item.candidates_count === 0}
-                                                    sx={{ fontWeight: 'bold', cursor: item.candidates_count > 0 ? 'pointer' : 'default' }}
+                                                    size="small"
+                                                    sx={{
+                                                        fontWeight: 'bold',
+                                                        fontSize: 11,
+                                                        cursor: item.candidates_count > 0 ? 'pointer' : 'default'
+                                                    }}
                                                 />
                                             </TableCell>
-                                            <TableCell align="center">
+
+                                            {/* TAT chip — nowrap */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap',width: '65px' }}>
                                                 {item.tat_days != null ? (
                                                     <Tooltip
                                                         title={
@@ -231,26 +321,30 @@ const MRF_Status = () => {
                                                             size="small"
                                                             sx={{
                                                                 fontWeight: 'bold',
+                                                                fontSize: 11,
                                                                 bgcolor: isOverdue ? '#d32f2f' : '#e0f2f1',
                                                                 color: isOverdue ? '#fff' : '#2A7F66',
                                                                 '& .MuiChip-label': {
                                                                     color: isOverdue ? '#fff' : '#2A7F66',
                                                                 },
                                                                 borderRadius: '6px',
-                                                                minWidth: '80px',
+                                                                minWidth: '70px',
                                                                 cursor: 'pointer',
                                                             }}
                                                         />
                                                     </Tooltip>
                                                 ) : '-'}
                                             </TableCell>
-                                            <TableCell align="center">
+
+                                            {/* Status chip — nowrap */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap', width: '60px' }}>
                                                 <Chip
                                                     label={item.mrf_track_status || '-'}
                                                     size="small"
                                                     sx={{
                                                         fontWeight: 'bold',
-                                                        minWidth: '100px',
+                                                        fontSize: 11,
+                                                        minWidth: '80px',
                                                         borderRadius: '6px',
                                                         ...getBadgeStyles(item.mrf_track_status),
                                                         '& .MuiChip-label': {
@@ -259,14 +353,29 @@ const MRF_Status = () => {
                                                     }}
                                                 />
                                             </TableCell>
-                                            <TableCell align="center">
+
+                                            {/* Candidate Names — wraps, show first + N more on hover */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, minWidth: 100 }}>
+                                                {item.candidate_names && item.candidate_names.length > 0 ? (
+                                                    <Tooltip title={item.candidate_names.join(', ')} arrow placement="top">
+                                                        <span style={{ cursor: 'pointer' }}>
+                                                            {item.candidate_names.length === 1
+                                                                ? item.candidate_names[0]
+                                                                : `${item.candidate_names[0]} +${item.candidate_names.length - 1} more`}
+                                                        </span>
+                                                    </Tooltip>
+                                                ) : '-'}
+                                            </TableCell>
+
+                                            {/* Action */}
+                                            <TableCell align="center" sx={{ fontSize: 12, px: 1, whiteSpace: 'nowrap' }}>
 
                                                 <IconButton
                                                     onClick={() => navigate(`/mrf_status_edit/${item.id}`)}
                                                     size="small"
                                                     sx={{ color: 'primary.main' }}
                                                 >
-                                                    <EditDocumentIcon />
+                                                    <EditDocumentIcon fontSize="small" />
                                                 </IconButton>
 
                                             </TableCell>
@@ -275,7 +384,7 @@ const MRF_Status = () => {
                                 })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={11} align="center">No data found.</TableCell>
+                                    <TableCell colSpan={12} align="center">No data found.</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
@@ -292,6 +401,7 @@ const MRF_Status = () => {
                     onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
                 />
 
+                {/* Candidate Modal */}
                 <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
                     <Fade in={isModalOpen}>
                         <Box sx={modalStyle}>
@@ -301,13 +411,17 @@ const MRF_Status = () => {
                                 borderTopLeftRadius: '12px', borderTopRightRadius: '12px',
                             }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Candidate Details</Typography>
-                                <IconButton onClick={() => setIsModalOpen(false)} sx={{ color: 'white' }}><CloseIcon /></IconButton>
+                                <IconButton onClick={() => setIsModalOpen(false)} sx={{ color: 'white' }}>
+                                    <CloseIcon />
+                                </IconButton>
                             </Box>
                             <Box sx={{ p: 3, maxHeight: '60vh', overflowY: 'auto' }}>
                                 <List disablePadding>
                                     {selectedCandidates.map((candidate, idx) => (
                                         <ListItem key={idx} sx={{ p: 1, borderRadius: 2, '&:hover': { bgcolor: 'action.hover' } }}>
-                                            <Avatar sx={{ bgcolor: 'primary.light', mr: 2 }}><PersonIcon /></Avatar>
+                                            <Avatar sx={{ bgcolor: 'primary.light', mr: 2 }}>
+                                                <PersonIcon />
+                                            </Avatar>
                                             <ListItemText
                                                 primary={candidate.name}
                                                 secondary={`Offer Date: ${candidate.offer_date}`}
@@ -320,6 +434,7 @@ const MRF_Status = () => {
                         </Box>
                     </Fade>
                 </Modal>
+
             </Paper>
         </Box>
     );
