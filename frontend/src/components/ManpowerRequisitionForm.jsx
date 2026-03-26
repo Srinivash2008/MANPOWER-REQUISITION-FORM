@@ -492,12 +492,23 @@ console.log(isStatus,"isStatus")
         : (directorStatusFilter === 'Raise Query'
           ? ['Raise Query', 'FH Replied'].includes(manpower.director_status)
           : manpower.director_status === directorStatusFilter));
-    const matchesStatus = !statusFilter ||
-      (statusFilter === 'Pending'
-        ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.status)
-        : (statusFilter === 'Raise Query'
-          ? ['Raise Query', 'FH Replied'].includes(manpower.status)
-          : manpower.status === statusFilter));
+    // const matchesStatus = !statusFilter ||
+    //   (statusFilter === 'Pending'
+    //     ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.status)
+    //     : (statusFilter === 'Raise Query'
+    //       ? ['Raise Query', 'FH Replied'].includes(manpower.status)
+    //       : manpower.status === statusFilter));
+    // Modified status filter with HR Approve condition
+  const matchesStatus = !statusFilter ||
+    (statusFilter === 'Pending'
+      ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.status)
+      : (statusFilter === 'Raise Query'
+        ? ['Raise Query', 'FH Replied'].includes(manpower.status)
+        : (statusFilter === 'HR Approve'
+          ? (manpower.status === statusFilter && 
+             manpower.mrf_track_status !== 'Joined' && 
+             manpower.mrf_track_status !== 'Offered')
+          : manpower.status === statusFilter)));
     const matchesHrStatus = !hrStatusFilter ||
       (hrStatusFilter === 'Pending'
         ? (manpower.director_status === 'Approve' && ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.hr_status))

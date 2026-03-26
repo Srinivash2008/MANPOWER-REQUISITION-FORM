@@ -151,7 +151,7 @@ const Dashboard = () => {
     fhReplied: displayedMrfList.filter(m => m.status === 'FH Replied').length,
 
     hrApproved: displayedMrfList.filter(m => m.status === 'HR Approve').length,
-    approved: displayedMrfList.filter(m => (m.status === 'Approve' || m.status === 'HR Approve') && m.mrf_track_status !== 'Joined').length,
+    approved: displayedMrfList.filter(m => (m.status === 'Approve' || m.status === 'HR Approve') && m.mrf_track_status !== 'Joined' && m.mrf_track_status !== 'Offered').length,
     approved_HR: displayedMrfList.filter(m => m.status === 'Approve').length,
     rejected: displayedMrfList.filter(m => m.status === 'Reject').length,
     onHold: displayedMrfList.filter(m => m.status === 'On Hold').length,
@@ -164,7 +164,7 @@ const Dashboard = () => {
     dir_hr_total_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw').length,
     dir_hr_pending_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw' && m.hr_status === 'Pending' && m.director_status === 'Pending').length,
     dir_hrpending_count: displayedMrfList.filter(m => m.status !== 'Draft' && m.status !== 'Withdraw' && m.hr_status === 'Pending' && m.director_status === 'Approve').length,
-    approved_completed: displayedMrfList.filter(m => m.mrf_track_status === 'Offered').length,
+    approved_completed: displayedMrfList.filter(m => m.mrf_track_status === 'Joined' || m.mrf_track_status === 'Offered').length,
    // approved_completed : 0,
   };
   const dirCounts = {
