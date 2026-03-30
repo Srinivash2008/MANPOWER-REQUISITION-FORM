@@ -122,61 +122,33 @@ const FHDashboard = ({
                 </Box>
               </motion.div>
             </Box>
+            <hr></hr>
             {/* MRF Tracking Status Counts — visible only for emp_id 12345 or 1722 */}
             {(user?.emp_id == '12345' || user?.emp_id == '1722') && (
-              <Card sx={{
-                flex: 1.2,
-                p: { xs: 2, sm: 3, md: 4 },
-                backdropFilter: 'blur(10px)',
-                display: 'grid',
-              }}>
-                <Box>
-
-                  {trackingStats.map((stat) => {
-                    const percentage = trackingStats.reduce((sum, s) => sum + s.value, 0) > 0
-                      ? (stat.value / trackingStats.reduce((sum, s) => sum + s.value, 0)) * 100
-                      : 0;
-
-                    return (
-                      <motion.div
-                        key={stat.label}
-                        whileHover={{ scale: 1.05, x: 5 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                      >
-                        <Box
-                          onClick={() => navigate(`/approved-mrf?status=${encodeURIComponent(stat.label)}`)}
-                          sx={{
-                            cursor: 'pointer',
-                            '&:hover': {
-                              backgroundColor: theme.palette.action.hover,
-                            },
-                            p: 0.5,
-                            borderRadius: 1,
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                            <Typography variant="caption" fontWeight={600} sx={{ color: stat.color }}>
-                              {stat.label}
-                            </Typography>
-                            <Typography variant="caption" fontWeight={700}>
-                              {stat?.value?.toLocaleString()}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
-                            <Box sx={{
-                              height: '100%',
-                              width: `${percentage}%`,
-                              backgroundColor: `${stat.color}.main`,
-                              borderRadius: 4,
-                              transition: 'width 0.5s ease-in-out'
-                            }} />
-                          </Box>
-                        </Box>
-                      </motion.div>
-                    );
-                  })}
-                </Box>
-              </Card>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mt: 2 }}>
+                {trackingStats.map((stat) => (
+                  <Box
+                    key={stat.label}
+                    onClick={() => navigate(`/approved-mrf?status=${encodeURIComponent(stat.label)}`)}
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      border: `1px solid ${stat.color}30`,
+                      backgroundColor: `${stat.color}10`,
+                      '&:hover': { backgroundColor: `${stat.color}25` },
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    <Typography variant="h5" fontWeight={800} sx={{ color: stat.color }}>
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      {stat.label}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
             )}
           </Card>
 

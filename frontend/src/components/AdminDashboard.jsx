@@ -118,6 +118,7 @@ const AdminDashboard = ({
                 <Typography fontWeight={600}>View Reports</Typography>
               </Box>
             </Box>
+            <hr style={{marginBottom: '5%'}}></hr>
              {/* MRF Tracking Status Counts — visible only for emp_id 12345 */}
             {(user?.emp_id == '12345' || user?.emp_id == '1722') && (
                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
@@ -207,7 +208,7 @@ const AdminDashboard = ({
                         <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
                           <Box sx={{
                             height: '100%', width: `${percentage}%`,
-                            backgroundColor: `${p.color}.main`, borderRadius: 4, transition: 'width 0.5s ease-in-out'
+                            backgroundColor: theme.palette[p.color]?.main || p.color, borderRadius: 4, transition: 'width 0.5s ease-in-out'
                           }} />
                         </Box>
                       </Box>
