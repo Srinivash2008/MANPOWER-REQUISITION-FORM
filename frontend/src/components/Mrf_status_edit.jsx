@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Paper, Typography, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop, Divider, IconButton, Card, CardContent, Tooltip
+    Box, Paper, Typography, TextField, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Backdrop, Divider, IconButton, Card, CardContent, Tooltip,
+    Dialog, DialogTitle, DialogContent, DialogActions
 } from "@mui/material";
 import {
     Numbers as NumbersIcon,
@@ -24,6 +25,7 @@ const MRF_Status_Edit = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const { selectedRequisition, loading } = useSelector((state) => state.manpowerRequisition);
+    const { user } = useSelector((state) => state.auth);
     console.log(selectedRequisition,"selectedRequisitionselectedRequisitionselectedRequisition")
 
     const [formData, setFormData] = useState({
@@ -32,6 +34,7 @@ const MRF_Status_Edit = () => {
         candidates: []
     });
     const [isUpdating, setIsUpdating] = useState(false);
+    const [deleteModal, setDeleteModal] = useState({ open: false, index: null, reason: '', reasonError: false });
 
     useEffect(() => {
         dispatch(fetchMrfTrackingById(id));
@@ -39,7 +42,6 @@ const MRF_Status_Edit = () => {
 
     const formatDateForInput = (dateString) => {
         if (!dateString) return '';
-        // Handles both 'YYYY-MM-DDTHH:mm:ss.sssZ' and 'MM/DD/YYYY'
         if (dateString.includes('T')) {
             return dateString.split('T')[0];
         }
@@ -67,7 +69,7 @@ const MRF_Status_Edit = () => {
 
             setFormData({
                 mrf_closed_date: formatDateForInput(selectedRequisition.mrf_closed_date),
-                mrf_track_status: selectedRequisition.mrf_track_status || 'In Process', // NOSONAR
+                mrf_track_status: selectedRequisition.mrf_track_status || 'In Process',
                 candidates: initialCandidates
             });
         }
@@ -104,7 +106,6 @@ const MRF_Status_Edit = () => {
     const handleCancelNewCandidate = (index) => {
         setFormData(prev => {
             const updatedCandidates = [...prev.candidates];
-            // If it's a new candidate entry, remove it from the array
             if (updatedCandidates[index].isNew) {
                 updatedCandidates.splice(index, 1);
             }
@@ -132,10 +133,7 @@ const MRF_Status_Edit = () => {
         try {
             await dispatch(addOrUpdateCandidate(candidatePayload)).unwrap();
             swal.fire('Success', 'Candidate details updated successfully!', 'success');
-            
-            // Refetch data to get the latest state from the server
             dispatch(fetchMrfTrackingById(id));
-
         } catch (error) {
             swal.fire('Error', error.message || 'Failed to update candidate details.', 'error');
         } finally {
@@ -143,37 +141,51 @@ const MRF_Status_Edit = () => {
         }
     };
 
-    const handleDeleteCandidate = async (index) => {
+    const openDeleteModal = (index) => {
+        setDeleteModal({ open: true, index, reason: '', reasonError: false });
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteModal({ open: false, index: null, reason: '', reasonError: false });
+    };
+
+    const handleDeleteCandidate = async () => {
+        const { index, reason } = deleteModal;
+
+        if (!reason.trim()) {
+            setDeleteModal(prev => ({ ...prev, reasonError: true }));
+            return;
+        }
+
         const candidateToDelete = formData.candidates[index];
 
-        // If it's a new candidate that hasn't been saved, just remove it from the state
+        // If unsaved new candidate, just remove from state
         if (candidateToDelete.isNew) {
+            closeDeleteModal();
             handleCancelNewCandidate(index);
             return;
         }
 
-        const result = await swal.fire({
-            title: 'Are you sure?',
-            text: `Do you want to delete ${candidateToDelete.candidate_name}? You won't be able to revert this!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
-        });
+        closeDeleteModal();
+        setIsUpdating(true);
 
-        if (result.isConfirmed) {
-            setIsUpdating(true);
-            try {
-                await dispatch(deleteManpowerTrackingCandidate(candidateToDelete.mrf_track_id)).unwrap();
-                swal.fire('Deleted!', 'The candidate has been marked as inactive.', 'success');
-                // Refetch data to update the list
-                dispatch(fetchMrfTrackingById(id));
-            } catch (error) {
-                swal.fire('Error', error.message || 'Failed to delete candidate.', 'error');
-            } finally {
-                setIsUpdating(false);
-            }
+        try {
+            await dispatch(deleteManpowerTrackingCandidate({
+                mrf_track_id: candidateToDelete.mrf_track_id,
+                reason: reason.trim(),
+                userid: user?.emp_id,
+                mrf_number: selectedRequisition.mrf_number,
+            })).unwrap();
+
+            // Revert status in local formData
+            setFormData(prev => ({ ...prev, mrf_track_status: 'In Process' }));
+
+            swal.fire('Deleted!', 'The candidate has been removed and status reverted to In Process.', 'success');
+            dispatch(fetchMrfTrackingById(id));
+        } catch (error) {
+            swal.fire('Error', error.message || 'Failed to delete candidate.', 'error');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -190,24 +202,21 @@ const MRF_Status_Edit = () => {
     };
 
     const isAnyCandidateEditing = formData.candidates.some(c => c.isEditing);
-
     const allCandidatesFilled = formData.candidates.every(c => c.candidate_name && c.offer_date);
 
     const handleStatusChange = (e) => {
         const newStatus = e.target.value;
-        // Re-evaluate `allCandidatesFilled` inside the handler to ensure it's up-to-date
         const allFilled = formData.candidates.every(c => c.candidate_name && c.offer_date);
 
-         // Block Joined if current status is not Offered
-    if (newStatus === 'Joined' && (selectedRequisition.mrf_track_status !== 'Offered' && selectedRequisition.mrf_track_status !== 'IJP')) {
-        swal.fire({
-            title: 'Invalid Status Change',
-            text: 'You can only mark as Joined after the status is set to Offered.',
-            icon: 'warning',
-            confirmButtonColor: '#2A7F66',
-        });
-        return;
-    }
+        if (newStatus === 'Joined' && (selectedRequisition.mrf_track_status !== 'Offered' && selectedRequisition.mrf_track_status !== 'IJP')) {
+            swal.fire({
+                title: 'Invalid Status Change',
+                text: 'You can only mark as Joined after the status is set to Offered.',
+                icon: 'warning',
+                confirmButtonColor: '#2A7F66',
+            });
+            return;
+        }
 
         if ((newStatus === 'Offered' || newStatus === 'IJP') && !allFilled) {
             swal.fire({
@@ -216,7 +225,7 @@ const MRF_Status_Edit = () => {
                 icon: 'warning',
                 confirmButtonColor: '#2A7F66',
             });
-            return; // Prevent status change
+            return;
         }
 
         setFormData(prev => ({ ...prev, mrf_track_status: newStatus }));
@@ -252,7 +261,6 @@ const MRF_Status_Edit = () => {
             });
             return;
         }
-        
 
         if (formData.candidates.length !== selectedRequisition.num_resources) {
             setIsUpdating(false);
@@ -364,9 +372,7 @@ const MRF_Status_Edit = () => {
                             </Typography>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                              
-
-                                  <Box>
+                                <Box>
                                     <TextField
                                         fullWidth
                                         type="date"
@@ -394,99 +400,105 @@ const MRF_Status_Edit = () => {
                                     <MenuItem value="Joined">Joined</MenuItem>
                                 </Select>
                             </FormControl>
-                            
-                                
-                                <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5, mt: 2 }}>
-                                    {formData.candidates.map((candidate, index) => (
-                                        <Box key={index}>
-                                            <Card 
-                                                variant="outlined" 
+
+                            <Box sx={{ maxHeight: '40vh', overflowY: 'auto', pr: 1, display: 'flex', flexDirection: 'column', gap: 2.5, mt: 2 }}>
+                                {formData.candidates.map((candidate, index) => (
+                                    <Box key={index}>
+                                        <Card 
+                                            variant="outlined" 
+                                            sx={{ 
+                                                p: 2, 
+                                                borderRadius: 2, 
+                                                backgroundColor: candidate.isNew ? '#E8F5E9' : '#fafafa',
+                                                transition: 'all 0.3s ease-in-out',
+                                                boxShadow: candidate.isNew ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                                            }}
+                                        >
+                                            <Typography 
+                                                variant="subtitle1" 
+                                                fontWeight="bold" 
                                                 sx={{ 
-                                                    p: 2, 
-                                                    borderRadius: 2, 
-                                                    backgroundColor: candidate.isNew ? '#E8F5E9' : '#fafafa',
-                                                    transition: 'all 0.3s ease-in-out',
-                                                    boxShadow: candidate.isNew ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                                                    mb: 2, 
+                                                    display: 'flex', 
+                                                    alignItems: 'center',
+                                                    color: candidate.isNew && !candidate.isEditing ? 'text.disabled' : 'text.primary'
                                                 }}
                                             >
-                                                <Typography 
-                                                    variant="subtitle1" 
-                                                    fontWeight="bold" 
-                                                    sx={{ 
-                                                        mb: 2, 
-                                                        display: 'flex', 
-                                                        alignItems: 'center',
-                                                        color: candidate.isNew && !candidate.isEditing ? 'text.disabled' : 'text.primary'
-                                                    }}><PersonAddIcon sx={{ mr: 1 }}/> Candidate #{index + 1}</Typography>
-                                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                                                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                         <TextField
-                                                             fullWidth
-                                                             type="date"
-                                                             name="offer_date"
-                                                             label="Offer Date"
-                                                             value={candidate.offer_date}
-                                                             onChange={(e) => handleInputChange(e, index)}
-                                                             onBlur={(e) => handleCandidateBlur(e, index)}
-                                                             InputLabelProps={{ shrink: true }}
-                                                             variant="outlined"
-                                                             error={candidate.isEditing && candidate.touched.offer_date && !candidate.offer_date}
-                                                             helperText={candidate.isEditing && candidate.touched.offer_date && !candidate.offer_date ? "Offer date is required." : ""}
-                                                             InputProps={{ // NOSONAR
-                                                                 readOnly: !candidate.isEditing, // NOSONAR
-                                                             }}
-                                                         />
-                                                         <TextField
-                                                             fullWidth
-                                                             name="candidate_name"
-                                                             label="Candidate Name"
-                                                             value={candidate.candidate_name}
-                                                             onChange={(e) => handleInputChange(e, index)}
-                                                             onBlur={(e) => handleCandidateBlur(e, index)}
-                                                             variant="outlined"
-                                                             error={candidate.isEditing && candidate.touched.candidate_name && !candidate.candidate_name}
-                                                             helperText={candidate.isEditing && candidate.touched.candidate_name && !candidate.candidate_name ? "Candidate name is required." : ""}
-                                                             InputProps={{ // NOSONAR
-                                                                 readOnly: !candidate.isEditing,
-                                                             }}
-                                                         />
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        {!candidate.isEditing ? (
-                                                            <Button variant="outlined" startIcon={<EditIcon />} onClick={() => handleToggleEdit(index)}>Edit</Button>
-                                                        ) : (
-                                                            <>
-                                                                <Button variant="contained" startIcon={<UpdateIcon />} onClick={() => handleUpdateCandidate(index)} disabled={isUpdating}>Update</Button>
-                                                                {candidate.isNew && <Button variant="text" color="error" onClick={() => handleCancelNewCandidate(index)}>Cancel</Button>}
-                                                            </>
-                                                        )}
-                                                        {!candidate.isNew && (
-                                                            <IconButton onClick={() => handleDeleteCandidate(index)} disabled={isUpdating || isAnyCandidateEditing} color="error"><DeleteIcon /></IconButton>
-                                                        )}
-                                                    </Box>
+                                                <PersonAddIcon sx={{ mr: 1 }}/> Candidate #{index + 1}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                                                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                    <TextField
+                                                        fullWidth
+                                                        type="date"
+                                                        name="offer_date"
+                                                        label="Offer Date"
+                                                        value={candidate.offer_date}
+                                                        onChange={(e) => handleInputChange(e, index)}
+                                                        onBlur={(e) => handleCandidateBlur(e, index)}
+                                                        InputLabelProps={{ shrink: true }}
+                                                        variant="outlined"
+                                                        error={candidate.isEditing && candidate.touched.offer_date && !candidate.offer_date}
+                                                        helperText={candidate.isEditing && candidate.touched.offer_date && !candidate.offer_date ? "Offer date is required." : ""}
+                                                        InputProps={{ // NOSONAR
+                                                            readOnly: !candidate.isEditing, // NOSONAR
+                                                        }}
+                                                    />
+                                                    <TextField
+                                                        fullWidth
+                                                        name="candidate_name"
+                                                        label="Candidate Name"
+                                                        value={candidate.candidate_name}
+                                                        onChange={(e) => handleInputChange(e, index)}
+                                                        onBlur={(e) => handleCandidateBlur(e, index)}
+                                                        variant="outlined"
+                                                        error={candidate.isEditing && candidate.touched.candidate_name && !candidate.candidate_name}
+                                                        helperText={candidate.isEditing && candidate.touched.candidate_name && !candidate.candidate_name ? "Candidate name is required." : ""}
+                                                        InputProps={{ // NOSONAR
+                                                            readOnly: !candidate.isEditing,
+                                                        }}
+                                                    />
                                                 </Box>
-                                            </Card>
-                                        </Box>
-                                    ))}
-                                </Box>
-                                {formData.candidates.length < selectedRequisition.num_resources && (
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                                        <Button
-                                            variant="dashed"
-                                            onClick={handleAddCandidate}
-                                            disabled={isAnyCandidateEditing}
-                                        >
-                                            <PersonAddIcon sx={{ mr: 1 }} /> {formData.candidates.length === 0 ? 'Add Candidate' : 'Add Another Candidate'}
-                                        </Button>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    {!candidate.isEditing ? (
+                                                        <Button variant="outlined" startIcon={<EditIcon />} onClick={() => handleToggleEdit(index)}>Edit</Button>
+                                                    ) : (
+                                                        <>
+                                                            <Button variant="contained" startIcon={<UpdateIcon />} onClick={() => handleUpdateCandidate(index)} disabled={isUpdating}>Update</Button>
+                                                            {candidate.isNew && <Button variant="text" color="error" onClick={() => handleCancelNewCandidate(index)}>Cancel</Button>}
+                                                        </>
+                                                    )}
+                                                    {!candidate.isNew && (
+                                                        <IconButton onClick={() => openDeleteModal(index)} disabled={isUpdating || isAnyCandidateEditing} color="error">
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    )}
+                                                </Box>
+                                            </Box>
+                                        </Card>
                                     </Box>
-                                )}
+                                ))}
+                            </Box>
+
+                            {formData.candidates.length < selectedRequisition.num_resources && (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                    <Button
+                                        variant="dashed"
+                                        onClick={handleAddCandidate}
+                                        disabled={isAnyCandidateEditing}
+                                    >
+                                        <PersonAddIcon sx={{ mr: 1 }} /> {formData.candidates.length === 0 ? 'Add Candidate' : 'Add Another Candidate'}
+                                    </Button>
+                                </Box>
+                            )}
                         </Box>
                     </Box>
+
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
                         <Button
                             type="submit"
                             variant="contained"
-                            disabled={isUpdating || isAnyCandidateEditing} // Disable overall update if any candidate is being edited
+                            disabled={isUpdating || isAnyCandidateEditing}
                             sx={{
                                 backgroundColor: '#2A7F66',
                                 '&:hover': { backgroundColor: '#1D5947' }
@@ -497,12 +509,53 @@ const MRF_Status_Edit = () => {
                     </Box>
                 </Box>
             </Paper>
+
             <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isUpdating}>
                 <CircularProgress color="inherit" />
             </Backdrop>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={deleteModal.open} onClose={closeDeleteModal} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 'bold', color: '#d33' }}>
+                    Confirm Delete
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                        Are you sure you want to delete{' '}
+                        <strong>
+                            {deleteModal.index !== null && formData.candidates[deleteModal.index]?.candidate_name}
+                        </strong>
+                        ? This action cannot be reverted. The MRF status will also be reset to <strong>In Process</strong>.
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        label="Reason for Deletion *"
+                        multiline
+                        rows={3}
+                        value={deleteModal.reason}
+                        onChange={(e) => setDeleteModal(prev => ({ ...prev, reason: e.target.value, reasonError: false }))}
+                        error={deleteModal.reasonError}
+                        helperText={deleteModal.reasonError ? 'Reason is required.' : ''}
+                        variant="outlined"
+                        autoFocus
+                    />
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+                    <Button onClick={closeDeleteModal} variant="outlined">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleDeleteCandidate}
+                        variant="contained"
+                        color="error"
+                        disabled={isUpdating}
+                    >
+                        {isUpdating ? <CircularProgress size={20} color="inherit" /> : 'Yes, Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
 
 export default MRF_Status_Edit;
-                            

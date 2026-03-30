@@ -1769,31 +1769,155 @@ router.get('/mrf-tracking-list/:userId', authMiddleware, async (req, res) => {
  * @route PUT /api/mrf/delete-candidate-tracking/:track_id
  * @access Private
  */
+// router.put('/delete-candidate-tracking/:track_id', authMiddleware, async (req, res) => {
+//     const { track_id } = req.params;
+
+//     if (!track_id) {
+//         return res.status(400).json({ message: 'Candidate tracking ID is required.' });
+//     }
+
+//     try {
+//         const [result] = await pool.execute(
+//             'UPDATE manpower_requisition_tracking SET is_active = ? WHERE mrf_track_id = ?',
+//             ['Inactive', track_id]
+//         );
+
+//         if (result.affectedRows === 0) {
+//             return res.status(404).json({ message: 'Candidate not found.' });
+//         }
+
+//         res.status(200).json({ message: 'Candidate marked as inactive successfully.' });
+//     } catch (error) {
+//         console.error('Error soft-deleting candidate:', error);
+//         res.status(500).json({ message: 'Server error while deleting candidate.' });
+//     }
+// });
 router.put('/delete-candidate-tracking/:track_id', authMiddleware, async (req, res) => {
     const { track_id } = req.params;
+    const { reason, userid, mrf_number } = req.body;
 
     if (!track_id) {
         return res.status(400).json({ message: 'Candidate tracking ID is required.' });
     }
 
+    if (!reason || !userid || !mrf_number) {
+        return res.status(400).json({ message: 'reason, userid, and mrf_number are required.' });
+    }
+
     try {
-        const [result] = await pool.execute(
+        // 1. Get candidate data before soft-deleting
+        const [candidateRows] = await pool.execute(
+            `SELECT mrf_id, candidate_name, offer_date 
+             FROM manpower_requisition_tracking 
+             WHERE mrf_track_id = ? AND is_active = 'active'`,
+            [track_id]
+        );
+
+        if (candidateRows.length === 0) {
+            return res.status(404).json({ message: 'Active candidate not found.' });
+        }
+
+        const candidate = candidateRows[0];
+        console.log(candidate, "candidate");
+
+        // 2. Fetch MRF + hiring manager details for email
+        const [mrfDetails] = await pool.execute(
+            `SELECT mr.created_by, mr.mrf_number, mr.designation, 
+                    ep.emp_name as hiring_manager_name, 
+                    ep.mail_id as hiring_manager_email
+             FROM manpower_requisition mr
+             JOIN employee_personal ep ON mr.created_by = ep.employee_id
+             WHERE mr.mrf_number = ?`,
+            [mrf_number]
+        );
+
+        const managerInfo = mrfDetails[0] || {};
+
+        // 3. Insert into manpower_offers_deleted table
+        await pool.execute(
+            `INSERT INTO manpower_offers_deleted (mrfid, name, offered_date, reason, userid, deleted_date, isdelete) 
+             VALUES (?, ?, ?, ?, ?, NOW(), 'active')`,
+            [
+                mrf_number,
+                candidate.candidate_name,
+                candidate.offer_date,
+                reason,
+                userid,
+            ]
+        );
+
+        // 4. Soft-delete from original table
+        await pool.execute(
             'UPDATE manpower_requisition_tracking SET is_active = ? WHERE mrf_track_id = ?',
             ['Inactive', track_id]
         );
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Candidate not found.' });
+        // 5. Revert MRF status to 'In Process'
+        await pool.execute(
+            `UPDATE manpower_requisition SET mrf_track_status = 'In Process' WHERE mrf_number = ?`,
+            [mrf_number]
+        );
+
+        // 6. Send email to hiring manager
+        if (managerInfo.hiring_manager_email) {
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                // to: managerInfo.hiring_manager_email,
+                to: "srinivasan@pdmrindia.com",
+                subject: `MRF - Candidate Removal Notification [${mrf_number}]`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                        <p>Hello ${managerInfo.hiring_manager_name || 'Manager'},</p>
+                        <p>Please be informed that the following candidate has been <strong style="color: #d33;">Removed</strong> from MRF tracking:</p>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Candidate Name</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Position</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">MRF Number</th>
+                                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Reason for Removal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${candidate.candidate_name}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${managerInfo.designation || '-'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${mrf_number}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${reason}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p>The MRF status has been reset to <strong>In Process</strong>. Please coordinate with the HR team for further action.</p>
+                        <br>
+                        <p style="color: #555;">
+                            Thanks & regards,<br>
+                            Automated MRF System
+                        </p>
+                    </div>`
+            };
+
+            try {
+                await transporter.sendMail(mailOptions);
+            } catch (mailError) {
+                console.error('Email sending failed:', mailError);
+                // Don't block the response if email fails
+            }
         }
 
-        res.status(200).json({ message: 'Candidate marked as inactive successfully.' });
+        res.status(200).json({ 
+            message: 'Candidate moved to deleted table, marked inactive, and MRF status reverted to In Process.',
+            deletedRecord: {
+                mrfid: mrf_number,
+                name: candidate.candidate_name,
+                deleted_date: new Date().toISOString()
+            }
+        });
+
     } catch (error) {
-        console.error('Error soft-deleting candidate:', error);
-        res.status(500).json({ message: 'Server error while deleting candidate.' });
+        console.error('Error archiving candidate:', error);
+        res.status(500).json({ message: 'Server error while archiving candidate.' });
     }
 });
-
-
 // router.get('/uploadFiles/submittedArticlesFile/:filename', (req, res) => {
 //     const filename = req.params.filename;
 //     // const __filename = fileURLToPath(import.meta.url);

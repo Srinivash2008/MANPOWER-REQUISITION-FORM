@@ -682,9 +682,37 @@ export const replyToQuery = createAsyncThunk(
   }
 );
 
+// export const deleteManpowerTrackingCandidate = createAsyncThunk(
+//   'manpowerRequisition/deleteManpowerTrackingCandidate',
+//   async (trackId, { rejectWithValue, getState }) => {
+//     try {
+//       const { auth } = getState();
+//       const token = auth.token;
+
+//       if (!token) {
+//         return rejectWithValue('Authentication token is missing.');
+//       }
+
+//       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+//       const response = await axios.put(
+//         `${API_URL}/api/mrf/delete-candidate-tracking/${trackId}`,
+//         {}, // No body is needed for this request
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+
+//       return { trackId, ...response.data };
+//     } catch (error) {
+//       const errorMessage =
+//         error.response?.data?.message || error.message || 'Failed to delete candidate.';
+//       return rejectWithValue({ trackId, error: errorMessage });
+//     }
+//   }
+// );
+
 export const deleteManpowerTrackingCandidate = createAsyncThunk(
   'manpowerRequisition/deleteManpowerTrackingCandidate',
-  async (trackId, { rejectWithValue, getState }) => {
+  async ({ mrf_track_id, reason, userid, mrf_number }, { rejectWithValue, getState }) => {
     try {
       const { auth } = getState();
       const token = auth.token;
@@ -696,16 +724,16 @@ export const deleteManpowerTrackingCandidate = createAsyncThunk(
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
       const response = await axios.put(
-        `${API_URL}/api/mrf/delete-candidate-tracking/${trackId}`,
-        {}, // No body is needed for this request
+        `${API_URL}/api/mrf/delete-candidate-tracking/${mrf_track_id}`,
+        { reason, userid, mrf_number },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      return { trackId, ...response.data };
+      return { mrf_track_id, ...response.data };
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || error.message || 'Failed to delete candidate.';
-      return rejectWithValue({ trackId, error: errorMessage });
+      return rejectWithValue({ mrf_track_id, error: errorMessage });
     }
   }
 );
