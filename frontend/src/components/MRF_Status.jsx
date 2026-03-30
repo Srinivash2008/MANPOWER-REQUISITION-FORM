@@ -101,6 +101,8 @@ const MRF_Status = () => {
         switch (status) {
             case 'Offered':
                 return { bgcolor: '#1565c0', color: '#fff !important' };
+            case 'IJP':
+                return { bgcolor: '#f57c00', color: '#fff !important' };
             case 'Joined':
                 return { bgcolor: '#2e7d32', color: '#fff !important' };
             case 'In Process':
@@ -211,6 +213,7 @@ const MRF_Status = () => {
                                 <MenuItem value="All">All</MenuItem>
                                 <MenuItem value="In Process">In Process</MenuItem>
                                 <MenuItem value="Offered">Offered</MenuItem>
+                                <MenuItem value="IJP">IJP</MenuItem>
                                 <MenuItem value="Joined">Joined</MenuItem>
                             </Select>
                         </FormControl>

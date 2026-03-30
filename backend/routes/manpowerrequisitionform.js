@@ -1145,7 +1145,7 @@ router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
             COALESCE(SUM(CASE WHEN status != 'Draft' AND status != 'Withdraw' THEN 1 ELSE 0 END), 0) AS FH_total_count,
             COALESCE(SUM(CASE WHEN status != 'Draft' AND status != 'Withdraw' AND hr_status = 'Pending' AND director_status = 'Pending' THEN 1 ELSE 0 END), 0) AS dir_pending_count,
             COALESCE(SUM(CASE WHEN status != 'Draft' AND status != 'Withdraw' AND hr_status = 'Pending' AND director_status = 'Approve' THEN 1 ELSE 0 END), 0) AS hrpending_count,
-            COALESCE(SUM(CASE WHEN status != 'Draft' AND status != 'Withdraw' AND hr_status = 'HR Approve' AND director_status = 'Approve' THEN 1 ELSE 0 END), 0) AS hrapproved_count,
+            COALESCE(SUM(CASE WHEN status != 'Draft' AND status != 'Withdraw' AND hr_status = 'HR Approve' AND director_status = 'Approve' AND (mrf_track_status = 'In Process' OR mrf_track_status IS NULL) THEN 1 ELSE 0 END), 0) AS hrapproved_count,
             COALESCE(SUM(CASE WHEN status != 'Draft' AND status != 'Withdraw' AND mrf_closed_date != 'NULL' THEN 1 ELSE 0 END), 0) AS FH_completed_count
         `;
 
@@ -1453,17 +1453,18 @@ router.put('/status/:id', authMiddleware, async (req, res) => {
         //     [mrf_closed_date || null, mrf_track_status || 'In Process', id]
         // );
         await pool.execute(
-    'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ?, joined_date = ? WHERE id = ?',
+    'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ?, joined_date = ?,IJP_date = ? WHERE id = ?',
     [
         mrf_closed_date || null,
         mrf_track_status || 'In Process',
         mrf_track_status === 'Joined' ? new Date().toISOString().split('T')[0] : null,
+        mrf_track_status === 'IJP' ? new Date().toISOString().split('T')[0] : null,
         id
     ]
 );
 
         // If status is 'Completed', fetch candidates and send email
-        if (mrf_track_status === 'Offered') {
+        if (mrf_track_status === 'Offered' || mrf_track_status === 'IJP') {
             const [candidates] = await pool.execute(
                 'SELECT candidate_name, offer_date FROM manpower_requisition_tracking WHERE mrf_id = ? AND is_active = "Active"',
                 [id]
@@ -1545,11 +1546,12 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
         //     [mrf_closed_date || null, mrf_track_status || null, id]
         // );
         await pool.execute(
-    'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ?, joined_date = ? WHERE id = ?',
+    'UPDATE manpower_requisition SET mrf_closed_date = ?, mrf_track_status = ?, joined_date = ?, IJP_date = ? WHERE id = ?',
     [
         mrf_closed_date || null,
         mrf_track_status || 'In Process',
         mrf_track_status === 'Joined' ? new Date().toISOString().split('T')[0] : null,
+        mrf_track_status === 'IJP' ? new Date().toISOString().split('T')[0] : null,
         id
     ]
 );
@@ -1580,7 +1582,7 @@ router.put('/update-mrf-tracking/:id', authMiddleware, async (req, res) => {
             }
         }
 
-        if (mrf_track_status === 'Offered' && candidates && candidates.length > 0) {
+        if ((mrf_track_status === 'Offered' || mrf_track_status === 'IJP') && candidates && candidates.length > 0) {
             const [mrfDetails] = await pool.execute(
                 `SELECT mr.created_by, mr.mrf_number, mr.designation, ep.emp_name as hiring_manager_name, ep.mail_id as hiring_manager_email
                  FROM manpower_requisition mr

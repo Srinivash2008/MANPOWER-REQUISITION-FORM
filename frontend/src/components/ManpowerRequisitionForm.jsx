@@ -507,7 +507,8 @@ console.log(isStatus,"isStatus")
         : (statusFilter === 'HR Approve'
           ? (manpower.status === statusFilter && 
              manpower.mrf_track_status !== 'Joined' && 
-             manpower.mrf_track_status !== 'Offered')
+             manpower.mrf_track_status !== 'Offered' && 
+             manpower.mrf_track_status !== 'IJP')
           : manpower.status === statusFilter)));
     const matchesHrStatus = !hrStatusFilter ||
       (hrStatusFilter === 'Pending'

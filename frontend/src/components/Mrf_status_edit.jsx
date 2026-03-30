@@ -199,7 +199,7 @@ const MRF_Status_Edit = () => {
         const allFilled = formData.candidates.every(c => c.candidate_name && c.offer_date);
 
          // Block Joined if current status is not Offered
-    if (newStatus === 'Joined' && selectedRequisition.mrf_track_status !== 'Offered') {
+    if (newStatus === 'Joined' && (selectedRequisition.mrf_track_status !== 'Offered' && selectedRequisition.mrf_track_status !== 'IJP')) {
         swal.fire({
             title: 'Invalid Status Change',
             text: 'You can only mark as Joined after the status is set to Offered.',
@@ -209,7 +209,7 @@ const MRF_Status_Edit = () => {
         return;
     }
 
-        if (newStatus === 'Offered' && !allFilled) {
+        if ((newStatus === 'Offered' || newStatus === 'IJP') && !allFilled) {
             swal.fire({
                 title: 'Incomplete Details',
                 text: 'Please fill in the offer date and name for all candidates before marking as Offered.',
@@ -218,6 +218,7 @@ const MRF_Status_Edit = () => {
             });
             return; // Prevent status change
         }
+
         setFormData(prev => ({ ...prev, mrf_track_status: newStatus }));
     };
 
@@ -230,7 +231,7 @@ const MRF_Status_Edit = () => {
             mrf_track_status: formData.mrf_track_status,
         };
 
-        if (statusData.mrf_track_status === 'Offered' && !statusData.mrf_closed_date) {
+        if ((statusData.mrf_track_status === 'Offered' || statusData.mrf_track_status === 'IJP') && !statusData.mrf_closed_date) {
             setIsUpdating(false);
             swal.fire({
                 title: 'Cannot Complete MRF',
@@ -241,7 +242,7 @@ const MRF_Status_Edit = () => {
             return;
         }
 
-        if (statusData.mrf_track_status === 'Offered' && !allCandidatesFilled) {
+        if ((statusData.mrf_track_status === 'Offered' || statusData.mrf_track_status === 'IJP') && !allCandidatesFilled) {
             setIsUpdating(false);
             swal.fire({
                 title: 'Cannot Complete MRF',
@@ -251,6 +252,7 @@ const MRF_Status_Edit = () => {
             });
             return;
         }
+        
 
         if (formData.candidates.length !== selectedRequisition.num_resources) {
             setIsUpdating(false);
@@ -388,6 +390,7 @@ const MRF_Status_Edit = () => {
                                 >
                                     <MenuItem value="In Process">In Process</MenuItem>
                                     <MenuItem value="Offered">Offered</MenuItem>
+                                    <MenuItem value="IJP">IJP</MenuItem>
                                     <MenuItem value="Joined">Joined</MenuItem>
                                 </Select>
                             </FormControl>
