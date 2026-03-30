@@ -11,7 +11,7 @@ import {
   useTheme,
   InputLabel,
   Icon,
-} from '@mui/material'; 
+} from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
@@ -26,6 +26,7 @@ import RadialBarChart from './RadialBarChart';
 import StatRow from './StatRow';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useSelector } from 'react-redux';
 
 const FHDashboard = ({
   counts,
@@ -37,10 +38,11 @@ const FHDashboard = ({
   comprehensiveData,
   dirStatusMetrics,
   hrStatusMetrics,
+  approvedmfrCounts,
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
-
+  const { user } = useSelector((state) => state.auth);
   const overviewStats = [
     {
       label: 'Submitted',
@@ -62,10 +64,17 @@ const FHDashboard = ({
     },
   ];
 
+  const trackingStats = [
+    { label: 'In Process', value: approvedmfrCounts.inProcess, color: '#FF9800' },
+    { label: 'Offered', value: approvedmfrCounts.offered, color: '#2196F3' },
+    { label: 'Joined', value: approvedmfrCounts.joined, color: '#4CAF50' },
+    { label: 'IJP', value: approvedmfrCounts.ijp, color: '#9C27B0' },
+  ];
+
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
       {/* --- Left Column (Main Content) --- */}
-      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}> 
+      <Box sx={{ flex: { lg: 8 }, display: 'flex', flexDirection: 'column', gap: { xs: 3, md: 4 } }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr', lg: '1fr 1.2fr' }, gap: { xs: 3, md: 4 } }}>
           {/* Quick Actions Card */}
           <Card sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', justifyContent: 'center', backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)', border: `1px solid ${theme.palette.divider}` }}>
@@ -86,6 +95,7 @@ const FHDashboard = ({
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3, ml: 4.5 }}>
               Your essential shortcuts.
             </Typography>
+
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <motion.div
                 whileHover={{ scale: 1.03 }}
@@ -112,6 +122,62 @@ const FHDashboard = ({
                 </Box>
               </motion.div>
             </Box>
+            {/* MRF Tracking Status Counts — visible only for emp_id 12345 or 1722 */}
+            {(user?.emp_id == '12345' || user?.emp_id == '1722') && (
+              <Card sx={{
+                flex: 1.2,
+                p: { xs: 2, sm: 3, md: 4 },
+                backdropFilter: 'blur(10px)',
+                display: 'grid',
+              }}>
+                <Box>
+
+                  {trackingStats.map((stat) => {
+                    const percentage = trackingStats.reduce((sum, s) => sum + s.value, 0) > 0
+                      ? (stat.value / trackingStats.reduce((sum, s) => sum + s.value, 0)) * 100
+                      : 0;
+
+                    return (
+                      <motion.div
+                        key={stat.label}
+                        whileHover={{ scale: 1.05, x: 5 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                      >
+                        <Box
+                          onClick={() => navigate(`/approved-mrf?status=${encodeURIComponent(stat.label)}`)}
+                          sx={{
+                            cursor: 'pointer',
+                            '&:hover': {
+                              backgroundColor: theme.palette.action.hover,
+                            },
+                            p: 0.5,
+                            borderRadius: 1,
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="caption" fontWeight={600} sx={{ color: stat.color }}>
+                              {stat.label}
+                            </Typography>
+                            <Typography variant="caption" fontWeight={700}>
+                              {stat?.value?.toLocaleString()}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
+                            <Box sx={{
+                              height: '100%',
+                              width: `${percentage}%`,
+                              backgroundColor: `${stat.color}.main`,
+                              borderRadius: 4,
+                              transition: 'width 0.5s ease-in-out'
+                            }} />
+                          </Box>
+                        </Box>
+                      </motion.div>
+                    );
+                  })}
+                </Box>
+              </Card>
+            )}
           </Card>
 
           {/* Pending Requisitions Focus Area */}
@@ -137,22 +203,22 @@ const FHDashboard = ({
                         onClick={() => {
                           let statusParam = p.status.replace('MRF ', '');
                           const lowerStatus = statusParam.toLowerCase();
-                          console.log(lowerStatus,"lowerStatus")
-                          if(lowerStatus == "submitted"){
+                          console.log(lowerStatus, "lowerStatus")
+                          if (lowerStatus == "submitted") {
                             statusParam = ""
-                          }else if(lowerStatus == "pending with director"){
+                          } else if (lowerStatus == "pending with director") {
                             statusParam = "director_status=Pending"
-                          }else if(lowerStatus == "pending with hr"){
+                          } else if (lowerStatus == "pending with hr") {
                             statusParam = "director_status=Approve&hr_status=Pending"
-                          }else if(lowerStatus == "approved mrf"){
+                          } else if (lowerStatus == "approved mrf") {
                             statusParam = "status=HR Approve"
-                          }else if(lowerStatus == "rejected mrf"){
+                          } else if (lowerStatus == "rejected mrf") {
                             statusParam = "status=Reject"
                           }
-                          else if(lowerStatus == "completed mrf"){
+                          else if (lowerStatus == "completed mrf") {
                             statusParam = "isStatus=Completed"
                           }
-                          console.log(statusParam,"statusParam");
+                          console.log(statusParam, "statusParam");
                           navigate(`/mrf-list?${statusParam}`);
                         }}
                         sx={{
@@ -165,16 +231,16 @@ const FHDashboard = ({
                         }}
                       >
 
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                        <Typography variant="caption" fontWeight={600} color="text.secondary">{p.status}</Typography>
-                        <Typography variant="caption" fontWeight={700}>{p.count.toLocaleString()}</Typography>
-                      </Box>
-                      <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
-                        <Box sx={{
-                          height: '100%', width: `${percentage}%`,
-                          backgroundColor: `${p.color}.main`, borderRadius: 4, transition: 'width 0.5s ease-in-out'
-                        }} />
-                      </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                          <Typography variant="caption" fontWeight={600} color="text.secondary">{p.status}</Typography>
+                          <Typography variant="caption" fontWeight={700}>{p.count.toLocaleString()}</Typography>
+                        </Box>
+                        <Box sx={{ height: 8, backgroundColor: theme.palette.grey[200], borderRadius: 4, overflow: 'hidden' }}>
+                          <Box sx={{
+                            height: '100%', width: `${percentage}%`,
+                            backgroundColor: `${p.color}.main`, borderRadius: 4, transition: 'width 0.5s ease-in-out'
+                          }} />
+                        </Box>
                       </Box>
                     </motion.div>
                   );

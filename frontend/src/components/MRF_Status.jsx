@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMrfTrackingList } from '../redux/cases/manpowerrequisitionSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import EditDocumentIcon from '@mui/icons-material/EditDocument';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
@@ -63,13 +63,15 @@ const MRF_Status = () => {
     const { user } = useSelector((state) => state.auth);
     const navigate = useNavigate();
     const { data: manpowerRequisitionList, loading } = useSelector((state) => state.manpowerRequisition);
-
+    const [searchParams] = useSearchParams();
+    const status = searchParams.get('status');
+console.log(status,"status")
     const [trackingData, setTrackingData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCandidates, setSelectedCandidates] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [statusFilter, setStatusFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState(status || 'All');
 
     useEffect(() => {
         dispatch(fetchMrfTrackingList(user?.emp_id));

@@ -34,6 +34,7 @@ const AdminDashboard = ({
   managerOptions,
   managerFilter,
   setManagerFilter,
+  approvedmfrCounts,
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -62,6 +63,13 @@ const AdminDashboard = ({
           color: theme.palette.warning.main,
         },
       ];
+
+       const trackingStats = [
+      { label: 'In Process', value: approvedmfrCounts.inProcess, color: '#FF9800' },
+      { label: 'Offered',    value: approvedmfrCounts.offered,   color: '#2196F3' },
+      { label: 'Joined',     value: approvedmfrCounts.joined,    color: '#4CAF50' },
+      { label: 'IJP',        value: approvedmfrCounts.ijp,       color: '#9C27B0' },
+  ];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: { xs: 3, md: 4 } }}>
@@ -110,6 +118,33 @@ const AdminDashboard = ({
                 <Typography fontWeight={600}>View Reports</Typography>
               </Box>
             </Box>
+             {/* MRF Tracking Status Counts — visible only for emp_id 12345 */}
+            {(user?.emp_id == '12345' || user?.emp_id == '1722') && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+                    {trackingStats.map((stat) => (
+                        <Box
+                            key={stat.label}
+                            onClick={() => navigate(`/approved-mrf?status=${encodeURIComponent(stat.label)}`)}
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                cursor: 'pointer',
+                                border: `1px solid ${stat.color}30`,
+                                backgroundColor: `${stat.color}10`,
+                                '&:hover': { backgroundColor: `${stat.color}25` },
+                                transition: 'background-color 0.2s'
+                            }}
+                        >
+                            <Typography variant="h5" fontWeight={800} sx={{ color: stat.color }}>
+                                {stat.value}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                {stat.label}
+                            </Typography>
+                        </Box>
+                    ))}
+                </Box>
+            )}
           </Card>
 
           {/* Pending Requisitions Focus Area */}

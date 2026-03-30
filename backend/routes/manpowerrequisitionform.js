@@ -1103,6 +1103,31 @@ router.get('/getmanpowerrequisitionbystatus/:status/:emp_id', authMiddleware, as
     }
 });
 
+router.get('/tracking-status-counts', authMiddleware, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(
+            `SELECT mrf_track_status, COUNT(*) as count 
+             FROM manpower_requisition 
+             WHERE mrf_track_status IN ('In Process', 'Offered', 'Joined', 'IJP')
+             GROUP BY mrf_track_status`
+        );
+
+        const result = { inProcess: 0, offered: 0, joined: 0, ijp: 0 };
+
+        rows.forEach(row => {
+            if (row.mrf_track_status === 'In Process') result.inProcess = row.count;
+            else if (row.mrf_track_status === 'Offered') result.offered = row.count;
+            else if (row.mrf_track_status === 'Joined') result.joined = row.count;
+            else if (row.mrf_track_status === 'IJP') result.ijp = row.count;
+        });
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching tracking status counts:', error);
+        res.status(500).json({ message: 'Server error.' });
+    }
+});
+
 router.get('/manager-mrf-counts/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;

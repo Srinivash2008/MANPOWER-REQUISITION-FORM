@@ -167,6 +167,34 @@ export const getMFRCounts = createAsyncThunk(
     }
   }
 );
+
+
+export const getApprovedMRFStatus = createAsyncThunk(
+  'manpowerRequisition/getApprovedMRFStatus',
+  async (managerId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/mrf/tracking-status-counts`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch MRF counts.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+
 export const fetchManagerList = createAsyncThunk(
   'manpowerRequisition/fetchManagerrList',
   async (_, { rejectWithValue, getState }) => {
@@ -772,6 +800,7 @@ const manpowerrequisitionSlice = createSlice({
     userByEmpId: null,
     data: [],
     mfrCounts: [],
+    approvedmfrCounts: [],
     departments: [],
     managerList: [],
     managerListById: [],
@@ -900,6 +929,20 @@ const manpowerrequisitionSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
         state.mfrCounts = null;
+      })
+      .addCase(getApprovedMRFStatus.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(getApprovedMRFStatus.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.approvedmfrCounts = action.payload;
+      }
+      )
+      .addCase(getApprovedMRFStatus.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.approvedmfrCounts = null;
       })
       .addCase(fetchManagerList.pending, (state) => {
         state.status = 'loading';

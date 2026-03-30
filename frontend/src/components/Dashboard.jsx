@@ -17,7 +17,7 @@ import DraftsIcon from '@mui/icons-material/Drafts';
 import UndoIcon from '@mui/icons-material/Undo';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { getMFRCounts, fetchManpowerRequisitionByuserId, fetchManpowerRequisitionFH } from '../redux/cases/manpowerrequisitionSlice';
+import { getMFRCounts, fetchManpowerRequisitionByuserId, fetchManpowerRequisitionFH, getApprovedMRFStatus } from '../redux/cases/manpowerrequisitionSlice';
 
 import AdminDashboard from './AdminDashboard';
 import FHDashboard from './FHDashboard';
@@ -90,17 +90,22 @@ const Dashboard = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { mfrCounts } = useSelector((state) => state.manpowerRequisition);
+  const { mfrCounts,approvedmfrCounts } = useSelector((state) => state.manpowerRequisition);
   const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data) || [];
   const manpowerRequisitionFHList = useSelector((state) => state.manpowerRequisition.selectedRequisitionFH) || [];
   const [managerFilter, setManagerFilter] = useState('');
   const [fhChartFilter, setFhChartFilter] = useState('overall');
 
-  console.log("MFR Counts from Redux:", mfrCounts);
+  console.log("MFR Counts from Redux:", mfrCounts,approvedmfrCounts);
 
   useEffect(() => {
     if (user?.emp_id) {
       dispatch(getMFRCounts(user.emp_id));
+
+      if(user?.emp_id === '12345' || user?.emp_id === '1722'){
+        dispatch(getApprovedMRFStatus());
+      }
+      
 
       if (user?.emp_id === '1400' || user?.emp_id === '1722') {
         dispatch(fetchManpowerRequisitionByuserId(user.emp_id));
@@ -501,6 +506,7 @@ const Dashboard = () => {
           managerOptions={managerOptions}
           managerFilter={managerFilter}
           setManagerFilter={setManagerFilter}
+          approvedmfrCounts={approvedmfrCounts}
         />
       ) : (
         <FHDashboard
@@ -513,6 +519,7 @@ const Dashboard = () => {
           setFhChartFilter={setFhChartFilter}
           dirStatusMetrics={dirStatusMetrics}
           hrStatusMetrics={hrStatusMetrics}
+          approvedmfrCounts={approvedmfrCounts}
         />
       )}
     </Box>
