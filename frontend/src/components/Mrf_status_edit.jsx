@@ -240,7 +240,7 @@ const MRF_Status_Edit = () => {
             mrf_track_status: formData.mrf_track_status,
         };
 
-        if ((statusData.mrf_track_status === 'Offered' || statusData.mrf_track_status === 'IJP') && !statusData.mrf_closed_date) {
+        if ((statusData.mrf_track_status === 'Offered') && !statusData.mrf_closed_date) {
             setIsUpdating(false);
             swal.fire({
                 title: 'Cannot Complete MRF',
@@ -251,7 +251,7 @@ const MRF_Status_Edit = () => {
             return;
         }
 
-        if ((statusData.mrf_track_status === 'Offered' || statusData.mrf_track_status === 'IJP') && !allCandidatesFilled) {
+        if ((statusData.mrf_track_status === 'Offered') && !allCandidatesFilled) {
             setIsUpdating(false);
             swal.fire({
                 title: 'Cannot Complete MRF',
@@ -262,7 +262,7 @@ const MRF_Status_Edit = () => {
             return;
         }
 
-        if (formData.candidates.length !== selectedRequisition.num_resources) {
+        if (formData.candidates.length !== selectedRequisition.num_resources && statusData.mrf_track_status !== 'IJP' && statusData.mrf_track_status !== 'In Process') {
             setIsUpdating(false);
             swal.fire({
                 title: 'Incomplete Candidate Entries',

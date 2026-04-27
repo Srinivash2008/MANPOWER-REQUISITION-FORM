@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Grid,
   Box,
@@ -11,6 +11,7 @@ import {
   useTheme,
   InputLabel,
   Icon,
+  TextField,
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
@@ -18,6 +19,7 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import PeopleIcon from '@mui/icons-material/People';
 
 // --- Child Components (assuming they are in the same folder or imported) ---
 import DonutChart from './DonutChart';
@@ -26,7 +28,8 @@ import RadialBarChart from './RadialBarChart';
 import StatRow from './StatRow';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAllRecruitersWithCounts } from '../redux/cases/manpowerrequisitionSlice';
 
 const FHDashboard = ({
   counts,
@@ -42,7 +45,25 @@ const FHDashboard = ({
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  
+  // Get recruiter data from Redux store
+  const { recruitersWithCounts, status } = useSelector((state) => state.manpowerRequisition);
+  const [recruiterFilter, setRecruiterFilter] = useState('');
+
+  // Fetch recruiters data when component mounts (only for user 12345)
+  useEffect(() => {
+    if (user?.emp_id === '12345') {
+      dispatch(fetchAllRecruitersWithCounts());
+    }
+  }, [dispatch, user?.emp_id]);
+
+  // Filter recruiters based on search input
+  const filteredRecruiters = recruitersWithCounts?.filter(recruiter =>
+    recruiter.emp_name?.toLowerCase().includes(recruiterFilter.toLowerCase())
+  ) || [];
+
   const overviewStats = [
     {
       label: 'Submitted',
@@ -267,6 +288,58 @@ const FHDashboard = ({
               <StatRow filterType="selvi" key={metric.status} {...metric} total={hrStatusMetrics.filter(m => m.status !== 'MRF Pending').reduce((acc, m) => acc + m.count, 0)} />
             ))}
           </Card>
+
+          {/* Recruiter Status Overview Card - Visible only for user 12345 */}
+          {user?.emp_id === '12345' && (
+            <Card sx={{ p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <PeopleIcon color="primary" />
+                <Typography variant="h6" fontWeight={700}>Recruiter Status Overview</Typography>
+              </Box>
+
+              
+              {status === 'loading' ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <Box sx={{ maxHeight: '450px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f5f5f5' }}>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid #ddd' }}>Recruiter Name</th>
+                        <th style={{ textAlign: 'center', padding: '8px 12px', borderBottom: '1px solid #ddd' }}>MRF Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRecruiters.length > 0 ? (
+                        filteredRecruiters.map((recruiter) => (
+                          <tr
+                            key={recruiter.employee_id}
+                            onClick={() => navigate(`/mrf-list?recruiter_id=${recruiter.employee_id}`)}
+                            style={{ cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <td style={{ padding: '8px 12px' }}>{recruiter.emp_name}</td>
+                            <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600 }}>
+                              {recruiter.total_mrfs || recruiter.count || 0}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={2} style={{ textAlign: 'center', padding: '16px', color: '#999' }}>
+                            {recruiterFilter ? 'No recruiters found with that name.' : 'No recruiter data available.'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </Box>
+              )}
+            </Card>
+          )}
         </Box>
       </Box>
     </Box>

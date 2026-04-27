@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Grid,
   Box,
@@ -8,6 +8,7 @@ import {
   TextField,
   Autocomplete,
   useTheme,
+  CircularProgress,
 } from '@mui/material';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
@@ -16,11 +17,11 @@ import FlashOnIcon from '@mui/icons-material/FlashOn';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-
+import PeopleIcon from '@mui/icons-material/People';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
-// --- Child Components (assuming they are in the same folder or imported) ---
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAllRecruitersWithCounts } from '../redux/cases/manpowerrequisitionSlice';
 import { DonutChart } from './DonutChart';
 import { LineChart } from './LineChart';
 
@@ -38,37 +39,52 @@ const AdminDashboard = ({
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Get recruiter data from Redux store
+  const { recruitersWithCounts, status } = useSelector((state) => state.manpowerRequisition);
+  const [recruiterFilter, setRecruiterFilter] = useState('');
+
+  // Fetch recruiters data when component mounts
+  useEffect(() => {
+    dispatch(fetchAllRecruitersWithCounts());
+  }, [dispatch]);
+
+  // Filter recruiters based on search input
+  const filteredRecruiters = recruitersWithCounts?.filter(recruiter =>
+    recruiter.emp_name?.toLowerCase().includes(recruiterFilter.toLowerCase())
+  ) || [];
 
   const overviewStats =
     user?.emp_id === '1722'
       ? [
-        {
-          label: 'Approved',
-          value: counts.approved,
-          icon: <CheckCircleOutlineIcon fontSize="large" />,
-          color: theme.palette.success.main,
-        },
-        {
-          label: 'Rejected',
-          value: counts.rejected,
-          icon: <HighlightOffIcon fontSize="large" />,
-          color: theme.palette.error.main,
-        },
-      ]
+          {
+            label: 'Approved',
+            value: counts.approved,
+            icon: <CheckCircleOutlineIcon fontSize="large" />,
+            color: theme.palette.success.main,
+          },
+          {
+            label: 'Rejected',
+            value: counts.rejected,
+            icon: <HighlightOffIcon fontSize="large" />,
+            color: theme.palette.error.main,
+          },
+        ]
       : [
-        {
-          label: 'Submitted',
-          value: counts.pending,
-          icon: <PendingActionsIcon fontSize="large" />,
-          color: theme.palette.warning.main,
-        },
-      ];
+          {
+            label: 'Submitted',
+            value: counts.pending,
+            icon: <PendingActionsIcon fontSize="large" />,
+            color: theme.palette.warning.main,
+          },
+        ];
 
-       const trackingStats = [
-      { label: 'In Process', value: approvedmfrCounts.inProcess, color: '#FF9800' },
-      { label: 'Offered',    value: approvedmfrCounts.offered,   color: '#2196F3' },
-      { label: 'Joined',     value: approvedmfrCounts.joined,    color: '#4CAF50' },
-      { label: 'IJP',        value: approvedmfrCounts.ijp,       color: '#9C27B0' },
+  const trackingStats = [
+    { label: 'In Process', value: approvedmfrCounts.inProcess, color: '#FF9800' },
+    { label: 'Offered', value: approvedmfrCounts.offered, color: '#2196F3' },
+    { label: 'Joined', value: approvedmfrCounts.joined, color: '#4CAF50' },
+    { label: 'IJP', value: approvedmfrCounts.ijp, color: '#9C27B0' },
   ];
 
   return (
@@ -96,20 +112,24 @@ const AdminDashboard = ({
               Your administrative shortcuts.
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {user?.emp_id == '1722' && (<Box
-                onClick={() => navigate('/add-mrf')}
-                sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-              >
-                <AddCircleOutlineIcon color="primary" />
-                <Typography fontWeight={600}>Create New MRF</Typography>
-              </Box>)}
-                  {user?.emp_id == '1400' && (<Box
-                onClick={() => navigate('/mrf-list')}
-                sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-              >
-                <ArrowForwardIosIcon color="primary" />
-                <Typography fontWeight={600}>View MRF</Typography>
-              </Box>)}
+              {user?.emp_id == '1722' && (
+                <Box
+                  onClick={() => navigate('/add-mrf')}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                >
+                  <AddCircleOutlineIcon color="primary" />
+                  <Typography fontWeight={600}>Create New MRF</Typography>
+                </Box>
+              )}
+              {user?.emp_id == '1400' && (
+                <Box
+                  onClick={() => navigate('/mrf-list')}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                >
+                  <ArrowForwardIosIcon color="primary" />
+                  <Typography fontWeight={600}>View MRF</Typography>
+                </Box>
+              )}
               <Box
                 onClick={() => navigate('/reports')}
                 sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, borderRadius: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
@@ -118,33 +138,33 @@ const AdminDashboard = ({
                 <Typography fontWeight={600}>View Reports</Typography>
               </Box>
             </Box>
-            <hr style={{marginBottom: '5%'}}></hr>
-             {/* MRF Tracking Status Counts — visible only for emp_id 12345 */}
+            <hr style={{ marginBottom: '5%' }}></hr>
+            {/* MRF Tracking Status Counts */}
             {(user?.emp_id == '12345' || user?.emp_id == '1722') && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
-                    {trackingStats.map((stat) => (
-                        <Box
-                            key={stat.label}
-                            onClick={() => navigate(`/approved-mrf?status=${encodeURIComponent(stat.label)}`)}
-                            sx={{
-                                p: 1.5,
-                                borderRadius: 2,
-                                cursor: 'pointer',
-                                border: `1px solid ${stat.color}30`,
-                                backgroundColor: `${stat.color}10`,
-                                '&:hover': { backgroundColor: `${stat.color}25` },
-                                transition: 'background-color 0.2s'
-                            }}
-                        >
-                            <Typography variant="h5" fontWeight={800} sx={{ color: stat.color }}>
-                                {stat.value}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                                {stat.label}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+                {trackingStats.map((stat) => (
+                  <Box
+                    key={stat.label}
+                    onClick={() => navigate(`/approved-mrf?status=${encodeURIComponent(stat.label)}`)}
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      border: `1px solid ${stat.color}30`,
+                      backgroundColor: `${stat.color}10`,
+                      '&:hover': { backgroundColor: `${stat.color}25` },
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    <Typography variant="h5" fontWeight={800} sx={{ color: stat.color }}>
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      {stat.label}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
             )}
           </Card>
 
@@ -155,12 +175,10 @@ const AdminDashboard = ({
             </Box>
             <Box>
               <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 0.5 }}>
-                {user?.emp_id === '1722' ? 'MRF Details' : 'MRF Details'}
+                MRF Details
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, maxWidth: '500px' }}>
-                {user?.emp_id === '1722'
-                  ? `${totalPending.toLocaleString()} MRF require attention.`
-                  : `${totalPending.toLocaleString()} MRF require attention.`}
+                {`${totalPending.toLocaleString()} MRF require attention.`}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minHeight: '50px' }}>
                 {pendingStatuses.map((p) => {
@@ -175,21 +193,19 @@ const AdminDashboard = ({
                         onClick={() => {
                           let statusParam = p.status.replace('MRF ', '');
                           const lowerStatus = statusParam.toLowerCase();
-                          console.log(lowerStatus,"lowerStatus")
-                          if(lowerStatus == "submitted"){
+                          if (lowerStatus == "submitted") {
                             statusParam = ""
-                          }else if(lowerStatus == "pending with director"){
+                          } else if (lowerStatus == "pending with director") {
                             statusParam = "director_status=Pending"
-                          }else if(lowerStatus == "pending with hr"){
+                          } else if (lowerStatus == "pending with hr") {
                             statusParam = "director_status=Approve&hr_status=Pending"
-                          }else if(lowerStatus == "approved mrf"){
+                          } else if (lowerStatus == "approved mrf") {
                             statusParam = "status=HR Approve"
-                          }else if(lowerStatus == "rejected mrf"){
+                          } else if (lowerStatus == "rejected mrf") {
                             statusParam = "status=Reject"
-                          }else if(lowerStatus == "completed mrf"){
+                          } else if (lowerStatus == "completed mrf") {
                             statusParam = "isStatus=Completed"
                           }
-                          console.log(statusParam,"statusParam");
                           navigate(`/mrf-list?${statusParam}`);
                         }}
                         sx={{
@@ -240,6 +256,7 @@ const AdminDashboard = ({
       {/* --- Right Column (Status Overview) --- */}
       <Box sx={{ flex: { lg: 4 } }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Manager Status Overview Card */}
           <Card sx={{ p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
             <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Manager Status Overview</Typography>
             <Autocomplete
@@ -288,6 +305,57 @@ const AdminDashboard = ({
               )}
             </Box>
           </Card>
+
+        {/* Recruiter Status Overview Card */}
+<Card sx={{ p: { xs: 2, sm: 3 }, backdropFilter: 'blur(10px)', bgcolor: 'rgba(255, 255, 255, 0.7)' }}>
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+    <PeopleIcon color="primary" />
+    <Typography variant="h6" fontWeight={700}>Recruiter Status Overview</Typography>
+  </Box>
+
+ 
+
+  {status === 'loading' ? (
+    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+      <CircularProgress />
+    </Box>
+  ) : (
+    <Box sx={{ maxHeight: '450px', overflowY: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f5f5f5' }}>
+            <th style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid #ddd' }}>Recruiter Name</th>
+            <th style={{ textAlign: 'center', padding: '8px 12px', borderBottom: '1px solid #ddd' }}>MRF Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredRecruiters.length > 0 ? (
+            filteredRecruiters.map((recruiter) => (
+              <tr
+                key={recruiter.employee_id}
+                onClick={() => navigate(`/mrf-list?recruiter_id=${recruiter.employee_id}`)}
+                style={{ cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <td style={{ padding: '8px 12px' }}>{recruiter.emp_name}</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600 }}>
+                  {recruiter.count || 0}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={2} style={{ textAlign: 'center', padding: '16px', color: '#999' }}>
+                {recruiterFilter ? 'No recruiters found with that name.' : 'No recruiter data available.'}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </Box>
+  )}
+</Card>
         </Box>
       </Box>
     </Box>

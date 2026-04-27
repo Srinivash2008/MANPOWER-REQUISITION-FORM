@@ -72,7 +72,9 @@ const ManpowerRequisitionEdit = () => {
         current_status: "",
         created_at: "",
         Director_Query_Answer: "",
-        HR_Query_Answer: ""
+        HR_Query_Answer: "",
+        recruiter_name: "",
+        recruiter_id: ""
     });
 
     const [errors, setErrors] = useState({});
@@ -86,6 +88,7 @@ const ManpowerRequisitionEdit = () => {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+    const [recruiters, setRecruiters] = useState([]);
 
     const { selectedRequisition, departments } = useSelector((state) => state.manpowerRequisition);
 
@@ -96,6 +99,17 @@ const ManpowerRequisitionEdit = () => {
             dispatch(fetchDepartmentsManagerId(user.emp_id));
         }
     }, [dispatch, id, user?.emp_id]);
+
+    useEffect(() => {
+    if (user?.emp_id === '1722' || user?.emp_id === '12345') {
+        fetch(`${API_URL}/api/mrf/recruiters`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => res.json())
+            .then(data => setRecruiters(Array.isArray(data) ? data : []))
+            .catch(() => setRecruiters([]));
+    }
+}, [user?.emp_id, token]);
 
     useEffect(() => {
         if (selectedRequisition) {
@@ -144,7 +158,9 @@ const ManpowerRequisitionEdit = () => {
                 current_status: selectedRequisition.status || "",
                 created_at: selectedRequisition.created_at || "",
                 Director_Query_Answer: selectedRequisition.Director_Query_Answer || "",
-                HR_Query_Answer: selectedRequisition.HR_Query_Answer || ""
+                HR_Query_Answer: selectedRequisition.HR_Query_Answer || "",
+                recruiter_name: selectedRequisition.recruiter_name || "",
+                recruiter_id: selectedRequisition.recruiter_id || ""
             });
         }
     }, [selectedRequisition]);
@@ -432,6 +448,10 @@ const ManpowerRequisitionEdit = () => {
             setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
             return;
         }
+        if (isHr && formData.status === 'HR Approve' && !formData.recruiter_name) {
+    setNotification({ open: true, message: 'Please select a recruiter for HR Approval.', severity: 'error' });
+    return;
+}
         // if (isHr && formData.status == "Pending") {
         //     setNotification({ open: true, message: 'Please select a status before updating.', severity: 'error' });
         //     return;
@@ -561,14 +581,26 @@ const ManpowerRequisitionEdit = () => {
             if (manpowerStatus) {
                 // console.log(manpowerStatus,"manpowerStatus")
                 if ((user.emp_id != "1722" && formData.directorstatus != "Approve")) {
-                    await dispatch(updateManpowerStatus({
-                        manpowerId,
-                        newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
-                        hr_comments: formData.hr_comments,
-                        director_comments: formData.director_comments,
-                        data: selectedRequisition,
-                        isSendMail
-                    })).unwrap();
+                   await dispatch(updateManpowerStatus({
+                    manpowerId,
+                    newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
+                    hr_comments: formData.hr_comments,
+                    director_comments: formData.director_comments,
+                    data: selectedRequisition,
+                    isSendMail
+                })).unwrap();
+                }
+                 if ((user.emp_id == "1722" && formData.directorstatus == "Approve")) {
+                   await dispatch(updateManpowerStatus({
+                    manpowerId,
+                    newStatus: manpowerStatus == "Draft" ? "Pending" : manpowerStatus,
+                    hr_comments: formData.hr_comments,
+                    director_comments: formData.director_comments,
+                    data: selectedRequisition,
+                    isSendMail,
+                    recruiter_name: manpowerStatus === 'HR Approve' ? formData.recruiter_name || null : null,
+                    recruiter_id: manpowerStatus === 'HR Approve' ? formData.recruiter_id || null : null
+                })).unwrap();
                 }
 
             }
@@ -1068,12 +1100,39 @@ const ManpowerRequisitionEdit = () => {
                                             </div>
                                         )}
                                         {(isHr && manpowerStatus != "Raise Query") && (
-                                            <div style={{ marginTop: '1rem' }}>
-                                                <label className="form-label">HR Comments<span className="required-star"></span></label>
-                                                <TextField fullWidth multiline rows={3} label="Enter your comments here" name="hr_comments" value={formData.hr_comments || ''} onChange={handleInputChange} variant="outlined" size="small" />
-                                                {renderError('hr_comments')}
-                                            </div>
-                                        )}
+    <div style={{ marginTop: '1rem' }}>
+        <label className="form-label">HR Comments<span className="required-star"></span></label>
+        <TextField fullWidth multiline rows={3} label="Enter your comments here" name="hr_comments" value={formData.hr_comments || ''} onChange={handleInputChange} variant="outlined" size="small" />
+        {renderError('hr_comments')}
+    </div>
+)}
+
+{isHr && formData.status === 'HR Approve' && (
+    <div style={{ marginTop: '1rem' }}>
+        <FormControl fullWidth size="small" error={!formData.recruiter_name && touched.recruiter_name}>
+            <label className="form-label">Assigned Recruiter<span className="required-star">*</span></label>
+            <Select
+                value={formData.recruiter_name || ''}
+                displayEmpty
+                size="small"
+                sx={{ fontSize: '0.85rem', height: 36, borderRadius: '6px', mt: 0.5 }}
+                onChange={(e) => {
+                    const selected = recruiters.find(r => r.emp_name === e.target.value);
+                    setFormData(prev => ({
+                        ...prev,
+                        recruiter_name: selected?.emp_name || '',
+                        recruiter_id: selected?.employee_id || ''
+                    }));
+                }}
+            >
+                <MenuItem value="" disabled>-- Select Recruiter --</MenuItem>
+                {recruiters.map(r => (
+                    <MenuItem key={r.emp_id} value={r.emp_name}>{r.emp_name}</MenuItem>
+                ))}
+            </Select>
+        </FormControl>
+    </div>
+)}
                                     </>
                                 )}
                             </div>

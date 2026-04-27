@@ -77,7 +77,9 @@ router.get('/getmanpowerrequisitionbyuser/:userId', authMiddleware, async (req, 
             mrf_hr_approve_date: row.mrf_hr_approve_date,
             mrf_end_date: row.mrf_end_date,
             mrf_track_status: row.mrf_track_status,
-            mrf_closed_date: row.mrf_closed_date
+            mrf_closed_date: row.mrf_closed_date,
+            recruiter_name: row.recruiter_name,
+            recruiter_id: row.recruiter_id,
 
         }));
         res.json(fetchManpowerRequisitionByUser);
@@ -646,11 +648,96 @@ router.get('/get-query/:id', authMiddleware, async (req, res) => {
     }
 });
 
+router.get('/recruiters', authMiddleware, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(
+            "SELECT employee_id, emp_name FROM employee_personal WHERE department = 8 AND emp_name NOT IN ('HR Portal','Je. Rajesh','Shalu R','SWATHY S','Muthamil Selvi V') AND emp_resign = '12/31/2030'"
+        );
+        res.status(200).json(rows);
+    } catch (err) {
+        res.status(500).json({ message: 'Error fetching recruiters' });
+    }
+});
+
+router.get('/recruiters/with-counts', authMiddleware, async (req, res) => {
+    try {
+        const [recruiters] = await pool.execute(
+            "SELECT employee_id, emp_name FROM employee_personal WHERE department = 8 AND emp_name NOT IN ('HR Portal','Je. Rajesh','Shalu R','SWATHY S','Muthamil Selvi V') AND emp_resign = '12/31/2030'"
+        );
+
+        if (recruiters.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // Get counts by matching recruiter_name
+        const [counts] = await pool.execute(
+            `SELECT recruiter_name, COUNT(*) as count
+             FROM manpower_requisition
+             WHERE recruiter_name IS NOT NULL AND recruiter_name != ''
+             GROUP BY recruiter_name`
+        );
+
+        // Create a map for quick lookup by name
+        const countsMap = {};
+        counts.forEach(count => {
+            countsMap[count.recruiter_name] = count.count;
+        });
+
+        // Match each recruiter by emp_name
+        const result = recruiters.map(recruiter => ({
+            employee_id: recruiter.employee_id,
+            emp_name: recruiter.emp_name,
+            count: countsMap[recruiter.emp_name] || 0
+        }));
+
+        res.status(200).json(result);
+    } catch (err) {
+        console.error('Error fetching recruiters with counts:', err);
+        res.status(500).json({ message: 'Error fetching recruiters data' });
+    }
+});
+
+// GET /api/recruiter/mrf-counts/:recruiterId - Returns counts for a specific recruiter
+router.get('/recruiter/mrf-counts/:recruiterId', authMiddleware, async (req, res) => {
+    const { recruiterId } = req.params;
+    try {
+        const [results] = await pool.execute(
+            `SELECT 
+                COUNT(*) as total_mrfs,
+                SUM(CASE WHEN status IN ('Pending', 'Submitted') OR director_status = 'Pending' OR hr_status = 'Pending' THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN status = 'Approved' OR status = 'HR Approve' THEN 1 ELSE 0 END) as approved_count,
+                SUM(CASE WHEN status = 'Reject' OR status = 'Rejected' THEN 1 ELSE 0 END) as rejected_count,
+                SUM(CASE WHEN status IN ('In Process', 'inProcess') OR tracking_status = 'In Process' THEN 1 ELSE 0 END) as in_process_count,
+                SUM(CASE WHEN status = 'On_Hold' THEN 1 ELSE 0 END) as on_hold_count,
+                SUM(CASE WHEN status = 'Offered' THEN 1 ELSE 0 END) as offered_count,
+                SUM(CASE WHEN status = 'Joined' THEN 1 ELSE 0 END) as joined_count,
+                SUM(CASE WHEN status = 'IJP' THEN 1 ELSE 0 END) as ijp_count
+            FROM manpower_requisition 
+            WHERE hr_id = ?`,
+            [recruiterId]
+        );
+        
+        res.status(200).json(results[0] || {
+            total_mrfs: 0,
+            pending_count: 0,
+            approved_count: 0,
+            rejected_count: 0,
+            in_process_count: 0,
+            on_hold_count: 0,
+            offered_count: 0,
+            joined_count: 0,
+            ijp_count: 0
+        });
+    } catch (err) {
+        console.error('Error fetching recruiter counts:', err);
+        res.status(500).json({ message: 'Error fetching recruiter counts' });
+    }
+});
 
 
 router.put('/update-status/:id', authMiddleware, async (req, res) => {
     const manpowerId = req.params.id;
-    const { status, user, hr_comments, director_comments, data,isSendMail } = req.body; // Changed from newStatus to status
+    const { status, user, hr_comments, director_comments, data,isSendMail,recruiter_name,recruiter_id  } = req.body; // Changed from newStatus to status
     console.log(req.body, "req.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.bodyreq.body")
     if (!manpowerId || !status || !user) {
         return res.status(400).json({ message: 'Missing required fields: id, status, and user are required.' });
@@ -689,8 +776,8 @@ router.put('/update-status/:id', authMiddleware, async (req, res) => {
             params.push(status, director_comments, approve_date);
             } else if (user?.emp_id === '1722') { // HR
 
-            query += ', hr_status = ?, hr_comments = ?, mrf_hr_approve_date = ?, mrf_track_status = ? ';
-            params.push(status, hr_comments, approve_date,'In Process');
+            query += ', hr_status = ?, hr_comments = ?, mrf_hr_approve_date = ?, mrf_track_status = ?, recruiter_name = ?, recruiter_id = ?';
+            params.push(status, hr_comments, approve_date,'In Process',recruiter_name,recruiter_id );
             }
 
             if (mrfNumber) {

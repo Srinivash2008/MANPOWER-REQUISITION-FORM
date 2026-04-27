@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import MessageIcon from '@mui/icons-material/Message';
-import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList, my_requisitions, fetchManpowerRequisitionFH } from '../redux/cases/manpowerrequisitionSlice';
+import { fetchManpowerRequisition, fetchManpowerRequisitionById, addQueryForm, updateManpowerStatus, deleteManpowerRequisition, optimisticUpdateManpowerStatus, revertManpowerStatus, fetchManpowerRequisitionByuserId, fetchManagerList, my_requisitions, fetchManpowerRequisitionFH, fetchAllRecruitersWithCounts } from '../redux/cases/manpowerrequisitionSlice';
 import swal from "sweetalert2";
 import { withdrawManpowerRequisition } from '../redux/cases/manpowerrequisitionSlice';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -93,12 +93,6 @@ const StyledTableRow = styled(TableRow, {
   '&:hover': {
     backgroundColor: '#E9F5F2', // A slightly darker green for hover
   },
-  // ...(status === 'Draft' && {
-  //     backgroundColor: '#5096f842 !important', // A light grey for Draft
-  // }),
-  // ...(status === 'Withdraw' && {
-  //     backgroundColor: '#fbbe2455  !important', // A light orange for Withdraw
-  // }),
 }));
 
 const modalVariants = {
@@ -139,54 +133,52 @@ const StatusBadge = ({ status }) => {
     displayStatus = 'Submitted';
   }
 
-
-
   const statusStyles = {
     'Approve': {
-      backgroundColor: '#28a745', // A vibrant green
+      backgroundColor: '#28a745',
       color: '#fff',
     },
     'HR Approve': {
-      backgroundColor: '#20c997', // A slightly different, teal-like green
+      backgroundColor: '#20c997',
       color: '#fff',
     },
     'Pending': {
-      backgroundColor: '#b29b58ff', // A warm amber/yellow
-      color: '#212529', // Dark text for better contrast on yellow
+      backgroundColor: '#b29b58ff',
+      color: '#fff',
     },
     'Submitted': {
-      backgroundColor: '#b29b58ff', // A warm amber/yellow
-      color: '#fff', // Dark text for better contrast on yellow
+      backgroundColor: '#b29b58ff',
+      color: '#fff',
     },
     'Reject': {
-      backgroundColor: '#dc3545', // A strong red
+      backgroundColor: '#dc3545',
       color: '#fff',
     },
     'Raise Query': {
-      backgroundColor: '#0dcaf0', // A bright cyan/info blue
+      backgroundColor: '#0dcaf0',
       color: '#fff',
     },
     'On Hold': {
-      backgroundColor: '#6c757d', // A neutral, secondary grey
+      backgroundColor: '#6c757d',
       color: '#fff',
     },
     'Draft': {
-      backgroundColor: '#060606ff', // A very light grey
+      backgroundColor: '#060606ff',
       color: '#6c757d',
       border: `1px solid #dee2e6`
     },
     'Withdrawn': {
-      backgroundColor: '#ff8800', // Orange color
+      backgroundColor: '#ff8800',
       color: '#fff',
       border: `1px solid #ff8800`
     },
     'FH Replied': {
-      backgroundColor: '#ff006a', // Orange color
+      backgroundColor: '#ff006a',
       color: '#fff',
       border: `1px solid #ff006a`
     },
     default: {
-      backgroundColor: "#9bebebff", // Default grey
+      backgroundColor: "#9bebebff",
       color: 'white',
     }
   };
@@ -204,7 +196,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, onMenuClick }) => {
-  const theme = useTheme(); //NOSONAR
+  const theme = useTheme();
   const { user } = useSelector((state) => state.auth);
   const { managerList } = useSelector((state) => state.manpowerRequisition);
   const raisedByInitial = manpower.emp_name ? manpower.emp_name.charAt(0).toUpperCase() : '?';
@@ -222,9 +214,6 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
   };
 
   const { light: lightColor, main: mainColor } = statusColors[manpower.status] || statusColors.default;
-  const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
-  const isDirector = user?.emp_id === "1400";
-  const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
 
   return (
     <Box sx={{
@@ -252,7 +241,6 @@ const ManpowerCard = ({ manpower, index, onEdit, onView, onWithdraw, onDelete, o
             boxShadow: `0 12px 28px rgba(0,0,0,0.1)`,
           }
         }}>
-          {/* Gradient Header */}
           <Box sx={{
             background: `linear-gradient(135deg, ${lightColor} 0%, ${mainColor} 100%)`,
             p: 2,
@@ -320,6 +308,7 @@ const ManpowerRequisition = () => {
   const { user, token } = useSelector((state) => state.auth);
   const manpowerRequisitionList = useSelector((state) => state.manpowerRequisition.data);
   const status = useSelector((state) => state.manpowerRequisition.status);
+  const { recruitersWithCounts } = useSelector((state) => state.manpowerRequisition);
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
@@ -349,6 +338,7 @@ const ManpowerRequisition = () => {
   const [isRaiseQueryOpen, setIsRaiseQueryOpen] = useState(false);
   const [queryText, setQueryText] = useState("");
   const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+  const [recruiters, setRecruiters] = useState([]);
   const [statusModalErrors, setStatusModalErrors] = useState({});
 
   const [functionalHeadFilter, setFunctionalHeadFilter] = useState("");
@@ -364,10 +354,17 @@ const ManpowerRequisition = () => {
   const [hrStatusFilter, setHrStatusFilter] = useState("");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
+  const [recruiterFilter, setRecruiterFilter] = useState(""); // New recruiter filter state
   const today = new Date().toISOString().split("T")[0];
 
-
   const navigate = useNavigate();
+
+  // Fetch recruiters data for filter dropdown
+  useEffect(() => {
+    if (user?.emp_id === '1722' || user?.emp_id === '12345') {
+      dispatch(fetchAllRecruitersWithCounts());
+    }
+  }, [dispatch, user?.emp_id]);
 
   useEffect(() => {
     if (token) {
@@ -383,7 +380,7 @@ const ManpowerRequisition = () => {
     const hrStatus = params.get('hr_status');
     const functional_head = params.get('functional_head');
     const isStatus = params.get('isStatus');
-console.log(isStatus,"isStatus")
+    const recruiter_id = params.get('recruiter_id'); // New recruiter_id param
 
     if (directorStatus) {
       setDirectorStatusFilter(directorStatus);
@@ -397,48 +394,40 @@ console.log(isStatus,"isStatus")
     if (functional_head) {
       setFunctionalHeadFilter(functional_head);
     }
-    if(isStatus){
+    if (isStatus) {
       setIsStatusFilter(isStatus);
     }
-
+    if (recruiter_id) {
+      setRecruiterFilter(recruiter_id);
+    }
   }, [location.search]);
-
 
   const { managerList, selectedRequisitionFH: manpowerRequisitionFHList } = useSelector((state) => state.manpowerRequisition);
 
-  // --- Role-based visibility flags ---
   const isHr = user?.emp_id === "12345" || user?.emp_id === "1722";
   const isDirector = user?.emp_id === "1400";
   const isSeniorManager = managerList.some(manager => manager.employee_id === user?.emp_id);
 
-
-
-  // useEffect(() => {
-  //   if (status === 'idle' && user) {
-  //     //  dispatch(fetchManpowerRequisition());
-  //     dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-  //   }
-  //   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  //   const socket = io(API_URL);
-  //   socket.on('manpowerrequisition-refresh', () => {
-  //     // dispatch(fetchManpowerRequisition());
-  //     dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-
-  //   });
-  // }, [status, user, dispatch]);
+  useEffect(() => {
+    dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+  }, [dispatch, user?.emp_id]);
 
   useEffect(() => {
-
-    dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-
-  }, [dispatch, user?.emp_id]);
+    if (user?.emp_id === '1722' || user?.emp_id === '12345') {
+      fetch(`${import.meta.env.VITE_API_URL}/api/mrf/recruiters`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => setRecruiters(Array.isArray(data) ? data : []))
+        .catch(() => setRecruiters([]));
+    }
+  }, [user?.emp_id, token]);
 
   useEffect(() => {
     if (location.pathname === '/my-requisitions') {
       dispatch(my_requisitions(user?.emp_id));
     }
   }, [dispatch, location.pathname, user?.emp_id]);
-
 
   const currentUserId = user?.emp_id || null;
   const created_at = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -449,8 +438,6 @@ console.log(isStatus,"isStatus")
       setForm((prev) => ({ ...prev, query_manpower_requisition_pid: manpowerId }));
     }
   }, [open, manpowerId]);
-
-  // const manpowerArray = Array.isArray(manpowerRequisitionList) ? manpowerRequisitionList : [];
 
   const clearFilters = () => {
     setFunctionalHeadFilter("");
@@ -465,7 +452,10 @@ console.log(isStatus,"isStatus")
     setHrStatusFilter("");
     setStartDateFilter("");
     setEndDateFilter("");
+    setRecruiterFilter(""); // Clear recruiter filter
     setPage(0);
+    // Clear URL params
+    navigate('/mrf-list', { replace: true });
   };
 
   const filteredManpower = manpowerRequisitionList?.filter(manpower => {
@@ -492,45 +482,45 @@ console.log(isStatus,"isStatus")
         : (directorStatusFilter === 'Raise Query'
           ? ['Raise Query', 'FH Replied'].includes(manpower.director_status)
           : manpower.director_status === directorStatusFilter));
-    // const matchesStatus = !statusFilter ||
-    //   (statusFilter === 'Pending'
-    //     ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.status)
-    //     : (statusFilter === 'Raise Query'
-    //       ? ['Raise Query', 'FH Replied'].includes(manpower.status)
-    //       : manpower.status === statusFilter));
-    // Modified status filter with HR Approve condition
-  const matchesStatus = !statusFilter ||
-    (statusFilter === 'Pending'
-      ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.status)
-      : (statusFilter === 'Raise Query'
-        ? ['Raise Query', 'FH Replied'].includes(manpower.status)
-        : (statusFilter === 'HR Approve'
-          ? (manpower.status === statusFilter && 
-             manpower.mrf_track_status !== 'Joined' && 
-             manpower.mrf_track_status !== 'Offered' && 
-             manpower.mrf_track_status !== 'IJP')
-          : manpower.status === statusFilter)));
+    
+    const matchesStatus = !statusFilter ||
+      (statusFilter === 'Pending'
+        ? ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.status)
+        : (statusFilter === 'Raise Query'
+          ? ['Raise Query', 'FH Replied'].includes(manpower.status)
+          : (statusFilter === 'HR Approve'
+            ? (manpower.status === statusFilter && 
+               manpower.mrf_track_status !== 'Joined' && 
+               manpower.mrf_track_status !== 'Offered' && 
+               manpower.mrf_track_status !== 'IJP')
+            : manpower.status === statusFilter)));
+    
     const matchesHrStatus = !hrStatusFilter ||
       (hrStatusFilter === 'Pending'
         ? (manpower.director_status === 'Approve' && ['Pending', 'Raise Query', 'On Hold', 'FH Replied'].includes(manpower.hr_status))
         : (hrStatusFilter === 'Raise Query'
           ? ['Raise Query', 'FH Replied'].includes(manpower.hr_status)
           : manpower.hr_status === hrStatusFilter));
+    
     const matchesStartDate = !startDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] >= startDateFilter);
     const matchesEndDate = !endDateFilter || (manpower?.created_at && manpower.created_at.split('T')[0] <= endDateFilter);
     const matchesIsStatus = !isStatusFilter ||
       (isStatusFilter === 'Completed'
         ? manpower.hr_status === 'HR Approve' && manpower.mrf_closed_date !== null && manpower.mrf_closed_date !== ''
         : true);
+    
+    // New recruiter filter
+    const matchesRecruiter = !recruiterFilter || String(manpower.recruiter_id) === String(recruiterFilter);
 
-    return matchesSearchTerm && matchesFunctionalHead && matchesDepartment && matchesEmploymentStatus && matchesDesignation && matchesRequirementType && matchesTatRequest && matchesDirectorStatus && matchesStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesIsStatus;
+    return matchesSearchTerm && matchesFunctionalHead && matchesDepartment && matchesEmploymentStatus && 
+           matchesDesignation && matchesRequirementType && matchesTatRequest && matchesDirectorStatus && 
+           matchesStatus && matchesHrStatus && matchesStartDate && matchesEndDate && matchesIsStatus && matchesRecruiter;
   });
 
   const paginatedManpower =
     rowsPerPage === -1
       ? filteredManpower
       : filteredManpower.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-      console.log(paginatedManpower,"paginatedManpower")
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -538,7 +528,7 @@ console.log(isStatus,"isStatus")
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to first page
+    setPage(0);
   };
 
   const handleFilterChange = (e) => {
@@ -554,6 +544,7 @@ console.log(isStatus,"isStatus")
       case "directorStatusFilter": setDirectorStatusFilter(value); break;
       case "statusFilter": setStatusFilter(value); break;
       case "hrStatusFilter": setHrStatusFilter(value); break;
+      case "recruiterFilter": setRecruiterFilter(value); break;
       case "startDateFilter":
         if (endDateFilter && value > endDateFilter) setEndDateFilter("");
         setStartDateFilter(value);
@@ -568,7 +559,6 @@ console.log(isStatus,"isStatus")
   const getUniqueValues = (key) => [...new Set(manpowerRequisitionList?.filter(Boolean).map(item => item[key])?.filter(Boolean))];
   const directorStatuses = [{ value: "Pending", label: "Pending" }, { value: "Approve", label: "Approved" }, { value: "Reject", label: "Rejected" }, { value: "Raise Query", label: "Raise Query" }, { value: "On Hold", label: "On Hold" }];
   const hrStatuses = [{ value: "Pending", label: "Pending" }, { value: "HR Approve", label: "HR Approved" }, { value: "Reject", label: "Rejected" }, { value: "Raise Query", label: "Raise Query" }, { value: "On Hold", label: "On Hold" }];
-
 
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
@@ -585,7 +575,6 @@ console.log(isStatus,"isStatus")
   const handleChatboxClick = (id, type) => {
     navigate(`/${type}/${id}`);
   }
-
 
   const TablePaginationActions = (props) => {
     const { count, page, onPageChange } = props;
@@ -632,7 +621,6 @@ console.log(isStatus,"isStatus")
     setCurrentManpowerId(manpower.id);
     const currentStatus = manpower.status;
     setStatusFormData({
-      // Initialize status as empty to force user selection.
       status: '',
       comments: '',
       current_status: currentStatus
@@ -661,35 +649,29 @@ console.log(isStatus,"isStatus")
   };
 
   const handleStatusUpdate = async () => {
-
     const errors = {};
     if (!statusFormData.status) {
       errors.status = 'Please select a status.';
     }
-
+    if (isHr && statusFormData.status === 'HR Approve' && !statusFormData.recruiter_name) {
+      errors.recruiter = 'Please select a recruiter.';
+    }
 
     if (Object.keys(errors).length > 0) {
       setStatusModalErrors(errors);
       return;
     }
 
-
-
-
-
     setStatusModalErrors({});
     let isSendMail = false;
 
-    console.log(statusFormData?.current_status, "statusFormData?.current_statusstatusFormData?.current_status")
     switch (statusFormData?.current_status) {
       case 'Draft':
         if (user.emp_id != "1722" && user.emp_id != "1400") {
           isSendMail = true;
-        }
-        else {
+        } else {
           isSendMail = false;
         }
-
         break;
       case 'Pending':
         if (user.emp_id == "1400") {
@@ -701,8 +683,7 @@ console.log(isStatus,"isStatus")
       case 'Approve':
         if (user.emp_id == "1722") {
           isSendMail = true;
-        }
-        else {
+        } else {
           isSendMail = false;
         }
         break;
@@ -713,13 +694,10 @@ console.log(isStatus,"isStatus")
           isSendMail = false;
         }
         break;
-
       default:
         isSendMail = false;
         break;
     }
-
-
 
     const payload = {
       manpowerId: currentManpowerId,
@@ -727,13 +705,10 @@ console.log(isStatus,"isStatus")
       hr_comments: (isHr ? statusFormData.comments : null) || null,
       director_comments: (isDirector ? statusFormData.comments : null) || null,
       data: paginatedManpower.find(m => m.id === currentManpowerId),
-      isSendMail: isSendMail
+      isSendMail: isSendMail,
+      recruiter_name: statusFormData.status === 'HR Approve' ? statusFormData.recruiter_name || null : null,
+      recruiter_id: statusFormData.status === 'HR Approve' ? statusFormData.recruiter_id || null : null,
     };
-
-    console.log("isSendMail After Switch Case", isSendMail);
-    console.log(payload, "payloadpayloadpayloadpayloadpayload");
-    console.log(statusFormData.status, "statusFormData.statusstatusFormData.status")
-    console.log(statusFormData?.current_status, "current_statuscurrent_status")
 
     try {
       setIsStatusUpdating(true);
@@ -761,112 +736,140 @@ console.log(isStatus,"isStatus")
   };
 
   const handleApproveClick = (manpower) => {
-    swal.fire({
-      title: "Are you sure",
-      text: "Do you want to approve this requisition",
-      iconHtml: `<img src="/validation/question.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-      icon: '',
-      showCancelButton: true,
-      confirmButtonColor: theme.palette.success.main,
-      cancelButtonColor: theme.palette.error.main,
-      confirmButtonText: "Yes, approve it!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        setIsStatusUpdating(true);
-        let newStatus = '';
-        // let isSendMail = false;
+    const isHrUser = user?.emp_id === '1722' || user?.emp_id === '12345';
 
-        // if (isDirector) {
-        //   newStatus = 'Approve';
-        //   if (manpower.status === 'Pending' || manpower.status === 'FH Replied') {
-        //     isSendMail = true;
-        //   }
-        // } else if (isHr) {
-        //   newStatus = 'HR Approve';
-        //   if (manpower.status === 'Approve') {
-        //     isSendMail = true;
-        //   }
-        // }
-        console.log(manpower,"manpower")
+    if (isHrUser && isHr) {
+      const options = recruiters
+        .map(r => `<option value="${r.emp_name}">${r.emp_name}</option>`)
+        .join('');
 
-        const payload = {
-          manpowerId: manpower.id,
-          newStatus: isDirector ? 'Approve' : 'HR Approve',
-          hr_comments: isHr ? 'Approved' : null,
-          director_comments: isDirector ? 'Approved' : null,
-          data: manpower,
-          isSendMail: true
-        };
-
-        try {
-          await dispatch(updateManpowerStatus(payload)).unwrap();
-          swal.fire('Approved!', 'The requisition has been approved.', 'success');
-          dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
-        } catch (error) {
-          swal.fire('Error', error.message || 'Failed to approve status.', 'error');
-        } finally {
-          setIsStatusUpdating(false);
+      swal.fire({
+        title: 'Are you sure?',
+        html: `
+          <p style="margin-bottom:14px;color:#555;font-size:0.95rem;">
+            Do you want to HR Approve this requisition?
+          </p>
+          <div style="position:relative;width:90%;margin:0 auto;">
+            <label style="
+              position:absolute;
+              top:-9px;
+              left:10px;
+              background:#fff;
+              padding:0 4px;
+              font-size:0.72rem;
+              color:#2A7F66;
+              font-family:'Roboto','Helvetica','Arial',sans-serif;
+              font-weight:500;
+              letter-spacing:0.03em;
+              z-index:1;
+            ">Assigned Recruiter</label>
+            <select id="swal-recruiter" style="
+              width:100%;
+              padding:14px 36px 14px 14px;
+              font-size:0.95rem;
+              font-family:'Roboto','Helvetica','Arial',sans-serif;
+              color:#333;
+              background-color:#fff;
+              border:1.5px solid #2A7F66;
+              border-radius:6px;
+              appearance:none;
+              -webkit-appearance:none;
+              outline:none;
+              cursor:pointer;
+              transition:border-color 0.2s,box-shadow 0.2s;
+            "
+            onfocus="this.style.borderColor='#2A7F66';this.style.boxShadow='0 0 0 2px rgba(42,127,102,0.2)'"
+            onblur="this.style.boxShadow='none'"
+            >
+              <option value="" disabled selected style="color:#aaa;">-- Select Recruiter --</option>
+              ${options}
+            </select>
+            <span style="
+              position:absolute;
+              right:12px;
+              top:50%;
+              transform:translateY(-50%);
+              pointer-events:none;
+              color:#2A7F66;
+              font-size:1rem;
+            ">▼</span>
+          </div>`,
+        iconHtml: `<img src="/validation/question.gif" alt="Custom Icon" style="width:100px;height:100px">`,
+        icon: '',
+        showCancelButton: true,
+        confirmButtonColor: theme.palette.success.main,
+        cancelButtonColor: theme.palette.error.main,
+        confirmButtonText: 'Yes, approve it!',
+        preConfirm: () => {
+          const recruiter = document.getElementById('swal-recruiter').value;
+          if (!recruiter) {
+            swal.showValidationMessage('Please select a recruiter before approving.');
+            return false;
+          }
+          const selectedRecruiter = recruiters.find(r => r.emp_name === recruiter);
+          return {
+            recruiter_name: recruiter,
+            recruiter_id: selectedRecruiter?.employee_id || null
+          };
         }
-      }
-    });
+      }).then(async (result) => {
+        if (result.isConfirmed && result.value) {
+          setIsStatusUpdating(true);
+          const payload = {
+            manpowerId: manpower.id,
+            newStatus: 'HR Approve',
+            hr_comments: 'Approved',
+            director_comments: null,
+            data: manpower,
+            isSendMail: true,
+            recruiter_name: result.value.recruiter_name,
+            recruiter_id: result.value.recruiter_id
+          };
+          try {
+            await dispatch(updateManpowerStatus(payload)).unwrap();
+            swal.fire('Approved!', 'The requisition has been approved.', 'success');
+            dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+          } catch (error) {
+            swal.fire('Error', error.message || 'Failed to approve status.', 'error');
+          } finally {
+            setIsStatusUpdating(false);
+          }
+        }
+      });
+    } else {
+      swal.fire({
+        title: 'Are you sure',
+        text: 'Do you want to approve this requisition',
+        iconHtml: `<img src="/validation/question.gif" alt="Custom Icon" style="width:100px;height:100px">`,
+        icon: '',
+        showCancelButton: true,
+        confirmButtonColor: theme.palette.success.main,
+        cancelButtonColor: theme.palette.error.main,
+        confirmButtonText: 'Yes, approve it!',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          setIsStatusUpdating(true);
+          const payload = {
+            manpowerId: manpower.id,
+            newStatus: 'Approve',
+            hr_comments: null,
+            director_comments: 'Approved',
+            data: manpower,
+            isSendMail: true
+          };
+          try {
+            await dispatch(updateManpowerStatus(payload)).unwrap();
+            swal.fire('Approved!', 'The requisition has been approved.', 'success');
+            dispatch(fetchManpowerRequisitionByuserId(user?.emp_id));
+          } catch (error) {
+            swal.fire('Error', error.message || 'Failed to approve status.', 'error');
+          } finally {
+            setIsStatusUpdating(false);
+          }
+        }
+      });
+    }
   };
-
-
-
-  //   const handleStatusChange = (event, manpowerId) => {
-  //     const newStatus = event.target.value;
-  //     const originalManpower = manpowerArray.find((M) => M.id === manpowerId);
-
-  //     if (!originalManpower || newStatus === originalManpower.status) {
-  //       return;
-  //     }
-
-  //     if (newStatus === "Raise Query") {
-  //       setManpowerId(manpowerId);
-  //       setManpowerStatus(newStatus);
-  //       setIsRaiseQueryModalOpen(true);
-  //       return;
-  //     }
-
-  //     swal.fire({
-  //       title: "Are you sure?",
-  //       text: `Change status from "${originalManpower.status}" to "${newStatus}"?`,
-  //       icon: '',
-  //       iconHtml: `<img src="/validation/warning.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-  //       showCancelButton: true,      
-  //       confirmButtonColor: theme.palette.primary.main,
-  //       cancelButtonColor: theme.palette.error.main,
-  //       confirmButtonText: "Yes, update it!",
-  //     }).then(async (result) => {
-  //       if (!result.isConfirmed) {
-  //         return;
-  //       }
-
-  //       dispatch(optimisticUpdateManpowerStatus({ manpowerId, newStatus }));
-  // console.log('Dispatched optimistic update for manpowerId:', manpowerId, 'with newStatus:', newStatus);
-  //        try {
-  //         await dispatch(updateManpowerStatus({ manpowerId, newStatus })).unwrap();
-  //         swal.fire({
-  //           title: 'Updated!',
-  //           text: 'Manpower status updated successfully.',
-  //           icon: '',
-  //           iconHtml: `<img src="/validation/success.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-  //           confirmButtonColor: theme.palette.error.main,
-  //           confirmButtonText: 'OK'
-  //         });
-  //       } catch (err) {
-  //         dispatch(revertManpowerStatus({ manpowerId, originalManpower }));
-  //         swal.fire({
-  //           title: 'Error!',
-  //           text: err.message || 'Failed to update Manpower.',
-  //           icon: '',
-  //           iconHtml: `<img src="/validation/error.gif" alt="Custom Icon" style="width: 100px; height: 100px">`,
-  //           confirmButtonColor: theme.palette.error.main,
-  //           confirmButtonText: 'OK'
-  //         });
-  //       }
-  //     });
-  //   }
 
   const handleDeleteClick = (id) => {
     setDeleteId(id);
@@ -878,10 +881,9 @@ console.log(isStatus,"isStatus")
       id: deleteId,
       is_delete: 'Inactive',
     };
-
     dispatch(deleteManpowerRequisition(deletemanpowerdata));
     setIsDeleteModalOpen(false);
-    setIsSuccessModalOpen(true); // Show success modal after deletion.
+    setIsSuccessModalOpen(true);
     setDeleteId(null);
   };
 
@@ -894,34 +896,28 @@ console.log(isStatus,"isStatus")
     const withdrawData = {
       id: withdrawId,
     };
-
     dispatch(withdrawManpowerRequisition(withdrawData));
     setIsWithdrawModalOpen(false);
     setIsSuccessModalOpen(true);
     setWithdrawId(null);
   };
 
-
   const handleClose = () => {
     setIsDeleteModalOpen(false);
-    setIsSuccessModalOpen(false)
+    setIsSuccessModalOpen(false);
     setIsRaiseQueryModalOpen(false);
     setIsSuccessQueryModalOpen(false);
     setIsManpowerRequisitionViewModelOpen(false);
   };
 
-
   const handleSaveSubmit = (e) => {
     e.preventDefault();
-
     const query_manpower_requisition_pid = form.query_manpower_requisition_pid;
     const query_name = form.query_name;
-    // Validation: check if query_name is empty
     if (!query_name.trim()) {
       setError(true);
       return;
     }
-
     const queryAddData = {
       query_manpower_requisition_pid: query_manpower_requisition_pid,
       query_name: query_name,
@@ -930,12 +926,10 @@ console.log(isStatus,"isStatus")
       query_created_time: created_at,
       query_is_delete: 'Active',
     };
-
     dispatch(addQueryForm(queryAddData));
     dispatch(updateManpowerStatus({ manpowerId: manpowerId, newStatus: manpowerStatus })).unwrap();
     setIsRaiseQueryModalOpen(false);
     setIsSuccessQueryModalOpen(true);
-
   }
 
   const handleViewClick = (id) => {
@@ -944,7 +938,6 @@ console.log(isStatus,"isStatus")
   const handleEditClick = (id) => {
     navigate(`/manpower_requisition_edit/${id}`);
   }
-
 
   return (
     <Box sx={{ p: 4, backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
@@ -963,17 +956,15 @@ console.log(isStatus,"isStatus")
             }}>
               {(user?.emp_id == "1722" || user?.emp_id == "1400") && (
                 <FormControl variant="standard" fullWidth>
-                  
                   <InputLabel>Functional Head</InputLabel>
                   <Select
                     name="functionalHeadFilter"
                     value={functionalHeadFilter}
                     onChange={handleFilterChange}
-
                     MenuProps={{
                       PaperProps: {
                         style: {
-                          maxHeight: 240, // Approx 5 items
+                          maxHeight: 240,
                         },
                       },
                     }}
@@ -990,7 +981,7 @@ console.log(isStatus,"isStatus")
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Department</InputLabel>
                 <Select name="departmentFilter" value={departmentFilter} onChange={handleFilterChange}>
-
+                  <MenuItem value=""><em>All Departments</em></MenuItem>
                   {getUniqueValues('department_name').map(dept => <MenuItem key={dept} value={dept}>{dept}</MenuItem>)}
                 </Select>
               </FormControl>
@@ -998,23 +989,15 @@ console.log(isStatus,"isStatus")
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Employment Status</InputLabel>
                 <Select name="employmentStatusFilter" value={employmentStatusFilter} onChange={handleFilterChange}>
-
+                  <MenuItem value=""><em>All Employment Statuses</em></MenuItem>
                   {getUniqueValues('employment_status').map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
                 </Select>
               </FormControl>
 
-              {/* <FormControl variant="standard" fullWidth>
-                <InputLabel>Designation</InputLabel>
-                <Select name="designationFilter" value={designationFilter} onChange={handleFilterChange}>
-                  
-                  {getUniqueValues('designation').map(desg => <MenuItem key={desg} value={desg}>{desg}</MenuItem>)}
-                </Select>
-              </FormControl> */}
-
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Requirement Type</InputLabel>
                 <Select name="requirementTypeFilter" value={requirementTypeFilter} onChange={handleFilterChange}>
-
+                  <MenuItem value=""><em>All Requirement Types</em></MenuItem>
                   {getUniqueValues('requirement_type').map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
                 </Select>
               </FormControl>
@@ -1022,7 +1005,7 @@ console.log(isStatus,"isStatus")
               <FormControl variant="standard" fullWidth>
                 <InputLabel>TAT Request</InputLabel>
                 <Select name="tatRequestFilter" value={tatRequestFilter} onChange={handleFilterChange}>
-
+                  <MenuItem value=""><em>All TAT Requests</em></MenuItem>
                   {getUniqueValues('hiring_tat').map(tat => <MenuItem key={tat} value={tat}>{tat}</MenuItem>)}
                 </Select>
               </FormControl>
@@ -1030,7 +1013,7 @@ console.log(isStatus,"isStatus")
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Director Status</InputLabel>
                 <Select name="directorStatusFilter" value={directorStatusFilter} onChange={handleFilterChange}>
-
+                  <MenuItem value=""><em>All Director Statuses</em></MenuItem>
                   {directorStatuses.map(status => <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>)}
                 </Select>
               </FormControl>
@@ -1038,7 +1021,7 @@ console.log(isStatus,"isStatus")
               <FormControl variant="standard" fullWidth>
                 <InputLabel>Current Status</InputLabel>
                 <Select name="statusFilter" value={statusFilter} onChange={handleFilterChange}>
-                  <MenuItem value=""><em>All</em></MenuItem>
+                  <MenuItem value=""><em>All Statuses</em></MenuItem>
                   {getUniqueValues('status').map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
                 </Select>
               </FormControl>
@@ -1046,10 +1029,25 @@ console.log(isStatus,"isStatus")
               <FormControl variant="standard" fullWidth>
                 <InputLabel>HR Status</InputLabel>
                 <Select name="hrStatusFilter" value={hrStatusFilter} onChange={handleFilterChange}>
-
+                  <MenuItem value=""><em>All HR Statuses</em></MenuItem>
                   {hrStatuses.map(status => <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>)}
                 </Select>
               </FormControl>
+
+              {/* New Recruiter Filter */}
+              {(user?.emp_id == "1722" || user?.emp_id == "12345") && (
+                <FormControl variant="standard" fullWidth>
+                  <InputLabel>Recruiter Name</InputLabel>
+                  <Select name="recruiterFilter" value={recruiterFilter} onChange={handleFilterChange}>
+                    <MenuItem value=""><em>All Recruiters</em></MenuItem>
+                    {recruitersWithCounts?.map(recruiter => (
+                      <MenuItem key={recruiter.employee_id} value={recruiter.employee_id}>
+                        {recruiter.emp_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
 
               <FormControl variant="standard" fullWidth>
                 <InputLabel shrink={true} sx={{ transform: 'translate(0, -1.5px) scale(0.9)', fontSize: '1.1rem' }}>Start Date</InputLabel>
@@ -1095,7 +1093,6 @@ console.log(isStatus,"isStatus")
               >
                 Clear
               </Button>
-
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -1105,10 +1102,10 @@ console.log(isStatus,"isStatus")
                 display: 'inline-block',
                 '@keyframes moveWord': {
                   '0%': { transform: 'translate(0, 0)' },
-                  '25%': { transform: 'translate(5px, -5px)' },   // Move right and up
-                  '50%': { transform: 'translate(10px, 0)' },    // Move further right
-                  '75%': { transform: 'translate(5px, 5px)' },   // Move right and down
-                  '100%': { transform: 'translate(0, 0)' },      // Back to initial
+                  '25%': { transform: 'translate(5px, -5px)' },
+                  '50%': { transform: 'translate(10px, 0)' },
+                  '75%': { transform: 'translate(5px, 5px)' },
+                  '100%': { transform: 'translate(0, 0)' },
                 },
                 '&:hover': {
                   animation: 'moveWord 1s ease-in-out forwards',
@@ -1117,10 +1114,24 @@ console.log(isStatus,"isStatus")
               >
                 Manpower Requisition List
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-
-              </Box>
+              {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <ToggleButtonGroup
+                  value={view}
+                  exclusive
+                  onChange={handleViewChange}
+                  aria-label="view toggle"
+                  size="small"
+                >
+                  <ToggleButton value="table" aria-label="table view">
+                    <ViewListIcon />
+                  </ToggleButton>
+                  <ToggleButton value="card" aria-label="card view">
+                    <ViewModuleIcon />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box> */}
             </Box>
+
             {view === 'table' ? (
               <TableContainer
                 component={Paper}
@@ -1136,12 +1147,12 @@ console.log(isStatus,"isStatus")
                     <TableRow>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>S.No</StyledTableCell>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>Name / <br />Department</StyledTableCell>
-                      {/* <StyledTableCell>Department</StyledTableCell> */}
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>Status of <br />Employment</StyledTableCell>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>Designation</StyledTableCell>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>Requirement <br />Type</StyledTableCell>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>TAT Request</StyledTableCell>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>Created<br /> Date</StyledTableCell>
+                      <StyledTableCell style={{ fontSize: '0.7rem' }}>Recruiter Name</StyledTableCell>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>Overall Status</StyledTableCell>
                       <StyledTableCell style={{ fontSize: '0.7rem' }}>Action</StyledTableCell>
                     </TableRow>
@@ -1161,6 +1172,7 @@ console.log(isStatus,"isStatus")
                           <StyledTableCell>{manpower.requirement_type}</StyledTableCell>
                           <StyledTableCell style={{ whiteSpace: "normal", wordBreak: "break-word" }}>{manpower.hiring_tat}</StyledTableCell>
                           <StyledTableCell>{manpower.created_at ? new Date(manpower.created_at).toLocaleDateString() : '-'}</StyledTableCell>
+                          <StyledTableCell>{manpower?.recruiter_name ? manpower?.recruiter_name : '-'}</StyledTableCell>
                           <StyledTableCell>
                             <Box sx={{ display: "grid", gridTemplateColumns: "max-content 6px auto", rowGap: 0.6, columnGap: 0.5, alignItems: "center", }}>
                               <Box fontWeight={600} textAlign="left">Current Status</Box>
@@ -1185,7 +1197,6 @@ console.log(isStatus,"isStatus")
                                   status={manpower.hr_status !== "Pending" ? manpower.hr_status : "-"}
                                 />
                                 {user.emp_id != "1400" && <Tooltip title="HR Query's"><IconButton onClick={() => handleChatboxClick(manpower.id, "HR_chatbox")} sx={{ color: '#3e5624', padding: "1%" }}><MessageIcon fontSize="small" /></IconButton></Tooltip>}
-
                               </Box>
 
                               {manpower.hr_status === "HR Approve" &&
@@ -1212,50 +1223,47 @@ console.log(isStatus,"isStatus")
                             {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
                               <Tooltip title="Update Status">
                                 <IconButton onClick={() => handleOpenStatusModal(manpower)} sx={{ color: 'secondary.main', padding: "4px" }}>
-                                  <PublishedWithChangesIcon fontSize="small" style={{color:'#316a31'}} />
+                                  <PublishedWithChangesIcon fontSize="small" style={{ color: '#316a31' }} />
                                 </IconButton>
                               </Tooltip>
                             )}
 
-
-
-                            {(isDirector && manpower.director_status !== "Approve")
-                              && <Tooltip title="Edit">
+                            {(isDirector && manpower.director_status !== "Approve") && (
+                              <Tooltip title="Edit">
                                 <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
                                   <EditDocumentIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                            }
-                            {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve")
-                              && <Tooltip title="Edit">
+                            )}
+                            {(user.emp_id == "1722" && manpower.hr_status !== "HR Approve") && (
+                              <Tooltip title="Edit">
                                 <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
                                   <EditDocumentIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                            }
-                            {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw"
-                              && <Tooltip title="Edit">
+                            )}
+                            {isSeniorManager && user.emp_id !== "1722" && manpower.director_status !== "Approve" && manpower.hr_status !== "HR Approve" && manpower.status !== "Withdraw" && (
+                              <Tooltip title="Edit">
                                 <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
                                   <EditDocumentIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                            }
-                            {(user.emp_id == "12345")
-                              && <Tooltip title="Edit">
+                            )}
+                            {(user.emp_id == "12345") && (
+                              <Tooltip title="Edit">
                                 <IconButton onClick={() => handleEditClick(manpower.id)} sx={{ color: 'primary.main', padding: "4px" }}>
                                   <EditDocumentIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                            }
+                            )}
 
                             {user.emp_id !== '12345' && ((isDirector && manpower.director_status !== "Approve" && manpower.director_status != "Reject") || (isHr && manpower.director_status === "Approve" && manpower.hr_status !== "HR Approve")) && (
                               <Tooltip title="Approve">
                                 <IconButton onClick={() => handleApproveClick(manpower)} sx={{ color: 'success.main', padding: "4px" }}>
-                                  <DoneAllIcon fontSize="small" style={{color:'#07741b'}} />
+                                  <DoneAllIcon fontSize="small" style={{ color: '#07741b' }} />
                                 </IconButton>
                               </Tooltip>
                             )}
-
 
                             {manpower.isWithdrawOpen === 1 && (user.emp_id !== "1722" && user.emp_id !== "1400") && manpower.status === 'Pending' && (
                               <Tooltip title="Withdraw">
@@ -1264,7 +1272,6 @@ console.log(isStatus,"isStatus")
                                 </IconButton>
                               </Tooltip>
                             )}
-
                           </StyledTableCell>
                         </StyledTableRow>
                       ))
@@ -1285,8 +1292,8 @@ console.log(isStatus,"isStatus")
                     display: 'grid',
                     gridTemplateColumns: {
                       xs: '1fr',
-                      sm: 'repeat(2, 1fr)', // 2 cards on small screens
-                      md: 'repeat(3, 1fr)'  // 3 cards on medium and larger screens
+                      sm: 'repeat(2, 1fr)',
+                      md: 'repeat(3, 1fr)'
                     },
                     gap: 3
                   }}>
@@ -1294,15 +1301,12 @@ console.log(isStatus,"isStatus")
                       <ManpowerCard
                         key={manpower.id}
                         manpower={manpower}
-                        isHr={isHr}
-                        isDirector={isDirector}
-                        isSeniorManager={isSeniorManager}
-                        managerList={managerList}
                         index={index}
                         onView={handleViewClick}
                         onEdit={handleEditClick}
                         onWithdraw={handleWithdrawClick}
                         onDelete={handleDeleteClick}
+                        onMenuClick={handleMenuClick}
                       />
                     ))}
                   </Box>
@@ -1320,7 +1324,7 @@ console.log(isStatus,"isStatus")
               rowsPerPage={rowsPerPage === -1 ? paginatedManpower.length : rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               labelRowsPerPage="Rows per page"
-              labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : `All ${assessmentList.length}`} cases`}
+              labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count !== -1 ? count : `All ${filteredManpower.length}`} cases`}
               ActionsComponent={TablePaginationActions}
               sx={{
                 mt: 2,
@@ -1347,6 +1351,8 @@ console.log(isStatus,"isStatus")
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Modals remain unchanged */}
       {isDeleteModalOpen && (
         <AnimatePresence>
           <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
@@ -1439,13 +1445,13 @@ console.log(isStatus,"isStatus")
               <AssessmentIcon
                 sx={{
                   color: '#1f7150ff',
-                  fontSize: 24,               // Customize size as needed
+                  fontSize: 24,
                   transition: 'color 0.3s ease, transform 0.3s ease',
                   cursor: 'pointer',
                   '&:hover': {
-                    color: '#1f7150ff',         // Brighter red on hover
-                    transform: 'scale(1.2)', // Slightly grow the icon on hover
-                    filter: 'drop-shadow(0 0 5px #1f7150ff)', // Glow effect
+                    color: '#1f7150ff',
+                    transform: 'scale(1.2)',
+                    filter: 'drop-shadow(0 0 5px #1f7150ff)',
                   },
                 }}
               />
@@ -1482,7 +1488,6 @@ console.log(isStatus,"isStatus")
                 name="query_name"
                 multiline
                 minRows={4}
-                // value={form.query_name}
                 onChange={(e) => setForm({ ...form, query_name: e.target.value })}
                 sx={{
                   mb: 2,
@@ -1606,25 +1611,23 @@ console.log(isStatus,"isStatus")
                     name="status"
                     value={statusFormData.status}
                     onChange={handleStatusFormChange}
-
                   >
+                    <MenuItem value="" disabled>Select the Status</MenuItem>
                     {isDirector && (
-                      <MenuItem value="" disabled>Select the Status</MenuItem>,
-                      [
-                        <MenuItem key="Approve" value="Approve">Approve</MenuItem>,
-                        <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
-                        <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
+                      <>
+                        <MenuItem key="Approve" value="Approve">Approve</MenuItem>
+                        <MenuItem key="Reject" value="Reject">Reject</MenuItem>
+                        <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>
                         <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
-                      ]
+                      </>
                     )}
                     {isHr && (
-                      <MenuItem value="" disabled>Select the Status</MenuItem>,
-                      [
-                        <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>,
-                        <MenuItem key="Reject" value="Reject">Reject</MenuItem>,
-                        <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>,
+                      <>
+                        <MenuItem key="HR Approve" value="HR Approve">HR Approve</MenuItem>
+                        <MenuItem key="Reject" value="Reject">Reject</MenuItem>
+                        <MenuItem key="Raise Query" value="Raise Query">Raise Query</MenuItem>
                         <MenuItem key="On Hold" value="On Hold">On Hold</MenuItem>
-                      ]
+                      </>
                     )}
                   </Select>
                   {statusModalErrors.status && (
@@ -1662,6 +1665,35 @@ console.log(isStatus,"isStatus")
                     helperText={statusModalErrors.comments}
                   />
                 )}
+                {isHr && statusFormData.status === 'HR Approve' && (
+                  <FormControl fullWidth variant="outlined" error={!!statusModalErrors.recruiter}>
+                    <InputLabel id="recruiter-select-label">Assigned Recruiter</InputLabel>
+                    <Select
+                      labelId="recruiter-select-label"
+                      label="Assigned Recruiter"
+                      value={statusFormData.recruiter_name || ''}
+                      onChange={(e) => {
+                        const selected = recruiters.find(r => r.emp_name === e.target.value);
+                        setStatusFormData(prev => ({
+                          ...prev,
+                          recruiter_name: selected?.emp_name || '',
+                          recruiter_id: selected?.employee_id || ''
+                        }));
+                        if (statusModalErrors.recruiter) {
+                          setStatusModalErrors(prev => ({ ...prev, recruiter: '' }));
+                        }
+                      }}
+                    >
+                      <MenuItem value="" disabled>-- Select Recruiter --</MenuItem>
+                      {recruiters.map(r => (
+                        <MenuItem key={r.employee_id} value={r.emp_name}>{r.emp_name}</MenuItem>
+                      ))}
+                    </Select>
+                    {statusModalErrors.recruiter && (
+                      <FormHelperText>{statusModalErrors.recruiter}</FormHelperText>
+                    )}
+                  </FormControl>
+                )}
               </Box>
             </DialogContent>
             <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
@@ -1680,7 +1712,6 @@ console.log(isStatus,"isStatus")
       </Backdrop>
     </Box>
   );
-
 }
 
 export default ManpowerRequisition;

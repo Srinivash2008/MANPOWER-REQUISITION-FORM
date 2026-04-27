@@ -143,6 +143,87 @@ export const fetchManpowerRequisitionByStatus = createAsyncThunk(
 );
 
 
+// Add these new thunks to your existing file
+
+// Fetch recruiters list
+export const fetchRecruitersList = createAsyncThunk(
+  'manpowerRequisition/fetchRecruitersList',
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/recruiters`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch recruiters list.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Fetch recruiter MRF counts
+export const fetchRecruiterMRFCounts = createAsyncThunk(
+  'manpowerRequisition/fetchRecruiterMRFCounts',
+  async (recruiterId, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/recruiter/mrf-counts/${recruiterId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return { recruiterId, counts: response.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch recruiter MRF counts.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Fetch all recruiters with their counts in one API call
+export const fetchAllRecruitersWithCounts = createAsyncThunk(
+  'manpowerRequisition/fetchAllRecruitersWithCounts',
+  async (_, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();
+      const token = auth.token;
+      if (!token) {
+        return rejectWithValue('Authentication token is missing.');
+      }
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${API_URL}/api/mrf/recruiters/with-counts`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to fetch recruiters with counts.';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+
 export const getMFRCounts = createAsyncThunk(
   'manpowerRequisition/getMFRCounts',
   async (managerId, { rejectWithValue, getState }) => {
@@ -487,8 +568,8 @@ export const addQueryForm = createAsyncThunk(
 
 export const updateManpowerStatus = createAsyncThunk(
   'manpowerRequisition/updateManpowerStatus',
-  async ({ manpowerId, newStatus, hr_comments, director_comments,data,isSendMail }, { rejectWithValue, getState }) => {
-    console.log('updateManpowerStatus called with:', { manpowerId, newStatus });
+  async ({ manpowerId, newStatus, hr_comments, director_comments,data,isSendMail,recruiter_name,recruiter_id }, { rejectWithValue, getState }) => {
+    console.log('updateManpowerStatus called with:', { recruiter_name });
     try {
       const { auth } = getState();
       const token = auth.token;
@@ -503,7 +584,9 @@ export const updateManpowerStatus = createAsyncThunk(
         hr_comments,
         director_comments,
         data,
-        isSendMail
+        isSendMail,
+        recruiter_name: recruiter_name || null,
+        recruiter_id: recruiter_id || null
       };
 
       const response = await axios.put(
@@ -804,6 +887,8 @@ const manpowerrequisitionSlice = createSlice({
     departments: [],
     managerList: [],
     managerListById: [],
+    recruitersList: [], // Add this
+    recruitersWithCounts: [], // Add this
     query: null,
     status: 'idle',
     error: null,
@@ -915,6 +1000,51 @@ const manpowerrequisitionSlice = createSlice({
         state.statusById = 'failed';
         state.errorById = action.payload;
         state.selectedRequisitionFH = null;
+      })
+
+      .addCase(fetchRecruitersList.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchRecruitersList.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.recruitersList = action.payload;
+      })
+      .addCase(fetchRecruitersList.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.recruitersList = [];
+      })
+
+      // Fetch all recruiters with counts
+      .addCase(fetchAllRecruitersWithCounts.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchAllRecruitersWithCounts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.recruitersWithCounts = action.payload;
+      })
+      .addCase(fetchAllRecruitersWithCounts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.recruitersWithCounts = [];
+      })
+      .addCase(fetchRecruiterMRFCounts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchRecruiterMRFCounts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const { recruiterId, counts } = action.payload;
+        // Update the counts for the specific recruiter in the list
+        const index = state.recruitersWithCounts.findIndex(r => r.id === recruiterId);
+        if (index !== -1) {
+          state.recruitersWithCounts[index].counts = counts;
+        }
+      })
+      .addCase(fetchRecruiterMRFCounts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       })
       .addCase(getMFRCounts.pending, (state) => {
         state.status = 'loading';
